@@ -43,6 +43,31 @@ describe("Google Gemini API key", () => {
     }
   });
 
+  it("retries a temporary Gemini 503 and returns the recovered response", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({ ok: false, status: 503, text: async () => "service unavailable" } as Response)
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: "recovered" }] } }] }) } as Response);
+    try {
+      await expect(invokeGoogleGemini({ messages: [{ role: "user", content: "Retry once" }], maxTokens: 16, apiKey: "test-server-key" })).resolves.toEqual({ text: "recovered", truncated: false });
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
+  it("reports Gemini 503 clearly after bounded retries", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({ ok: false, status: 503, text: async () => "service unavailable" } as Response);
+    try {
+      await expect(invokeGoogleGemini({ messages: [{ role: "user", content: "Still unavailable" }], maxTokens: 16, apiKey: "test-server-key" })).rejects.toMatchObject({
+        code: "SERVICE_UNAVAILABLE",
+        message: "Google Gemini sedang tidak tersedia (503). Key kamu sudah tersambung; coba lagi beberapa saat lagi.",
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("removes unsupported additionalProperties from nested Google response schemas", () => {
     expect(toGoogleResponseSchema({
       type: "object",

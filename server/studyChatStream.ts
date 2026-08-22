@@ -45,6 +45,7 @@ export function normalizeStreamPayload(body: unknown) {
 export function streamErrorMessage(reason: unknown) {
   if (reason instanceof z.ZodError) return "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikan data chat—silakan kirim ulang pesanmu.";
   if (reason instanceof Error && /Gemini stream failed \(429\)/i.test(reason.message)) return "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mengirim pesan lagi.";
+  if (reason instanceof Error && /Gemini stream failed \(503\)/i.test(reason.message)) return "Google Gemini sedang tidak tersedia (503). Key kamu sudah tersambung; coba lagi beberapa saat lagi.";
   return "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
 }
 
@@ -242,7 +243,7 @@ export function registerStudyChatStream(app: Express) {
           event(res, "meta", { provider });
           result = await streamGemini(messages, credential.apiKey, maxTokens, timeoutMs, writeToken);
         } catch (error) {
-          if (error instanceof Error && /Gemini stream failed \(429\)/i.test(error.message)) throw error;
+          if (error instanceof Error && /Gemini stream failed \((?:429|503)\)/i.test(error.message)) throw error;
           provider = "StudyOS AI gateway · Fast fallback";
           event(res, "meta", { provider, fallback: true });
           result = await streamBuiltIn(messages, "gpt-5-mini", maxTokens, timeoutMs, writeToken);

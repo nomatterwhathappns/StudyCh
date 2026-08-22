@@ -14,6 +14,11 @@ type GeminiRequest = {
 export type GoogleGeminiResult = { text: string; truncated: boolean };
 
 const GOOGLE_GEMINI_MODEL = "gemini-3.6-flash";
+const GEMINI_503_RETRY_DELAYS_MS = [200, 500] as const;
+
+function pause(milliseconds: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+}
 
 /**
  * The Gemini REST API accepts a JSON Schema subset for responseSchema. In
@@ -50,22 +55,33 @@ export async function invokeGoogleGemini({ messages, maxTokens, json = false, js
     parts: [{ text: message.content }],
   }));
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GOOGLE_GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GOOGLE_GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const request = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(timeoutMs),
     body: JSON.stringify({
       ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
       contents,
       generationConfig: { maxOutputTokens: maxTokens, ...(json ? { responseMimeType: "application/json", ...(jsonSchema ? { responseSchema: toGoogleResponseSchema(jsonSchema) } : {}) } : {}) },
     }),
-  });
+  };
+  let response: Response | undefined;
+  for (let attempt = 0; attempt <= GEMINI_503_RETRY_DELAYS_MS.length; attempt += 1) {
+    response = await fetch(endpoint, { ...request, signal: AbortSignal.timeout(timeoutMs) });
+    if (response.status !== 503 || attempt === GEMINI_503_RETRY_DELAYS_MS.length) break;
+    await response.text().catch(() => "");
+    await pause(GEMINI_503_RETRY_DELAYS_MS[attempt]);
+  }
+  if (!response) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Google Gemini request could not be started." });
 
   if (!response.ok) {
     const detail = await response.text();
     console.error("[Google Gemini] request failed", response.status, detail);
     if (response.status === 429) {
       throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mencoba lagi." });
+    }
+    if (response.status === 503) {
+      throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Google Gemini sedang tidak tersedia (503). Key kamu sudah tersambung; coba lagi beberapa saat lagi." });
     }
     throw new TRPCError({ code: "BAD_GATEWAY", message: "Google Gemini could not complete the request. Check the API key, model access, and billing status." });
   }

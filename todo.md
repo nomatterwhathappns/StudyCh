@@ -185,3 +185,5 @@
 - [x] Menelusuri Translate Chat yang masih gagal saat Chat biasa berhasil melalui Gemini personal key
 - [x] Menelusuri kegagalan persisten Chat dan Translate walaupun Gemini personal key telah terkonfigurasi
 - [x] Mengaudit seluruh jalur kode Chat dan Translate terhadap request/log nyata untuk menemukan akar masalah di balik pesan error generik
+- [x] Menelusuri dan memperbaiki Gemini 503 ServiceUnavailable dari personal key baru agar tidak dipetakan sebagai quota fallback
+- [x] Mengingatkan revokasi API key yang terpapar pada screenshot serta penggunaan key pengganti hanya melalui AI Settings
