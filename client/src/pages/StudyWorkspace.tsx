@@ -193,6 +193,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const saveAssistantResponse = (response: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => addMessage(session.id, { role: "assistant", content: response.text, citations: attachMaterialIds(session, response.citations), truncated: response.truncated, ...(response.provider ? { provider: response.provider } : {}) });
   const friendlyChatError = (message: string) => /too_big|too_small|expected string|materials|history/i.test(message) ? "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikannya—silakan kirim ulang pesanmu." : "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
+  const friendlyTranslationError = (message: string) => /Penerjemahan Chat tidak tersedia karena kuota AI provider/i.test(message) ? message : "Penerjemahan sedang tidak tersedia. Teks asli tetap aman—coba lagi beberapa saat lagi atau gunakan provider AI lain.";
   const clearStreamPreview = () => { setStreaming(false); setStreamRecovery(false); setStreamedText(""); setStreamProvider(""); streamedTextRef.current = ""; streamProviderRef.current = ""; streamRecoveryRef.current = false; };
   const chat = trpc.study.chat.useMutation();
   const translateChatMessages = trpc.study.translateChat.useMutation();
@@ -223,12 +224,12 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
     const preferences = readAiSettings();
     void translateChatMessages.mutateAsync({ model: preferences.model, target: translationTarget, messages: missing.map(({ id, content }) => ({ id, content })) })
       .then(({ translations }) => { if (run !== translationRunRef.current) return; setTranslatedMessages((current) => ({ ...current, ...Object.fromEntries(translations.map((item) => [item.id, item.content])) })); setTranslationError(""); })
-      .catch(() => {
+      .catch((reason: unknown) => {
         if (run !== translationRunRef.current) return;
         missing.forEach((message) => translationFailuresRef.current.add(message.id));
         setTranslateChat(false); localStorage.setItem("studyos_translate_mode", "false");
         window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false, target: translationTarget } }));
-        setTranslationError("Penerjemahan sedang tidak tersedia. Teks asli tetap aman—coba lagi beberapa saat lagi atau gunakan provider AI lain.");
+        setTranslationError(friendlyTranslationError(reason instanceof Error ? reason.message : ""));
       })
       .finally(() => missing.forEach((message) => translatingIdsRef.current.delete(message.id)));
   }, [session.chatHistory, translateChat, translationTarget, translatedMessages, translateChatMessages, translationRetry]);

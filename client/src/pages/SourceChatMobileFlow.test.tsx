@@ -312,13 +312,13 @@ describe("mobile Source and AI flow", () => {
     localStorage.setItem("studyos_translate_mode", "true");
     localStorage.setItem("studyos_chat_translation_target", "english");
     translateChatMutateAsync
-      .mockRejectedValueOnce(new Error("Provider temporarily unavailable"))
+      .mockRejectedValueOnce(new Error("Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif."))
       .mockResolvedValueOnce({ translations: [{ id: "retry-message", content: "Hello again" }] });
     const retrySession: StudySession = { ...session, chatHistory: [{ id: "retry-message", role: "user", content: "Halo lagi", createdAt: 1 }] };
     const sourceUi = render(<SourcePanel session={retrySession} />);
     const ui = render(<ChatPanel session={retrySession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
 
-    await waitFor(() => expect(ui.getByRole("alert").textContent).toContain("Penerjemahan sedang tidak tersedia"));
+    await waitFor(() => expect(ui.getByRole("alert").textContent).toContain("kuota AI provider untuk proyek ini habis"));
     expect(ui.queryByRole("status")).toBeNull();
     expect(ui.getByText("Halo lagi")).toBeTruthy();
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);

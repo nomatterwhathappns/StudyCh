@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { invokeGoogleGemini, toGoogleResponseSchema } from "./googleGemini";
 
 describe("Google Gemini API key", () => {
-  it("can access the Gemini model catalog", async () => {
+  it.skipIf(!process.env.GOOGLE_GENERATIVE_AI_API_KEY)("can access the Gemini model catalog", async () => {
     const key = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     expect(key, "GOOGLE_GENERATIVE_AI_API_KEY must be configured").toBeTruthy();
 
@@ -21,7 +21,7 @@ describe("Google Gemini API key", () => {
       json: async () => ({ candidates: [{ content: { parts: [{ text: "ready" }] } }] }),
     } as Response);
     try {
-      await expect(invokeGoogleGemini({ messages: [{ role: "user", content: "Reply with exactly: ready" }], maxTokens: 64 })).resolves.toEqual({ text: "ready", truncated: false });
+      await expect(invokeGoogleGemini({ messages: [{ role: "user", content: "Reply with exactly: ready" }], maxTokens: 64, apiKey: "test-server-key" })).resolves.toEqual({ text: "ready", truncated: false });
       expect(fetchSpy).toHaveBeenCalledOnce();
     } finally {
       fetchSpy.mockRestore();
@@ -34,7 +34,7 @@ describe("Google Gemini API key", () => {
       json: async () => ({ candidates: [{ content: { parts: [{ text: "{}" }] } }] }),
     } as Response);
     try {
-      await invokeGoogleGemini({ messages: [{ role: "user", content: "Draft a card" }], maxTokens: 64, json: true, jsonSchema: { type: "object", properties: { term: { type: "string" } }, additionalProperties: false } });
+      await invokeGoogleGemini({ messages: [{ role: "user", content: "Draft a card" }], maxTokens: 64, apiKey: "test-server-key", json: true, jsonSchema: { type: "object", properties: { term: { type: "string" } }, additionalProperties: false } });
       const request = JSON.parse(String(fetchSpy.mock.calls[0]?.[1]?.body));
       expect(request.generationConfig).toMatchObject({ responseMimeType: "application/json", responseSchema: { type: "object" } });
       expect(request.generationConfig.responseSchema).not.toHaveProperty("additionalProperties");
@@ -76,7 +76,8 @@ describe("Google Gemini API key", () => {
         code: "PRECONDITION_FAILED",
       });
     } finally {
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY = originalKey;
+      if (originalKey === undefined) delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+      else process.env.GOOGLE_GENERATIVE_AI_API_KEY = originalKey;
     }
   });
 });

@@ -237,6 +237,17 @@ function aiText(response: Awaited<ReturnType<typeof invokeLLM>>) {
   return { text: content.trim(), truncated: finishReason === "length" || finishReason === "max_tokens" };
 }
 
+function providerUnavailableError(error: unknown) {
+  const detail = error instanceof Error ? error.message : String(error ?? "");
+  if (/(?:usage exhausted|quota(?:\s+(?:is\s+)?)?(?:exhausted|exceeded|unavailable)|resource exhausted|billing status|status 429|status 412)/i.test(detail)) {
+    return new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
+    });
+  }
+  return new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI is temporarily unavailable. Please try again." });
+}
+
 async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, geminiAccess?: { apiKey?: string; source: "personal" | "server" }) {
   const jsonSchema = typeof json === "object" ? json : { name: "studyos_json", schema: { type: "object", additionalProperties: true } };
   let response: { text: string; truncated: boolean };
@@ -264,7 +275,7 @@ async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-
           provider = "StudyOS AI gateway · Claude Haiku fallback";
         } catch (secondFallbackError) {
           console.error("[StudyOS AI] Built-in fallbacks failed", secondFallbackError);
-          throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI is temporarily unavailable. Please try again." });
+          throw providerUnavailableError(secondFallbackError);
         }
       }
     }
@@ -280,7 +291,7 @@ async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-
         provider = `${builtInProviderLabel(fallbackModel)} fallback`;
       } catch (fallbackError) {
         console.error("[StudyOS AI] Alternate gateway fallback also failed", fallbackError);
-        throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI is temporarily unavailable. Please try again." });
+        throw providerUnavailableError(fallbackError);
       }
     }
   }
