@@ -163,7 +163,7 @@ export function parseChatTranslationCache(content: string, messageIds: string[])
 }
 
 type ChatTranslationCache = ReturnType<typeof parseChatTranslationCache>;
-const TRANSLATION_BATCH_CHARACTER_LIMIT = 1_100;
+const TRANSLATION_BATCH_CHARACTER_LIMIT = 5_000;
 
 function translationBatches(messages: z.infer<typeof chatTranslationItemSchema>[]) {
   const batches: z.infer<typeof chatTranslationItemSchema>[][] = [];
@@ -531,23 +531,17 @@ export const appRouter = router({
           };
           const translateBatch = async (batch: z.infer<typeof chatTranslationItemSchema>[]): Promise<ChatTranslationCache> => {
             const characterCount = batch.reduce((total, message) => total + message.content.length, 0);
-            const outputBudget = Math.min(1_000, Math.max(450, Math.ceil(characterCount * 0.7) + 180));
-            try {
-              const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-                { role: "system", content: translationSystemPrompt },
-                { role: "user", content: JSON.stringify({ messages: batch }) },
-              ], outputBudget, "Balanced", translationSchema, 24_000);
-              if (result.truncated) throw new TRPCError({ code: "BAD_GATEWAY", message: "Translation JSON was truncated." });
-              const translated = parseChatTranslations(result.text, batch.map((message) => message.id));
-              const originals = batch.map((message) => ({ id: message.id, content: message.content }));
-              return input.target === "english"
-                ? { english: translated, indonesian: originals }
-                : { english: originals, indonesian: translated };
-            } catch (error) {
-              if (!(error instanceof TRPCError) || error.code !== "BAD_GATEWAY" || batch.length === 1) throw error;
-              const midpoint = Math.ceil(batch.length / 2);
-              return mergeTranslationCaches([await translateBatch(batch.slice(0, midpoint)), await translateBatch(batch.slice(midpoint))]);
-            }
+            const outputBudget = Math.min(1_600, Math.max(450, Math.ceil(characterCount * 0.8) + 220));
+            const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
+              { role: "system", content: translationSystemPrompt },
+              { role: "user", content: JSON.stringify({ messages: batch }) },
+            ], outputBudget, "Balanced", translationSchema, 24_000);
+            if (result.truncated) throw new TRPCError({ code: "BAD_GATEWAY", message: "Translation JSON was truncated." });
+            const translated = parseChatTranslations(result.text, batch.map((message) => message.id));
+            const originals = batch.map((message) => ({ id: message.id, content: message.content }));
+            return input.target === "english"
+              ? { english: translated, indonesian: originals }
+              : { english: originals, indonesian: translated };
           };
           const caches: ChatTranslationCache[] = [];
           for (const batch of translationBatches(input.messages)) caches.push(await translateBatch(batch));

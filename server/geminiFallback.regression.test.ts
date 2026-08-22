@@ -84,32 +84,17 @@ describe("Google Gemini fallback", () => {
     expect(invokeLLM.mock.calls).toHaveLength(fallbackCallsBefore);
   });
 
-  it("splits a truncated long translation batch and preserves both display directions", async () => {
+  it("does not automatically retry a truncated normal translation batch", async () => {
     const geminiCallsBefore = invokeGoogleGemini.mock.calls.length;
     const messages = [
       { id: "long-1", content: "A".repeat(550) },
       { id: "long-2", content: "B".repeat(550) },
       { id: "long-3", content: "C".repeat(550) },
     ];
-    const cache = (items: typeof messages) => ({
-      text: JSON.stringify({
-        translations: items.map((item) => ({ id: item.id, content: `English ${item.id}` })),
-      }),
-      truncated: false,
-    });
-    invokeGoogleGemini
-      .mockResolvedValueOnce({ text: "{\"translations\":[", truncated: true })
-      .mockResolvedValueOnce(cache(messages.slice(0, 1)))
-      .mockResolvedValueOnce(cache(messages.slice(1, 2)))
-      .mockResolvedValueOnce(cache(messages.slice(2, 3)));
+    invokeGoogleGemini.mockResolvedValueOnce({ text: "{\"translations\":[", truncated: true });
 
-    await expect(appRouter.createCaller(context()).study.translateChat({ model: "gemini-3-flash-preview", target: "english", messages })).resolves.toEqual({
-      translations: {
-        english: messages.map((item) => ({ id: item.id, content: `English ${item.id}` })),
-        indonesian: messages.map((item) => ({ id: item.id, content: item.content })),
-      },
-    });
-    expect(invokeGoogleGemini.mock.calls).toHaveLength(geminiCallsBefore + 4);
+    await expect(appRouter.createCaller(context()).study.translateChat({ model: "gemini-3-flash-preview", target: "english", messages })).rejects.toMatchObject({ code: "BAD_GATEWAY" });
+    expect(invokeGoogleGemini.mock.calls).toHaveLength(geminiCallsBefore + 1);
   });
 
   it("returns an actionable translation error when Gemini and both gateway fallbacks have exhausted quota", async () => {
