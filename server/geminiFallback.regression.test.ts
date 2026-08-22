@@ -67,7 +67,8 @@ describe("Google Gemini fallback", () => {
       },
     });
 
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 3600, maxRetries: 1 }));
+    expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 1800, timeoutMs: 24_000 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 1800, maxRetries: 1 }));
   });
 
   it("returns an actionable translation error when Gemini and both gateway fallbacks have exhausted quota", async () => {
@@ -86,8 +87,8 @@ describe("Google Gemini fallback", () => {
       message: "Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
     });
 
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 3600 }));
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "claude-haiku-4-5", maxTokens: 3600 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 1800 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "claude-haiku-4-5", maxTokens: 1800 }));
   });
 
   it("returns a Chat-specific quota message when Gemini and both gateway fallbacks are exhausted", async () => {

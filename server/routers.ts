@@ -264,7 +264,7 @@ function providerUnavailableError(error: unknown) {
   return new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI is temporarily unavailable. Please try again." });
 }
 
-async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, geminiAccess?: { apiKey?: string; source: "personal" | "server" }) {
+async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, geminiAccess?: { apiKey?: string; source: "personal" | "server" }, timeoutMs = providerTimeoutMs(responseStyle)) {
   const jsonSchema = typeof json === "object" ? json : { name: "studyos_json", schema: { type: "object", additionalProperties: true } };
   let response: { text: string; truncated: boolean };
   let provider: string;
@@ -276,7 +276,7 @@ async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-
   }));
   if (model === "gemini-3-flash-preview") {
     try {
-      response = await invokeGoogleGemini({ messages, maxTokens, json: Boolean(json), ...(typeof json === "object" ? { jsonSchema: json.schema } : {}), apiKey: geminiAccess?.apiKey, timeoutMs: providerTimeoutMs(responseStyle) });
+      response = await invokeGoogleGemini({ messages, maxTokens, json: Boolean(json), ...(typeof json === "object" ? { jsonSchema: json.schema } : {}), apiKey: geminiAccess?.apiKey, timeoutMs });
       provider = geminiAccess?.source === "personal" ? "Google Gemini · personal key" : "Google Gemini · server key";
     } catch (error) {
       const code = error instanceof TRPCError ? error.code : "UNAVAILABLE";
@@ -315,9 +315,9 @@ async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-
   return { ...formatStudyResponse(response.text), truncated: response.truncated, provider } satisfies StudyAIResult;
 }
 
-async function invokeStudyAIForUser(userId: number | undefined, model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false) {
+async function invokeStudyAIForUser(userId: number | undefined, model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, timeoutMs?: number) {
   const geminiAccess = model === "gemini-3-flash-preview" ? await personalGeminiAccess(userId) : undefined;
-  return invokeStudyAI(model, messages, maxTokens, responseStyle, json, geminiAccess);
+  return invokeStudyAI(model, messages, maxTokens, responseStyle, json, geminiAccess, timeoutMs);
 }
 
 function isPrivateAddress(address: string) {
@@ -482,7 +482,7 @@ export const appRouter = router({
               "Return JSON only in exactly this shape: {\"english\":[{\"id\":\"original id\",\"content\":\"natural English translation\"}],\"indonesian\":[{\"id\":\"original id\",\"content\":\"natural Bahasa Indonesia translation\"}]}. Return every supplied id exactly once in each array.",
             ].join("\n\n") },
             { role: "user", content: JSON.stringify({ messages: input.messages }) },
-          ], 3_600, "Balanced", {
+          ], 1_800, "Balanced", {
             name: "chat_translations",
             schema: {
               type: "object",
@@ -509,7 +509,7 @@ export const appRouter = router({
               required: ["english", "indonesian"],
               additionalProperties: false,
             },
-          });
+          }, 24_000);
           return { translations: parseChatTranslationCache(result.text, input.messages.map((message) => message.id)) };
         } catch (error) {
           if (error instanceof TRPCError && error.code === "PRECONDITION_FAILED") {
