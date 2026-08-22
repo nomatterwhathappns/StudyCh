@@ -196,7 +196,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
   const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">(() => localStorage.getItem("studyos_chat_translation_target") === "indonesian" ? "indonesian" : "english");
   const [translatedMessages, setTranslatedMessages] = useState<ChatTranslationCache>(emptyChatTranslationCache);
   const saveAssistantResponse = (response: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => addMessage(session.id, { role: "assistant", content: response.text, citations: attachMaterialIds(session, response.citations), truncated: response.truncated, ...(response.provider ? { provider: response.provider } : {}) });
-  const friendlyChatError = (message: string) => /Respons Chat belum tersedia karena kuota AI provider/i.test(message) ? message : /too_big|too_small|expected string|materials|history/i.test(message) ? "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikannya—silakan kirim ulang pesanmu." : "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
+  const friendlyChatError = (message: string) => /(?:Respons Chat belum tersedia karena kuota AI provider|Google Gemini sedang membatasi request)/i.test(message) ? message : /too_big|too_small|expected string|materials|history/i.test(message) ? "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikannya—silakan kirim ulang pesanmu." : "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
   const friendlyTranslationError = (message: string) => /Penerjemahan Chat tidak tersedia karena kuota AI provider/i.test(message) ? message : "Penerjemahan sedang tidak tersedia. Teks asli tetap aman—coba lagi beberapa saat lagi atau gunakan provider AI lain.";
   const clearStreamPreview = () => { setStreaming(false); setStreamRecovery(false); setStreamedText(""); setStreamProvider(""); streamedTextRef.current = ""; streamProviderRef.current = ""; streamRecoveryRef.current = false; };
   const chat = trpc.study.chat.useMutation();
@@ -268,6 +268,8 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
       if (!complete) throw new Error("The streamed response ended too early.");
     } catch (reason) {
       if (run !== chatRunRef.current || (reason instanceof DOMException && reason.name === "AbortError")) return;
+      const streamMessage = reason instanceof Error ? reason.message : "";
+      if (/Google Gemini sedang membatasi request/i.test(streamMessage)) { clearStreamPreview(); setError(friendlyChatError(streamMessage)); return; }
       if (streamedTextRef.current.trim()) { streamRecoveryRef.current = true; setStreamRecovery(true); }
       chat.mutate(payload, { onSuccess: (response) => { if (run !== chatRunRef.current) return; saveAssistantResponse(response); clearStreamPreview(); }, onError: (error) => { if (run !== chatRunRef.current) return; const partialText = streamedTextRef.current.trim(); if (streamRecoveryRef.current && partialText) saveAssistantResponse({ text: partialText, citations: [], truncated: true, ...(streamProviderRef.current ? { provider: streamProviderRef.current } : {}) }); clearStreamPreview(); setError(friendlyChatError(error.message)); } });
     } finally {

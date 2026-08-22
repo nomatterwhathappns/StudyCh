@@ -44,6 +44,7 @@ export function normalizeStreamPayload(body: unknown) {
 
 export function streamErrorMessage(reason: unknown) {
   if (reason instanceof z.ZodError) return "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikan data chat—silakan kirim ulang pesanmu.";
+  if (reason instanceof Error && /Gemini stream failed \(429\)/i.test(reason.message)) return "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mengirim pesan lagi.";
   return "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
 }
 
@@ -188,7 +189,7 @@ async function streamGemini(messages: StreamMessage[], apiKey: string, maxTokens
     }),
     signal: AbortSignal.timeout(timeoutMs),
   });
-  if (!response.ok) throw new Error(`Gemini stream failed (${response.status}).`);
+  if (!response.ok) throw new Error(`Gemini stream failed (${response.status}): ${(await response.text()).slice(0, 300)}`);
 
   let text = "";
   let finishReason: string | undefined;

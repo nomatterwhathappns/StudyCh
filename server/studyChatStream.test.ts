@@ -24,6 +24,10 @@ describe("study chat streaming payload", () => {
     expect(streamErrorMessage(result.error)).toMatch(/Konteks chat terlalu besar atau belum lengkap/i);
   });
 
+  it("preserves an explicit Gemini rate-limit message for the Chat interface", () => {
+    expect(streamErrorMessage(new Error("Gemini stream failed (429): quota exceeded"))).toMatch(/Google Gemini sedang membatasi request/i);
+  });
+
   it("extracts built-in fallback content from delta, message, and text payload variants", () => {
     expect(extractBuiltInStreamContent(JSON.stringify({ choices: [{ delta: { content: "Delta" } }] }))).toBe("Delta");
     expect(extractBuiltInStreamContent(JSON.stringify({ choices: [{ message: { content: "Complete response" } }] }))).toBe("Complete response");

@@ -183,3 +183,4 @@
 - [x] Menelusuri dan memperbaiki error respons Chat biasa setelah pesan dikirim melalui provider Gemini personal key
 - [x] Menjadikan pemrosesan pesan Chat baru untuk terjemahan hanya berjalan saat pengguna menekan Translate
 - [x] Menelusuri Translate Chat yang masih gagal saat Chat biasa berhasil melalui Gemini personal key
+- [x] Menelusuri kegagalan persisten Chat dan Translate walaupun Gemini personal key telah terkonfigurasi

@@ -77,6 +77,23 @@ function doneOnlyFastFallbackResponse() {
   };
 }
 
+function geminiRateLimitedStreamingResponse() {
+  const encoder = new TextEncoder();
+  let emitted = false;
+  return {
+    ok: true,
+    body: {
+      getReader: () => ({
+        read: async () => {
+          if (emitted) return { done: true, value: undefined };
+          emitted = true;
+          return { done: false, value: encoder.encode('event: error\ndata: {"message":"Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mengirim pesan lagi."}\n\n') };
+        },
+      }),
+    },
+  };
+}
+
 function stagedModeStreamingResponse(mode: "Balanced" | "Deep") {
   const encoder = new TextEncoder();
   const firstToken = `Streaming ${mode}: bagian pertama. `;
@@ -456,6 +473,18 @@ describe("mobile Source and AI flow", () => {
 
     await waitFor(() => expect(ui.getByText(/kuota AI provider untuk proyek ini habis/i)).toBeTruthy());
     expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "user", content: "Jelaskan cloud storage" });
+  });
+
+  it("does not send a duplicate fallback request when Gemini returns a rate limit", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(geminiRateLimitedStreamingResponse() as unknown as Response);
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "Halo" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+
+    await waitFor(() => expect(ui.getByText(/Google Gemini sedang membatasi request/i)).toBeTruthy());
+    expect(chatMutate).not.toHaveBeenCalled();
+    expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "user", content: "Halo" });
   });
 
   it("keeps streaming payload compatible with fallback by clamping materials and dropping blank history", async () => {
