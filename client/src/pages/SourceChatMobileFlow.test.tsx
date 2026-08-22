@@ -1,0 +1,502 @@
+// @vitest-environment jsdom
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import type { StudySession } from "@/lib/study-types";
+
+const { uploadDocumentMutate, chatMutate, chatCallbacks, continueMutate, draftKeyTermMutate, draftKeyTermShouldFail, translateChatMutateAsync, translateChatIsPending, addMaterial, addMessage, addVocabulary } = vi.hoisted(() => ({
+  uploadDocumentMutate: vi.fn(), chatMutate: vi.fn(), continueMutate: vi.fn(), draftKeyTermMutate: vi.fn(), draftKeyTermShouldFail: { value: false }, translateChatMutateAsync: vi.fn(), addMaterial: vi.fn(), addMessage: vi.fn(), addVocabulary: vi.fn(),
+  translateChatIsPending: { value: false },
+  chatCallbacks: { onSuccess: undefined as undefined | ((value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => void), onError: undefined as undefined | ((reason: { message: string }) => void) },
+}));
+
+vi.mock("@/lib/trpc", () => ({
+  trpc: {
+    study: {
+      explain: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
+      fetchSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
+      uploadDocument: { useMutation: () => ({ mutate: uploadDocumentMutate, isPending: false }) },
+      draftKeyTerm: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; definition: string; context: string; example: string }) => void; onError?: (reason: { message: string }) => void }) => { draftKeyTermMutate(input); if (draftKeyTermShouldFail.value) { callbacks?.onError?.({ message: "StudyOS AI could not prepare that Key Term." }); return; } callbacks?.onSuccess?.({ term: "AWS S3", definition: "Object storage from AWS.", context: "It stores objects in buckets.", example: "Store a PDF in an S3 bucket." }); }, reset: vi.fn(), isPending: false }) },
+      chat: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => void; onError?: (reason: { message: string }) => void }) => { chatCallbacks.onSuccess = callbacks?.onSuccess; chatCallbacks.onError = callbacks?.onError; chatMutate(input); }, reset: vi.fn(), isPending: false }) },
+      translateChat: { useMutation: () => ({ mutateAsync: translateChatMutateAsync, reset: vi.fn(), isPending: translateChatIsPending.value }) },
+      continue: { useMutation: (options: { onSuccess?: (value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean }) => void }) => ({ mutate: (input: unknown) => { continueMutate(input); options.onSuccess?.({ text: "Lanjutan yang selesai.", citations: [], truncated: false }); }, isPending: false }) },
+    },
+  },
+}));
+
+vi.mock("@/store/useStudyStore", () => ({
+  useStudyStore: () => ({ addMaterial, deleteMaterial: vi.fn(), addVocabulary, addMessage, updateSession: vi.fn(), deleteSession: vi.fn() }),
+}));
+
+import { AiCancellationDock, ChatPanel, SourcePanel } from "./StudyWorkspace";
+
+const session: StudySession = {
+  id: "session-mobile", name: "Plant biology", createdAt: 1, isPinned: false, materials: [{ id: "plant-source", title: "Plants.md", type: "file", content: "Photosynthesis turns light energy into chemical energy in plants.", format: "MD", createdAt: 1 }], chatHistory: [], vocabulary: [], notes: [], quizzes: [], studySeconds: 0,
+};
+const fastFallbackText = "AWS Lambda menjalankan kode saat dipicu event.";
+const fastFallbackProvider = "StudyOS AI gateway · Fast fallback";
+
+class TestFileReader {
+  result: string | ArrayBuffer | null = null;
+  onload: ((event: ProgressEvent<FileReader>) => void) | null = null;
+  onerror: ((event: ProgressEvent<FileReader>) => void) | null = null;
+  readAsDataURL() { this.result = "data:text/plain;base64,UGxhbnRzIHVzZSBsaWdodC4="; this.onload?.(new ProgressEvent("load") as ProgressEvent<FileReader>); }
+}
+
+function streamingResponse() {
+  const encoder = new TextEncoder();
+  let emitted = false;
+  return {
+    ok: true,
+    body: {
+      getReader: () => ({
+        read: async () => {
+          if (emitted) return { done: true, value: undefined };
+          emitted = true;
+          return { done: false, value: encoder.encode('event: meta\ndata: {"provider":"StudyOS AI gateway · GPT-5 mini"}\n\nevent: token\ndata: {"token":"Photosynthesis uses light."}\n\nevent: done\ndata: {"text":"Photosynthesis uses light.","citations":[],"truncated":false,"provider":"StudyOS AI gateway · GPT-5 mini"}\n\n') };
+        },
+      }),
+    },
+  };
+}
+
+function doneOnlyFastFallbackResponse() {
+  const encoder = new TextEncoder();
+  let emitted = false;
+  return {
+    ok: true,
+    body: {
+      getReader: () => ({
+        read: async () => {
+          if (emitted) return { done: true, value: undefined };
+          emitted = true;
+          return { done: false, value: encoder.encode(`event: meta\ndata: {"provider":"${fastFallbackProvider}"}\n\nevent: done\ndata: {"text":"${fastFallbackText}","citations":[],"truncated":false,"provider":"${fastFallbackProvider}"}\n\n`) };
+        },
+      }),
+    },
+  };
+}
+
+function stagedModeStreamingResponse(mode: "Balanced" | "Deep") {
+  const encoder = new TextEncoder();
+  const firstToken = `Streaming ${mode}: bagian pertama. `;
+  const finalText = `${firstToken}Bagian kedua sudah selesai.`;
+  let phase = 0;
+  let releaseSecondChunk = () => {};
+  const secondChunk = new Promise<void>((resolve) => { releaseSecondChunk = resolve; });
+  return {
+    firstToken,
+    finalText,
+    releaseSecondChunk,
+    response: {
+      ok: true,
+      body: {
+        getReader: () => ({
+          read: async () => {
+            if (phase === 0) {
+              phase += 1;
+              return { done: false, value: encoder.encode(`event: meta\ndata: {"provider":"StudyOS AI gateway · GPT-5 mini"}\n\nevent: token\ndata: {"token":"${firstToken}"}\n\n`) };
+            }
+            if (phase === 1) {
+              await secondChunk;
+              phase += 1;
+              return { done: false, value: encoder.encode(`event: token\ndata: {"token":"Bagian kedua sudah selesai."}\n\nevent: done\ndata: {"text":"${finalText}","citations":[],"truncated":false,"provider":"StudyOS AI gateway · GPT-5 mini","mode":"${mode}"}\n\n`) };
+            }
+            return { done: true, value: undefined };
+          },
+        }),
+      },
+    },
+  };
+}
+
+function interruptedStreamingResponse() {
+  const encoder = new TextEncoder();
+  const partialText = "Bagian awal respons tetap terlihat. ";
+  let emitted = false;
+  return {
+    partialText,
+    response: {
+      ok: true,
+      body: {
+        getReader: () => ({
+          read: async () => {
+            if (emitted) return { done: true, value: undefined };
+            emitted = true;
+            return { done: false, value: encoder.encode(`event: meta\ndata: {"provider":"Google Gemini 3.6 Flash · Personal key"}\n\nevent: token\ndata: {"token":"${partialText}"}\n\n`) };
+          },
+        }),
+      },
+    },
+  };
+}
+
+function cancelableStreamingResponse() {
+  const encoder = new TextEncoder();
+  const partialText = "Bagian awal yang dapat dibatalkan. ";
+  let phase = 0;
+  let releaseLateChunk = () => {};
+  const lateChunk = new Promise<void>((resolve) => { releaseLateChunk = resolve; });
+  return {
+    partialText,
+    releaseLateChunk,
+    response: {
+      ok: true,
+      body: {
+        getReader: () => ({
+          read: async () => {
+            if (phase === 0) {
+              phase += 1;
+              return { done: false, value: encoder.encode(`event: token\ndata: {"token":"${partialText}"}\n\n`) };
+            }
+            if (phase === 1) {
+              await lateChunk;
+              phase += 1;
+              return { done: false, value: encoder.encode('event: done\ndata: {"text":"Respons terlambat tidak boleh tersimpan.","citations":[],"truncated":false}\n\n') };
+            }
+            return { done: true, value: undefined };
+          },
+        }),
+      },
+    },
+  };
+}
+
+describe("mobile Source and AI flow", () => {
+  beforeEach(() => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 375 });
+    vi.stubGlobal("FileReader", TestFileReader);
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callback(0); return 1; });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(streamingResponse()));
+    uploadDocumentMutate.mockReset(); chatMutate.mockReset(); chatCallbacks.onSuccess = undefined; chatCallbacks.onError = undefined; continueMutate.mockReset(); draftKeyTermMutate.mockReset(); draftKeyTermShouldFail.value = false; translateChatMutateAsync.mockReset(); translateChatIsPending.value = false; addMaterial.mockReset(); addMessage.mockReset(); addVocabulary.mockReset();
+    localStorage.clear();
+  });
+  afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+
+  it("shows cancel controls for AI activities and invokes only the selected cancellation handler", async () => {
+    const cancelTranslation = vi.fn();
+    const cancelAddTerms = vi.fn();
+    const cancelQuiz = vi.fn();
+    const ui = render(<AiCancellationDock />);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "translate-chat", label: "Translate chat", pending: true, cancel: cancelTranslation } }));
+      window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "add-terms", label: "Add Terms", pending: true, cancel: cancelAddTerms } }));
+      window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "generate-quiz", label: "Generate quiz", pending: true, cancel: cancelQuiz } }));
+    });
+
+    fireEvent.click(ui.getByRole("button", { name: "Cancel Translate chat" }));
+    expect(cancelTranslation).toHaveBeenCalledTimes(1);
+    expect(cancelAddTerms).not.toHaveBeenCalled();
+    expect(cancelQuiz).not.toHaveBeenCalled();
+    fireEvent.click(ui.getByRole("button", { name: "Cancel Add Terms" }));
+    expect(cancelAddTerms).toHaveBeenCalledTimes(1);
+    expect(cancelQuiz).not.toHaveBeenCalled();
+    fireEvent.click(ui.getByRole("button", { name: "Cancel Generate quiz" }));
+    expect(cancelQuiz).toHaveBeenCalledTimes(1);
+    act(() => window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "translate-chat", label: "Translate chat", pending: false } })));
+    await waitFor(() => expect(ui.queryByRole("button", { name: "Cancel Translate chat" })).toBeNull());
+    expect(ui.getByRole("button", { name: "Cancel Add Terms" })).toBeTruthy();
+    expect(ui.getByRole("button", { name: "Cancel Generate quiz" })).toBeTruthy();
+  });
+
+  it.each([["desktop", 1280], ["mobile", 375]] as const)("keeps a cancelled Chat response out of history on %s", async (_viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    const stream = cancelableStreamingResponse();
+    vi.mocked(fetch).mockResolvedValueOnce(stream.response as unknown as Response);
+    const ui = render(<><ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} /><AiCancellationDock /></>);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "Jelaskan bucket S3" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+
+    await waitFor(() => expect(ui.getByText(stream.partialText.trim())).toBeTruthy());
+    fireEvent.click(ui.getByRole("button", { name: "Cancel AI response" }));
+    stream.releaseLateChunk();
+
+    await waitFor(() => expect(ui.queryByRole("button", { name: "Cancel AI response" })).toBeNull());
+    expect(addMessage.mock.calls.some(([, message]) => (message as { role?: string; content?: string }).role === "assistant" && (message as { content?: string }).content === "Respons terlambat tidak boleh tersimpan.")).toBe(false);
+  });
+
+  it("accepts a source file and sends a query-aware source context to AI on a narrow viewport", async () => {
+    const sourceUi = render(<SourcePanel session={session} />);
+    const input = sourceUi.container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [new File(["Plants use light."], "plants.txt", { type: "text/plain" })] } });
+    await waitFor(() => expect(uploadDocumentMutate).toHaveBeenCalledWith({ name: "plants.txt", mimeType: "text/plain", dataUrl: "data:text/plain;base64,UGxhbnRzIHVzZSBsaWdodC4=" }));
+    sourceUi.unmount();
+
+    const chatUi = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = chatUi.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "How does photosynthesis use light?" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/study/chat-stream", expect.objectContaining({
+      method: "POST",
+      body: expect.stringContaining("[Source: Plants.md · part 1]"),
+    })));
+    expect(chatMutate).not.toHaveBeenCalled();
+    expect(addMessage).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
+      role: "assistant", content: "Photosynthesis uses light.",
+    }));
+    expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "user", content: "How does photosynthesis use light?" });
+    expect(JSON.parse((vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit).body as string)).toEqual(expect.objectContaining({
+      sessionName: "Plant biology",
+      materials: expect.stringContaining("[Source: Plants.md · part 1]"),
+      history: [{ role: "user", content: "How does photosynthesis use light?" }],
+    }));
+  });
+
+  it("saves a non-empty Fast fallback answer when the stream has a done event but no token events", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(doneOnlyFastFallbackResponse() as unknown as Response);
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "What does AWS Lambda do?" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+
+    await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", expect.objectContaining({
+      role: "assistant",
+      content: fastFallbackText,
+      provider: fastFallbackProvider,
+    })));
+    expect(chatMutate).not.toHaveBeenCalled();
+  });
+
+  it.each([["desktop", 1280], ["mobile", 375]] as const)("uses an explicit English target, flips the next label, and keeps the UI language unchanged on %s", async (_viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    localStorage.setItem("studyos_ai_model", "claude-haiku-4-5");
+    const translatedSession: StudySession = {
+      ...session,
+      chatHistory: [
+        { id: "english-user", role: "user", content: "Can you explain cloud storage?", createdAt: 1 },
+        { id: "indonesian-ai", role: "assistant", content: "Cloud storage menyimpan file lewat internet.", createdAt: 2 },
+      ],
+    };
+    translateChatMutateAsync.mockResolvedValueOnce({ translations: [
+      { id: "english-user", content: "Can you explain cloud storage?" },
+      { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
+    ] });
+    const sourceUi = render(<SourcePanel session={translatedSession} />);
+    const ui = render(<ChatPanel session={translatedSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    expect(sourceUi.getByRole("button", { name: "Translate to English" })).toBeTruthy();
+    expect(ui.getByLabelText("Translate chat to English")).toBeTruthy();
+    fireEvent.click(ui.getByLabelText("Translate chat to English"));
+    await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ messages: [
+      { id: "english-user", content: "Can you explain cloud storage?" },
+      { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
+    ], target: "english", model: "claude-haiku-4-5" })));
+    await waitFor(() => expect(ui.getByText("Can you explain cloud storage?")).toBeTruthy());
+    expect(ui.getByText("Cloud storage stores files over the internet.")).toBeTruthy();
+    expect(ui.getByLabelText("Ask StudyOS")).toBeTruthy();
+    expect(ui.getByLabelText("Translate chat to Indonesian")).toBeTruthy();
+    await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy());
+    sourceUi.unmount();
+  });
+
+  it.each([["desktop", 1280], ["mobile", 375]] as const)("shows a translation progress indicator while Chat translation is loading on %s", async (_viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    localStorage.setItem("studyos_translate_mode", "true");
+    localStorage.setItem("studyos_chat_translation_target", "english");
+    translateChatIsPending.value = true;
+    translateChatMutateAsync.mockReturnValue(new Promise(() => undefined));
+    const translatingSession: StudySession = { ...session, chatHistory: [{ id: "pending-message", role: "user", content: "Halo", createdAt: 1 }] };
+    const sourceUi = render(<SourcePanel session={translatingSession} />);
+    const ui = render(<ChatPanel session={translatingSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    expect(ui.getByRole("status").textContent).toContain("Translating chat to English");
+    await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translating to English…" })).toBeTruthy());
+    expect((ui.getByLabelText("Translate chat to Indonesian") as HTMLButtonElement).disabled).toBe(true);
+    sourceUi.unmount();
+  });
+
+  it.each([["desktop", 1280], ["mobile", 375]] as const)("stops translation cleanly after a provider failure and retries only on request on %s", async (_viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    localStorage.setItem("studyos_translate_mode", "true");
+    localStorage.setItem("studyos_chat_translation_target", "english");
+    translateChatMutateAsync
+      .mockRejectedValueOnce(new Error("Provider temporarily unavailable"))
+      .mockResolvedValueOnce({ translations: [{ id: "retry-message", content: "Hello again" }] });
+    const retrySession: StudySession = { ...session, chatHistory: [{ id: "retry-message", role: "user", content: "Halo lagi", createdAt: 1 }] };
+    const sourceUi = render(<SourcePanel session={retrySession} />);
+    const ui = render(<ChatPanel session={retrySession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    await waitFor(() => expect(ui.getByRole("alert").textContent).toContain("Penerjemahan sedang tidak tersedia"));
+    expect(ui.queryByRole("status")).toBeNull();
+    expect(ui.getByText("Halo lagi")).toBeTruthy();
+    expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translate to English" })).toBeTruthy());
+
+    fireEvent.click(ui.getByRole("button", { name: "Try translation again" }));
+    await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(ui.queryByRole("alert")).toBeNull());
+    expect(ui.getByText("Hello again")).toBeTruthy();
+    sourceUi.unmount();
+  });
+
+  it.each([["desktop", 1280], ["mobile", 375]])("renders the persisted Fast fallback answer as a non-empty AI bubble on %s", async (_viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    vi.mocked(fetch).mockResolvedValueOnce(doneOnlyFastFallbackResponse() as unknown as Response);
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "What does AWS Lambda do?" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+
+    await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", expect.objectContaining({ content: fastFallbackText })));
+    ui.rerender(<ChatPanel session={{ ...session, chatHistory: [{ id: `fast-fallback-${width}`, role: "assistant", content: fastFallbackText, provider: fastFallbackProvider, createdAt: 2 }] }} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    expect(ui.getByText(fastFallbackText)).toBeTruthy();
+    expect(ui.getByTestId("ai-provider-label").textContent).toContain(`Used: ${fastFallbackProvider}`);
+  });
+
+  it.each([
+    ["Balanced", "desktop", 1280],
+    ["Balanced", "mobile", 375],
+    ["Deep", "desktop", 1280],
+    ["Deep", "mobile", 375],
+  ] as const)("streams and renders the completed %s answer on %s", async (mode, _viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    localStorage.setItem("studyos_ai_style", mode);
+    const stream = stagedModeStreamingResponse(mode);
+    vi.mocked(fetch).mockResolvedValueOnce(stream.response as unknown as Response);
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "Explain cloud storage" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+
+    await waitFor(() => expect(ui.getByText(stream.firstToken.trim())).toBeTruthy());
+    const sentPayload = JSON.parse((vi.mocked(fetch).mock.calls.at(-1)?.[1] as RequestInit).body as string);
+    expect(sentPayload.responseStyle).toBe(mode);
+    expect(addMessage.mock.calls.some(([, message]) => (message as { role?: string }).role === "assistant")).toBe(false);
+
+    stream.releaseSecondChunk();
+    await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", expect.objectContaining({ role: "assistant", content: stream.finalText })));
+    ui.rerender(<ChatPanel session={{ ...session, chatHistory: [{ id: `streamed-${mode}-${width}`, role: "assistant", content: stream.finalText, provider: "StudyOS AI gateway · GPT-5 mini", createdAt: 2 }] }} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    expect(ui.getByText(stream.finalText)).toBeTruthy();
+    expect(ui.getByTestId("ai-provider-label").textContent).toContain("Used: StudyOS AI gateway · GPT-5 mini");
+  });
+
+  it.each([["desktop", 1280], ["mobile", 375]] as const)("keeps streamed text visible instead of returning to dots while fallback prepares the final answer on %s", async (_viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    const stream = interruptedStreamingResponse();
+    vi.mocked(fetch).mockResolvedValueOnce(stream.response as unknown as Response);
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "Jelaskan penyimpanan cloud" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+
+    await waitFor(() => expect(ui.getByText(stream.partialText.trim())).toBeTruthy());
+    await waitFor(() => expect(chatMutate).toHaveBeenCalled());
+    expect(ui.container.querySelector(".study-thinking")).toBeNull();
+    expect(ui.getByText(stream.partialText.trim())).toBeTruthy();
+
+    act(() => chatCallbacks.onSuccess?.({ text: "Jawaban cadangan sudah selesai.", citations: [], truncated: false, provider: "StudyOS AI gateway · GPT-5 mini" }));
+    await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", expect.objectContaining({ role: "assistant", content: "Jawaban cadangan sudah selesai." })));
+  });
+
+  it("keeps streaming payload compatible with fallback by clamping materials and dropping blank history", async () => {
+    const largeSession: StudySession = {
+      ...session,
+      materials: [{ ...session.materials[0], content: "AWS Lambda runs event-driven code.\n\n".repeat(500) }],
+      chatHistory: [
+        { id: "prior-user", role: "user", content: "Explain serverless", createdAt: 1 },
+        { id: "empty-stream", role: "assistant", content: "", createdAt: 2 },
+      ],
+    };
+    const ui = render(<ChatPanel session={largeSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "What is AWS Lambda?" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    const payload = JSON.parse((vi.mocked(fetch).mock.calls[0]?.[1] as RequestInit).body as string) as { materials: string; history: Array<{ role: string; content: string }> };
+    expect(payload.materials.length).toBeLessThanOrEqual(10_000);
+    expect(payload.history).toEqual([
+      { role: "user", content: "Explain serverless" },
+      { role: "user", content: "What is AWS Lambda?" },
+    ]);
+  });
+
+  it("scrolls to the newest message after sending without pulling a reader away from earlier history", () => {
+    const historySession: StudySession = {
+      ...session,
+      chatHistory: [{ id: "earlier", role: "assistant", content: "Earlier answer", createdAt: 1 }],
+    };
+    const ui = render(<ChatPanel session={historySession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const viewport = ui.container.querySelector("[data-slot='scroll-area-viewport']") as HTMLElement;
+    const scrollTo = vi.fn();
+    Object.defineProperties(viewport, {
+      scrollHeight: { configurable: true, value: 960 },
+      clientHeight: { configurable: true, value: 240 },
+      scrollTop: { configurable: true, writable: true, value: 720 },
+      scrollTo: { configurable: true, value: scrollTo },
+    });
+
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "Show the latest answer" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+    expect(scrollTo).toHaveBeenCalledWith({ top: 960, behavior: "smooth" });
+
+    scrollTo.mockClear();
+    viewport.scrollTop = 40;
+    fireEvent.scroll(viewport);
+    ui.rerender(<ChatPanel session={{ ...historySession, chatHistory: [...historySession.chatHistory, { id: "newer", role: "assistant", content: "New answer", createdAt: 2 }] }} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("renders citation chips and continues a response that reached the output limit", () => {
+    const focusSource = vi.fn();
+    window.addEventListener("studyos:focus-source", focusSource);
+    const truncatedSession: StudySession = {
+      ...session,
+      chatHistory: [
+        { id: "question", role: "user", content: "Jelaskan fotosintesis", createdAt: 1 },
+        { id: "answer", role: "assistant", content: "Fotosintesis memakai cahaya.", citations: [{ title: "Plants.md", ordinal: 1, materialId: "plant-source" }], truncated: true, createdAt: 2 },
+      ],
+    };
+    try {
+      const ui = render(<ChatPanel session={truncatedSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+      const citation = ui.getByRole("button", { name: /Plants\.md.*part 1/i });
+      fireEvent.click(citation);
+      expect(focusSource).toHaveBeenCalledWith(expect.objectContaining({ detail: { sessionId: "session-mobile", materialId: "plant-source", ordinal: 1 } }));
+
+      fireEvent.click(ui.getByRole("button", { name: /Continue answer/i }));
+      expect(continueMutate).toHaveBeenCalledWith(expect.objectContaining({
+        history: [{ role: "user", content: "Jelaskan fotosintesis" }, { role: "assistant", content: "Fotosintesis memakai cahaya." }],
+      }));
+      expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "assistant", content: "Lanjutan yang selesai.", citations: [], truncated: false });
+    } finally {
+      window.removeEventListener("studyos:focus-source", focusSource);
+    }
+  });
+
+  it("creates an AI draft from a selection, allows manual edits, and saves the complete Key Term", () => {
+    const ui = render(<SourcePanel session={session} />);
+    fireEvent.click(ui.getByRole("button", { name: "Read" }));
+    const reading = ui.getByText("Photosynthesis turns light energy into chemical energy in plants.");
+    const range = document.createRange();
+    range.selectNodeContents(reading);
+    const selection = window.getSelection();
+    selection?.removeAllRanges(); selection?.addRange(range);
+    fireEvent.mouseUp(reading.closest("article")!);
+
+    fireEvent.click(ui.getByRole("button", { name: "Save term" }));
+    expect(draftKeyTermMutate).toHaveBeenCalledWith(expect.objectContaining({ selection: expect.stringContaining("Photosynthesis turns light energy into chemical energy in plants.") }));
+    fireEvent.change(ui.getByLabelText("Key Term"), { target: { value: "Amazon S3" } });
+    fireEvent.click(ui.getByRole("button", { name: "Save Key Term" }));
+    expect(addVocabulary).toHaveBeenCalledWith("session-mobile", "Amazon S3", "Object storage from AWS.", expect.objectContaining({
+      context: "It stores objects in buckets.", example: "Store a PDF in an S3 bucket.", sourceExcerpt: expect.stringContaining("Photosynthesis turns light energy into chemical energy in plants."),
+    }));
+  });
+
+  it("shows a drafting error and does not save a Key Term when AI drafting fails", () => {
+    draftKeyTermShouldFail.value = true;
+    const ui = render(<SourcePanel session={session} />);
+    fireEvent.click(ui.getByRole("button", { name: "Read" }));
+    const reading = ui.getByText("Photosynthesis turns light energy into chemical energy in plants.");
+    const range = document.createRange(); range.selectNodeContents(reading);
+    const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+    fireEvent.mouseUp(reading.closest("article")!);
+
+    fireEvent.click(ui.getByRole("button", { name: "Save term" }));
+    expect(ui.getByText("StudyOS AI could not prepare that Key Term.")).toBeTruthy();
+    expect(addVocabulary).not.toHaveBeenCalled();
+    expect(ui.queryByRole("button", { name: "Save Key Term" })).toBeNull();
+  });
+});
