@@ -4,6 +4,7 @@ const { invokeLLM, invokeGoogleGemini } = vi.hoisted(() => ({ invokeLLM: vi.fn()
 vi.mock("./_core/llm", () => ({ invokeLLM }));
 vi.mock("./googleGemini", async (importOriginal) => ({ ...(await importOriginal<typeof import("./googleGemini")>()), invokeGoogleGemini }));
 
+import { TRPCError } from "@trpc/server";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
@@ -69,6 +70,22 @@ describe("Google Gemini fallback", () => {
 
     expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 1800, timeoutMs: 24_000 }));
     expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 1800, maxRetries: 1 }));
+  });
+
+  it("preserves a Gemini 429 instead of consuming an exhausted gateway fallback", async () => {
+    const fallbackCallsBefore = invokeLLM.mock.calls.length;
+    invokeGoogleGemini.mockRejectedValueOnce(new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mencoba lagi." }));
+
+    await expect(appRouter.createCaller(context()).study.translateChat({
+      model: "gemini-3-flash-preview",
+      target: "english",
+      messages: [{ id: "rate-user", content: "Halo" }],
+    })).rejects.toMatchObject({
+      code: "TOO_MANY_REQUESTS",
+      message: "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mencoba lagi.",
+    });
+
+    expect(invokeLLM.mock.calls).toHaveLength(fallbackCallsBefore);
   });
 
   it("returns an actionable translation error when Gemini and both gateway fallbacks have exhausted quota", async () => {

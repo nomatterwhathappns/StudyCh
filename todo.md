@@ -184,3 +184,4 @@
 - [x] Menjadikan pemrosesan pesan Chat baru untuk terjemahan hanya berjalan saat pengguna menekan Translate
 - [x] Menelusuri Translate Chat yang masih gagal saat Chat biasa berhasil melalui Gemini personal key
 - [x] Menelusuri kegagalan persisten Chat dan Translate walaupun Gemini personal key telah terkonfigurasi
+- [x] Mengaudit seluruh jalur kode Chat dan Translate terhadap request/log nyata untuk menemukan akar masalah di balik pesan error generik

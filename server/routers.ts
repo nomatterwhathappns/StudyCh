@@ -281,6 +281,7 @@ async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-
     } catch (error) {
       const code = error instanceof TRPCError ? error.code : "UNAVAILABLE";
       console.warn("[StudyOS AI] Google Gemini unavailable; using built-in fallback", { code });
+      if (error instanceof TRPCError && error.code === "TOO_MANY_REQUESTS") throw error;
       try {
         response = await invokeBuiltIn("gpt-5-mini");
         provider = "StudyOS AI gateway · GPT-5 mini fallback";

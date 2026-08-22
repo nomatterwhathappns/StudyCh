@@ -62,7 +62,11 @@ export async function invokeGoogleGemini({ messages, maxTokens, json = false, js
   });
 
   if (!response.ok) {
-    console.error("[Google Gemini] request failed", response.status, await response.text());
+    const detail = await response.text();
+    console.error("[Google Gemini] request failed", response.status, detail);
+    if (response.status === 429) {
+      throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mencoba lagi." });
+    }
     throw new TRPCError({ code: "BAD_GATEWAY", message: "Google Gemini could not complete the request. Check the API key, model access, and billing status." });
   }
 

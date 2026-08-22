@@ -241,7 +241,8 @@ export function registerStudyChatStream(app: Express) {
           provider = credential.source === "personal" ? "Google Gemini 3.6 Flash · Personal key" : "Google Gemini 3.6 Flash · Server key";
           event(res, "meta", { provider });
           result = await streamGemini(messages, credential.apiKey, maxTokens, timeoutMs, writeToken);
-        } catch {
+        } catch (error) {
+          if (error instanceof Error && /Gemini stream failed \(429\)/i.test(error.message)) throw error;
           provider = "StudyOS AI gateway · Fast fallback";
           event(res, "meta", { provider, fallback: true });
           result = await streamBuiltIn(messages, "gpt-5-mini", maxTokens, timeoutMs, writeToken);
