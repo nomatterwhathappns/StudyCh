@@ -433,6 +433,20 @@ describe("mobile Source and AI flow", () => {
     await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", expect.objectContaining({ role: "assistant", content: "Jawaban cadangan sudah selesai." })));
   });
 
+  it("explains an exhausted provider quota after the Chat stream falls back", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, body: null } as unknown as Response);
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "Jelaskan cloud storage" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+
+    await waitFor(() => expect(chatMutate).toHaveBeenCalled());
+    act(() => chatCallbacks.onError?.({ message: "Respons Chat belum tersedia karena kuota AI provider untuk proyek ini habis. Pesan kamu tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif." }));
+
+    await waitFor(() => expect(ui.getByText(/kuota AI provider untuk proyek ini habis/i)).toBeTruthy());
+    expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "user", content: "Jelaskan cloud storage" });
+  });
+
   it("keeps streaming payload compatible with fallback by clamping materials and dropping blank history", async () => {
     const largeSession: StudySession = {
       ...session,

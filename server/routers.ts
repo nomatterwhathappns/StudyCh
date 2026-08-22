@@ -258,7 +258,7 @@ function providerUnavailableError(error: unknown) {
   if (/(?:usage exhausted|quota(?:\s+(?:is\s+)?)?(?:exhausted|exceeded|unavailable)|resource exhausted|billing status|status 429|status 412)/i.test(detail)) {
     return new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: "Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
+      message: "Kuota AI provider untuk proyek ini habis. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
     });
   }
   return new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI is temporarily unavailable. Please try again." });
@@ -458,6 +458,9 @@ export const appRouter = router({
           ], responseTokenBudget("chat", input.responseStyle), input.responseStyle);
           return result;
         } catch (error) {
+          if (error instanceof TRPCError && error.code === "PRECONDITION_FAILED") {
+            throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Respons Chat belum tersedia karena kuota AI provider untuk proyek ini habis. Pesan kamu tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif." });
+          }
           if (error instanceof TRPCError) throw error;
           console.error("[StudyOS AI chat]", error);
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "StudyOS AI is temporarily unavailable. Please try again." });
@@ -509,6 +512,9 @@ export const appRouter = router({
           });
           return { translations: parseChatTranslationCache(result.text, input.messages.map((message) => message.id)) };
         } catch (error) {
+          if (error instanceof TRPCError && error.code === "PRECONDITION_FAILED") {
+            throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif." });
+          }
           if (error instanceof TRPCError) throw error;
           console.error("[StudyOS Chat translation]", error);
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "StudyOS could not translate this chat yet. Please try again." });

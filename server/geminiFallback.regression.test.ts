@@ -89,4 +89,21 @@ describe("Google Gemini fallback", () => {
     expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 3600 }));
     expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "claude-haiku-4-5", maxTokens: 3600 }));
   });
+
+  it("returns a Chat-specific quota message when Gemini and both gateway fallbacks are exhausted", async () => {
+    invokeGoogleGemini.mockRejectedValueOnce(new Error("Gemini quota exhausted"));
+    invokeLLM.mockRejectedValue(new Error('LLM invoke failed: 412 Precondition Failed – {"code":9,"message":"your account has hit a usage exhausted"}'));
+
+    await expect(appRouter.createCaller(context()).study.chat({
+      sessionName: "Cloud",
+      materials: "",
+      translate: false,
+      responseStyle: "Balanced",
+      model: "gemini-3-flash-preview",
+      history: [{ role: "user", content: "Halo" }],
+    })).rejects.toMatchObject({
+      code: "PRECONDITION_FAILED",
+      message: "Respons Chat belum tersedia karena kuota AI provider untuk proyek ini habis. Pesan kamu tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
+    });
+  });
 });
