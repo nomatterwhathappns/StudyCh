@@ -140,10 +140,26 @@ function parseJsonObject(content: string) {
 export function parseChatTranslations(content: string, messageIds: string[]) {
   const parsed = z.object({ translations: z.array(chatTranslationItemSchema) }).safeParse(parseJsonObject(content));
   if (!parsed.success) throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS could not translate this chat yet. Please try again." });
-  const translations = new Map(parsed.data.translations.map((item) => [item.id, item.content.trim()]));
+  return completeChatTranslations(parsed.data.translations, messageIds);
+}
+
+function completeChatTranslations(items: z.infer<typeof chatTranslationItemSchema>[], messageIds: string[]) {
+  const translations = new Map(items.map((item) => [item.id, item.content.trim()]));
   const missing = messageIds.filter((id) => !translations.get(id));
   if (missing.length) throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS could not translate every chat message. Please try again." });
   return messageIds.map((id) => ({ id, content: translations.get(id)! }));
+}
+
+export function parseChatTranslationCache(content: string, messageIds: string[]) {
+  const parsed = z.object({
+    english: z.array(chatTranslationItemSchema),
+    indonesian: z.array(chatTranslationItemSchema),
+  }).safeParse(parseJsonObject(content));
+  if (!parsed.success) throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS could not translate this chat yet. Please try again." });
+  return {
+    english: completeChatTranslations(parsed.data.english, messageIds),
+    indonesian: completeChatTranslations(parsed.data.indonesian, messageIds),
+  };
 }
 
 function normalizedDraftLabel(value: string) {
@@ -458,9 +474,9 @@ export const appRouter = router({
           const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
             { role: "system", content: [
               "You are a precise bilingual translator for a personal study chat.",
-              `Translate every item into natural ${input.target === "english" ? "English" : "Bahasa Indonesia"}.`,
+              `The learner is currently viewing ${input.target === "english" ? "English" : "Bahasa Indonesia"}, but you must prepare both translation directions for instant language switching.`,
               "Preserve Markdown, code blocks, URLs, names, numerical values, technical terms when clearer in English, and the learner's original tone. Do not explain, summarize, answer questions, or add commentary.",
-              "Return JSON only in exactly this shape: {\"translations\":[{\"id\":\"original id\",\"content\":\"translated text\"}]}. Return every supplied id exactly once.",
+              "Return JSON only in exactly this shape: {\"english\":[{\"id\":\"original id\",\"content\":\"natural English translation\"}],\"indonesian\":[{\"id\":\"original id\",\"content\":\"natural Bahasa Indonesia translation\"}]}. Return every supplied id exactly once in each array.",
             ].join("\n\n") },
             { role: "user", content: JSON.stringify({ messages: input.messages }) },
           ], 3_600, "Balanced", {
@@ -468,7 +484,16 @@ export const appRouter = router({
             schema: {
               type: "object",
               properties: {
-                translations: {
+                english: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: { id: { type: "string" }, content: { type: "string" } },
+                    required: ["id", "content"],
+                    additionalProperties: false,
+                  },
+                },
+                indonesian: {
                   type: "array",
                   items: {
                     type: "object",
@@ -478,11 +503,11 @@ export const appRouter = router({
                   },
                 },
               },
-              required: ["translations"],
+              required: ["english", "indonesian"],
               additionalProperties: false,
             },
           });
-          return { translations: parseChatTranslations(result.text, input.messages.map((message) => message.id)) };
+          return { translations: parseChatTranslationCache(result.text, input.messages.map((message) => message.id)) };
         } catch (error) {
           if (error instanceof TRPCError) throw error;
           console.error("[StudyOS Chat translation]", error);

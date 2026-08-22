@@ -179,3 +179,4 @@
 - [x] Menambahkan regresi Generate Quiz yang membuktikan Cancel muncul dan hasil terlambat tidak menambah kuis atau membuka modal
 - [x] Menjalankan verifikasi desktop-mobile eksplisit untuk provider aktif Translate serta kontrol Cancel, bukan hanya screenshot layout
 - [x] Menelusuri dan memperbaiki error Translate Chat dari tombol kanan-bawah, termasuk pesan provider yang tidak tersedia
+- [x] Menyimpan cache terjemahan Chat per arah bahasa agar toggle ulang instan dan hanya chat baru yang diproses

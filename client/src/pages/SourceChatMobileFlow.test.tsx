@@ -269,10 +269,16 @@ describe("mobile Source and AI flow", () => {
         { id: "indonesian-ai", role: "assistant", content: "Cloud storage menyimpan file lewat internet.", createdAt: 2 },
       ],
     };
-    translateChatMutateAsync.mockResolvedValueOnce({ translations: [
-      { id: "english-user", content: "Can you explain cloud storage?" },
-      { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
-    ] });
+    translateChatMutateAsync.mockResolvedValueOnce({ translations: {
+      english: [
+        { id: "english-user", content: "Can you explain cloud storage?" },
+        { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
+      ],
+      indonesian: [
+        { id: "english-user", content: "Bisa jelaskan penyimpanan cloud?" },
+        { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
+      ],
+    } });
     const sourceUi = render(<SourcePanel session={translatedSession} />);
     const ui = render(<ChatPanel session={translatedSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
 
@@ -291,6 +297,39 @@ describe("mobile Source and AI flow", () => {
     sourceUi.unmount();
   });
 
+  it("switches cached language directions instantly and translates only messages added afterwards", async () => {
+    const cacheSession: StudySession = {
+      ...session,
+      chatHistory: [
+        { id: "cached-user", role: "user", content: "Halo", createdAt: 1 },
+        { id: "cached-ai", role: "assistant", content: "Selamat datang", createdAt: 2 },
+      ],
+    };
+    translateChatMutateAsync
+      .mockResolvedValueOnce({ translations: {
+        english: [{ id: "cached-user", content: "Hello" }, { id: "cached-ai", content: "Welcome" }],
+        indonesian: [{ id: "cached-user", content: "Halo" }, { id: "cached-ai", content: "Selamat datang" }],
+      } })
+      .mockResolvedValueOnce({ translations: {
+        english: [{ id: "new-ai", content: "New study tip" }],
+        indonesian: [{ id: "new-ai", content: "Tips belajar baru" }],
+      } });
+    const ui = render(<ChatPanel session={cacheSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    fireEvent.click(ui.getByLabelText("Translate chat to English"));
+    await waitFor(() => expect(ui.getByText("Welcome")).toBeTruthy());
+    expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(ui.getByLabelText("Translate chat to Indonesian"));
+    await waitFor(() => expect(ui.getByText("Selamat datang")).toBeTruthy());
+    expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
+
+    ui.rerender(<ChatPanel session={{ ...cacheSession, chatHistory: [...cacheSession.chatHistory, { id: "new-ai", role: "assistant", content: "New study tip", createdAt: 3 }] }} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledTimes(2));
+    expect((translateChatMutateAsync.mock.calls.at(-1)?.[0] as { messages: Array<{ id: string }> }).messages).toEqual([{ id: "new-ai", content: "New study tip" }]);
+    await waitFor(() => expect(ui.getByText("Tips belajar baru")).toBeTruthy());
+  });
+
   it.each([["desktop", 1280], ["mobile", 375]] as const)("shows a translation progress indicator while Chat translation is loading on %s", async (_viewport, width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     localStorage.setItem("studyos_translate_mode", "true");
@@ -301,7 +340,7 @@ describe("mobile Source and AI flow", () => {
     const sourceUi = render(<SourcePanel session={translatingSession} />);
     const ui = render(<ChatPanel session={translatingSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
 
-    expect(ui.getByRole("status").textContent).toContain("Translating chat to English");
+    expect(ui.getByRole("status").textContent).toContain("Translating new chat messages to English");
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translating to English…" })).toBeTruthy());
     expect((ui.getByLabelText("Translate chat to Indonesian") as HTMLButtonElement).disabled).toBe(true);
     sourceUi.unmount();
@@ -313,7 +352,10 @@ describe("mobile Source and AI flow", () => {
     localStorage.setItem("studyos_chat_translation_target", "english");
     translateChatMutateAsync
       .mockRejectedValueOnce(new Error("Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif."))
-      .mockResolvedValueOnce({ translations: [{ id: "retry-message", content: "Hello again" }] });
+      .mockResolvedValueOnce({ translations: {
+        english: [{ id: "retry-message", content: "Hello again" }],
+        indonesian: [{ id: "retry-message", content: "Halo lagi" }],
+      } });
     const retrySession: StudySession = { ...session, chatHistory: [{ id: "retry-message", role: "user", content: "Halo lagi", createdAt: 1 }] };
     const sourceUi = render(<SourcePanel session={retrySession} />);
     const ui = render(<ChatPanel session={retrySession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);

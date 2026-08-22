@@ -39,11 +39,17 @@ describe("StudyOS AI prompt regression", () => {
     expect(prompt).toContain("Never invent a source");
   });
 
-  it("translates every persisted chat message between Indonesian and English without changing its id", async () => {
-    invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ translations: [
-      { id: "english-user", content: "Bisa jelaskan penyimpanan cloud?" },
-      { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
-    ] }) }, finish_reason: "stop" }] });
+  it("prepares both translation directions for every persisted chat message without changing its id", async () => {
+    invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({
+      english: [
+        { id: "english-user", content: "Can you explain cloud storage?" },
+        { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
+      ],
+      indonesian: [
+        { id: "english-user", content: "Bisa jelaskan penyimpanan cloud?" },
+        { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
+      ],
+    }) }, finish_reason: "stop" }] });
     const result = await appRouter.createCaller(context()).study.translateChat({
       model: "gpt-5-mini",
       target: "indonesian",
@@ -53,12 +59,18 @@ describe("StudyOS AI prompt regression", () => {
       ],
     });
 
-    expect(result).toEqual({ translations: [
-      { id: "english-user", content: "Bisa jelaskan penyimpanan cloud?" },
-      { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
-    ] });
+    expect(result).toEqual({ translations: {
+      english: [
+        { id: "english-user", content: "Can you explain cloud storage?" },
+        { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
+      ],
+      indonesian: [
+        { id: "english-user", content: "Bisa jelaskan penyimpanan cloud?" },
+        { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
+      ],
+    } });
     const request = invokeLLM.mock.calls.at(-1)?.[0];
-    expect(request.messages[0].content).toContain("Translate every item into natural Bahasa Indonesia");
+    expect(request.messages[0].content).toContain("prepare both translation directions");
     expect(request.messages[0].content).toContain("Preserve Markdown");
   });
 

@@ -33,10 +33,16 @@ describe("Google Gemini fallback", () => {
     invokeGoogleGemini.mockRejectedValueOnce(new Error("Gemini quota unavailable"));
     invokeLLM.mockResolvedValueOnce({
       choices: [{
-        message: { content: JSON.stringify({ translations: [
-          { id: "user-1", content: "Hello" },
-          { id: "assistant-1", content: "Amazon S3 is AWS object storage." },
-        ] }), },
+        message: { content: JSON.stringify({
+          english: [
+            { id: "user-1", content: "Hello" },
+            { id: "assistant-1", content: "Amazon S3 is AWS object storage." },
+          ],
+          indonesian: [
+            { id: "user-1", content: "Halo" },
+            { id: "assistant-1", content: "Amazon S3 adalah penyimpanan objek AWS." },
+          ],
+        }), },
         finish_reason: "stop",
       }],
     });
@@ -49,10 +55,16 @@ describe("Google Gemini fallback", () => {
         { id: "assistant-1", content: "Amazon S3 adalah penyimpanan objek AWS." },
       ],
     })).resolves.toEqual({
-      translations: [
-        { id: "user-1", content: "Hello" },
-        { id: "assistant-1", content: "Amazon S3 is AWS object storage." },
-      ],
+      translations: {
+        english: [
+          { id: "user-1", content: "Hello" },
+          { id: "assistant-1", content: "Amazon S3 is AWS object storage." },
+        ],
+        indonesian: [
+          { id: "user-1", content: "Halo" },
+          { id: "assistant-1", content: "Amazon S3 adalah penyimpanan objek AWS." },
+        ],
+      },
     });
 
     expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 3600, maxRetries: 1 }));
