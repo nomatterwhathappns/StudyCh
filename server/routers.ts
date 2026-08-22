@@ -162,6 +162,34 @@ export function parseChatTranslationCache(content: string, messageIds: string[])
   };
 }
 
+type ChatTranslationCache = ReturnType<typeof parseChatTranslationCache>;
+const TRANSLATION_BATCH_CHARACTER_LIMIT = 1_100;
+
+function translationBatches(messages: z.infer<typeof chatTranslationItemSchema>[]) {
+  const batches: z.infer<typeof chatTranslationItemSchema>[][] = [];
+  let current: z.infer<typeof chatTranslationItemSchema>[] = [];
+  let characters = 0;
+  for (const message of messages) {
+    const messageCharacters = message.content.length;
+    if (current.length && characters + messageCharacters > TRANSLATION_BATCH_CHARACTER_LIMIT) {
+      batches.push(current);
+      current = [];
+      characters = 0;
+    }
+    current.push(message);
+    characters += messageCharacters;
+  }
+  if (current.length) batches.push(current);
+  return batches;
+}
+
+function mergeTranslationCaches(caches: ChatTranslationCache[]): ChatTranslationCache {
+  return {
+    english: caches.flatMap((cache) => cache.english),
+    indonesian: caches.flatMap((cache) => cache.indonesian),
+  };
+}
+
 function normalizedDraftLabel(value: string) {
   return value.toLowerCase().replace(/[*_`]/g, "").replace(/\s+/g, " ").trim();
 }
@@ -475,15 +503,13 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         try {
-          const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-            { role: "system", content: [
-              "You are a precise bilingual translator for a personal study chat.",
-              `The learner is currently viewing ${input.target === "english" ? "English" : "Bahasa Indonesia"}, but you must prepare both translation directions for instant language switching.`,
-              "Preserve Markdown, code blocks, URLs, names, numerical values, technical terms when clearer in English, and the learner's original tone. Do not explain, summarize, answer questions, or add commentary.",
-              "Return JSON only in exactly this shape: {\"english\":[{\"id\":\"original id\",\"content\":\"natural English translation\"}],\"indonesian\":[{\"id\":\"original id\",\"content\":\"natural Bahasa Indonesia translation\"}]}. Return every supplied id exactly once in each array.",
-            ].join("\n\n") },
-            { role: "user", content: JSON.stringify({ messages: input.messages }) },
-          ], 1_800, "Balanced", {
+          const translationSystemPrompt = [
+            "You are a precise bilingual translator for a personal study chat.",
+            `The learner is currently viewing ${input.target === "english" ? "English" : "Bahasa Indonesia"}, but you must prepare both translation directions for instant language switching.`,
+            "Preserve Markdown, code blocks, URLs, names, numerical values, technical terms when clearer in English, and the learner's original tone. Do not explain, summarize, answer questions, or add commentary.",
+            "Return JSON only in exactly this shape: {\"english\":[{\"id\":\"original id\",\"content\":\"natural English translation\"}],\"indonesian\":[{\"id\":\"original id\",\"content\":\"natural Bahasa Indonesia translation\"}]}. Return every supplied id exactly once in each array.",
+          ].join("\n\n");
+          const translationSchema: StudyJsonSchema = {
             name: "chat_translations",
             schema: {
               type: "object",
@@ -510,8 +536,26 @@ export const appRouter = router({
               required: ["english", "indonesian"],
               additionalProperties: false,
             },
-          }, 24_000);
-          return { translations: parseChatTranslationCache(result.text, input.messages.map((message) => message.id)) };
+          };
+          const translateBatch = async (batch: z.infer<typeof chatTranslationItemSchema>[]): Promise<ChatTranslationCache> => {
+            const characterCount = batch.reduce((total, message) => total + message.content.length, 0);
+            const outputBudget = Math.min(1_800, Math.max(700, Math.ceil(characterCount * 1.15) + 300));
+            try {
+              const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
+                { role: "system", content: translationSystemPrompt },
+                { role: "user", content: JSON.stringify({ messages: batch }) },
+              ], outputBudget, "Balanced", translationSchema, 24_000);
+              if (result.truncated) throw new TRPCError({ code: "BAD_GATEWAY", message: "Translation JSON was truncated." });
+              return parseChatTranslationCache(result.text, batch.map((message) => message.id));
+            } catch (error) {
+              if (!(error instanceof TRPCError) || error.code !== "BAD_GATEWAY" || batch.length === 1) throw error;
+              const midpoint = Math.ceil(batch.length / 2);
+              return mergeTranslationCaches([await translateBatch(batch.slice(0, midpoint)), await translateBatch(batch.slice(midpoint))]);
+            }
+          };
+          const caches: ChatTranslationCache[] = [];
+          for (const batch of translationBatches(input.messages)) caches.push(await translateBatch(batch));
+          return { translations: mergeTranslationCaches(caches) };
         } catch (error) {
           if (error instanceof TRPCError && error.code === "PRECONDITION_FAILED") {
             throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif." });

@@ -68,8 +68,8 @@ describe("Google Gemini fallback", () => {
       },
     });
 
-    expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 1800, timeoutMs: 24_000 }));
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 1800, maxRetries: 1 }));
+    expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 700, timeoutMs: 24_000 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 700, maxRetries: 1 }));
   });
 
   it("preserves a Gemini 429 instead of consuming an exhausted gateway fallback", async () => {
@@ -88,6 +88,35 @@ describe("Google Gemini fallback", () => {
     expect(invokeLLM.mock.calls).toHaveLength(fallbackCallsBefore);
   });
 
+  it("splits a truncated long translation batch and preserves both display directions", async () => {
+    const geminiCallsBefore = invokeGoogleGemini.mock.calls.length;
+    const messages = [
+      { id: "long-1", content: "A".repeat(550) },
+      { id: "long-2", content: "B".repeat(550) },
+      { id: "long-3", content: "C".repeat(550) },
+    ];
+    const cache = (items: typeof messages) => ({
+      text: JSON.stringify({
+        english: items.map((item) => ({ id: item.id, content: `English ${item.id}` })),
+        indonesian: items.map((item) => ({ id: item.id, content: `Indonesia ${item.id}` })),
+      }),
+      truncated: false,
+    });
+    invokeGoogleGemini
+      .mockResolvedValueOnce({ text: "{\"english\":[", truncated: true })
+      .mockResolvedValueOnce(cache(messages.slice(0, 1)))
+      .mockResolvedValueOnce(cache(messages.slice(1, 2)))
+      .mockResolvedValueOnce(cache(messages.slice(2, 3)));
+
+    await expect(appRouter.createCaller(context()).study.translateChat({ model: "gemini-3-flash-preview", target: "english", messages })).resolves.toEqual({
+      translations: {
+        english: messages.map((item) => ({ id: item.id, content: `English ${item.id}` })),
+        indonesian: messages.map((item) => ({ id: item.id, content: `Indonesia ${item.id}` })),
+      },
+    });
+    expect(invokeGoogleGemini.mock.calls).toHaveLength(geminiCallsBefore + 4);
+  });
+
   it("returns an actionable translation error when Gemini and both gateway fallbacks have exhausted quota", async () => {
     invokeGoogleGemini.mockRejectedValueOnce(new Error("Gemini quota exhausted"));
     invokeLLM.mockRejectedValue(new Error('LLM invoke failed: 412 Precondition Failed – {"code":9,"message":"your account has hit a usage exhausted"}'));
@@ -104,8 +133,8 @@ describe("Google Gemini fallback", () => {
       message: "Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
     });
 
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 1800 }));
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "claude-haiku-4-5", maxTokens: 1800 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 700 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "claude-haiku-4-5", maxTokens: 700 }));
   });
 
   it("returns a Chat-specific quota message when Gemini and both gateway fallbacks are exhausted", async () => {
