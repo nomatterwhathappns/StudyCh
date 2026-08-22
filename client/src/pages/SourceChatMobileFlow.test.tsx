@@ -297,7 +297,7 @@ describe("mobile Source and AI flow", () => {
     sourceUi.unmount();
   });
 
-  it("switches cached language directions instantly and translates only messages added afterwards", async () => {
+  it("switches cached language directions instantly and translates a new message only after another user request", async () => {
     const cacheSession: StudySession = {
       ...session,
       chatHistory: [
@@ -325,9 +325,16 @@ describe("mobile Source and AI flow", () => {
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
 
     ui.rerender(<ChatPanel session={{ ...cacheSession, chatHistory: [...cacheSession.chatHistory, { id: "new-ai", role: "assistant", content: "New study tip", createdAt: 3 }] }} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    await waitFor(() => expect(ui.getByText("New study tip")).toBeTruthy());
+    expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(ui.getByLabelText("Translate chat to English"));
     await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledTimes(2));
     expect((translateChatMutateAsync.mock.calls.at(-1)?.[0] as { messages: Array<{ id: string }> }).messages).toEqual([{ id: "new-ai", content: "New study tip" }]);
+
+    fireEvent.click(ui.getByLabelText("Translate chat to Indonesian"));
     await waitFor(() => expect(ui.getByText("Tips belajar baru")).toBeTruthy());
+    expect(translateChatMutateAsync).toHaveBeenCalledTimes(2);
   });
 
   it.each([["desktop", 1280], ["mobile", 375]] as const)("shows a translation progress indicator while Chat translation is loading on %s", async (_viewport, width) => {
@@ -339,6 +346,8 @@ describe("mobile Source and AI flow", () => {
     const translatingSession: StudySession = { ...session, chatHistory: [{ id: "pending-message", role: "user", content: "Halo", createdAt: 1 }] };
     const sourceUi = render(<SourcePanel session={translatingSession} />);
     const ui = render(<ChatPanel session={translatingSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    act(() => window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: "english", request: true } })));
 
     expect(ui.getByRole("status").textContent).toContain("Translating new chat messages to English");
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translating to English…" })).toBeTruthy());
@@ -359,6 +368,8 @@ describe("mobile Source and AI flow", () => {
     const retrySession: StudySession = { ...session, chatHistory: [{ id: "retry-message", role: "user", content: "Halo lagi", createdAt: 1 }] };
     const sourceUi = render(<SourcePanel session={retrySession} />);
     const ui = render(<ChatPanel session={retrySession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    act(() => window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: "english", request: true } })));
 
     await waitFor(() => expect(ui.getByRole("alert").textContent).toContain("kuota AI provider untuk proyek ini habis"));
     expect(ui.queryByRole("status")).toBeNull();
