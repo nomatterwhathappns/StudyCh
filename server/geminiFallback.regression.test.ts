@@ -5,7 +5,7 @@ vi.mock("./_core/llm", () => ({ invokeLLM }));
 vi.mock("./googleGemini", async (importOriginal) => ({ ...(await importOriginal<typeof import("./googleGemini")>()), invokeGoogleGemini }));
 
 import { TRPCError } from "@trpc/server";
-import { appRouter } from "./routers";
+import { appRouter, invokeStudyAI } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
 function context(): TrpcContext {
@@ -35,13 +35,9 @@ describe("Google Gemini fallback", () => {
     invokeLLM.mockResolvedValueOnce({
       choices: [{
         message: { content: JSON.stringify({
-          english: [
+          translations: [
             { id: "user-1", content: "Hello" },
             { id: "assistant-1", content: "Amazon S3 is AWS object storage." },
-          ],
-          indonesian: [
-            { id: "user-1", content: "Halo" },
-            { id: "assistant-1", content: "Amazon S3 adalah penyimpanan objek AWS." },
           ],
         }), },
         finish_reason: "stop",
@@ -68,8 +64,8 @@ describe("Google Gemini fallback", () => {
       },
     });
 
-    expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 700, timeoutMs: 24_000 }));
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 700, maxRetries: 1 }));
+    expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 450, timeoutMs: 24_000 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 450, maxRetries: 1 }));
   });
 
   it("preserves a Gemini 429 instead of consuming an exhausted gateway fallback", async () => {
@@ -97,13 +93,12 @@ describe("Google Gemini fallback", () => {
     ];
     const cache = (items: typeof messages) => ({
       text: JSON.stringify({
-        english: items.map((item) => ({ id: item.id, content: `English ${item.id}` })),
-        indonesian: items.map((item) => ({ id: item.id, content: `Indonesia ${item.id}` })),
+        translations: items.map((item) => ({ id: item.id, content: `English ${item.id}` })),
       }),
       truncated: false,
     });
     invokeGoogleGemini
-      .mockResolvedValueOnce({ text: "{\"english\":[", truncated: true })
+      .mockResolvedValueOnce({ text: "{\"translations\":[", truncated: true })
       .mockResolvedValueOnce(cache(messages.slice(0, 1)))
       .mockResolvedValueOnce(cache(messages.slice(1, 2)))
       .mockResolvedValueOnce(cache(messages.slice(2, 3)));
@@ -111,7 +106,7 @@ describe("Google Gemini fallback", () => {
     await expect(appRouter.createCaller(context()).study.translateChat({ model: "gemini-3-flash-preview", target: "english", messages })).resolves.toEqual({
       translations: {
         english: messages.map((item) => ({ id: item.id, content: `English ${item.id}` })),
-        indonesian: messages.map((item) => ({ id: item.id, content: `Indonesia ${item.id}` })),
+        indonesian: messages.map((item) => ({ id: item.id, content: item.content })),
       },
     });
     expect(invokeGoogleGemini.mock.calls).toHaveLength(geminiCallsBefore + 4);
@@ -133,8 +128,8 @@ describe("Google Gemini fallback", () => {
       message: "Penerjemahan Chat tidak tersedia karena kuota AI provider untuk proyek ini habis. Teks asli tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
     });
 
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 700 }));
-    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "claude-haiku-4-5", maxTokens: 700 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 450 }));
+    expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "claude-haiku-4-5", maxTokens: 450 }));
   });
 
   it("returns a Chat-specific quota message when Gemini and both gateway fallbacks are exhausted", async () => {
@@ -152,5 +147,21 @@ describe("Google Gemini fallback", () => {
       code: "PRECONDITION_FAILED",
       message: "Respons Chat belum tersedia karena kuota AI provider untuk proyek ini habis. Pesan kamu tetap aman. Coba lagi setelah kuota tersedia atau gunakan provider/key lain yang masih aktif.",
     });
+  });
+
+  it("does not send a failed personal Gemini request into the project gateway", async () => {
+    const fallbackCallsBefore = invokeLLM.mock.calls.length;
+    invokeGoogleGemini.mockRejectedValueOnce(new Error("Gemini connection interrupted"));
+
+    await expect(invokeStudyAI(
+      "gemini-3-flash-preview",
+      [{ role: "user", content: "Hello" }],
+      64,
+      "Fast",
+      false,
+      { apiKey: "personal-key", source: "personal" },
+    )).rejects.toThrow("Gemini connection interrupted");
+
+    expect(invokeLLM.mock.calls).toHaveLength(fallbackCallsBefore);
   });
 });

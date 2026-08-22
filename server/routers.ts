@@ -292,7 +292,7 @@ function providerUnavailableError(error: unknown) {
   return new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI is temporarily unavailable. Please try again." });
 }
 
-async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, geminiAccess?: { apiKey?: string; source: "personal" | "server" }, timeoutMs = providerTimeoutMs(responseStyle)) {
+export async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, geminiAccess?: { apiKey?: string; source: "personal" | "server" }, timeoutMs = providerTimeoutMs(responseStyle)) {
   const jsonSchema = typeof json === "object" ? json : { name: "studyos_json", schema: { type: "object", additionalProperties: true } };
   let response: { text: string; truncated: boolean };
   let provider: string;
@@ -310,6 +310,7 @@ async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-
       const code = error instanceof TRPCError ? error.code : "UNAVAILABLE";
       console.warn("[StudyOS AI] Google Gemini unavailable; using built-in fallback", { code });
       if (error instanceof TRPCError && (error.code === "TOO_MANY_REQUESTS" || error.code === "SERVICE_UNAVAILABLE")) throw error;
+      if (geminiAccess?.source === "personal") throw error;
       try {
         response = await invokeBuiltIn("gpt-5-mini");
         provider = "StudyOS AI gateway · GPT-5 mini fallback";
@@ -505,25 +506,16 @@ export const appRouter = router({
         try {
           const translationSystemPrompt = [
             "You are a precise bilingual translator for a personal study chat.",
-            `The learner is currently viewing ${input.target === "english" ? "English" : "Bahasa Indonesia"}, but you must prepare both translation directions for instant language switching.`,
+            `Translate every supplied message into ${input.target === "english" ? "natural English" : "natural Bahasa Indonesia"}. The opposite language will use the original chat text, so do not generate it.`,
             "Preserve Markdown, code blocks, URLs, names, numerical values, technical terms when clearer in English, and the learner's original tone. Do not explain, summarize, answer questions, or add commentary.",
-            "Return JSON only in exactly this shape: {\"english\":[{\"id\":\"original id\",\"content\":\"natural English translation\"}],\"indonesian\":[{\"id\":\"original id\",\"content\":\"natural Bahasa Indonesia translation\"}]}. Return every supplied id exactly once in each array.",
+            "Return JSON only in exactly this shape: {\"translations\":[{\"id\":\"original id\",\"content\":\"translation\"}]}. Return every supplied id exactly once.",
           ].join("\n\n");
           const translationSchema: StudyJsonSchema = {
             name: "chat_translations",
             schema: {
               type: "object",
               properties: {
-                english: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: { id: { type: "string" }, content: { type: "string" } },
-                    required: ["id", "content"],
-                    additionalProperties: false,
-                  },
-                },
-                indonesian: {
+                translations: {
                   type: "array",
                   items: {
                     type: "object",
@@ -533,20 +525,24 @@ export const appRouter = router({
                   },
                 },
               },
-              required: ["english", "indonesian"],
+              required: ["translations"],
               additionalProperties: false,
             },
           };
           const translateBatch = async (batch: z.infer<typeof chatTranslationItemSchema>[]): Promise<ChatTranslationCache> => {
             const characterCount = batch.reduce((total, message) => total + message.content.length, 0);
-            const outputBudget = Math.min(1_800, Math.max(700, Math.ceil(characterCount * 1.15) + 300));
+            const outputBudget = Math.min(1_000, Math.max(450, Math.ceil(characterCount * 0.7) + 180));
             try {
               const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
                 { role: "system", content: translationSystemPrompt },
                 { role: "user", content: JSON.stringify({ messages: batch }) },
               ], outputBudget, "Balanced", translationSchema, 24_000);
               if (result.truncated) throw new TRPCError({ code: "BAD_GATEWAY", message: "Translation JSON was truncated." });
-              return parseChatTranslationCache(result.text, batch.map((message) => message.id));
+              const translated = parseChatTranslations(result.text, batch.map((message) => message.id));
+              const originals = batch.map((message) => ({ id: message.id, content: message.content }));
+              return input.target === "english"
+                ? { english: translated, indonesian: originals }
+                : { english: originals, indonesian: translated };
             } catch (error) {
               if (!(error instanceof TRPCError) || error.code !== "BAD_GATEWAY" || batch.length === 1) throw error;
               const midpoint = Math.ceil(batch.length / 2);

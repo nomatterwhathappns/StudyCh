@@ -188,3 +188,4 @@
 - [x] Menelusuri dan memperbaiki Gemini 503 ServiceUnavailable dari personal key baru agar tidak dipetakan sebagai quota fallback
 - [x] Mengingatkan revokasi API key yang terpapar pada screenshot serta penggunaan key pengganti hanya melalui AI Settings
 - [x] Menelusuri dan memperbaiki Translate Chat yang masih gagal setelah Chat biasa pulih melalui Gemini personal key
+- [x] Menelusuri dan menghapus fallback Translate yang masih jatuh ke provider proyek saat Gemini personal key tersedia

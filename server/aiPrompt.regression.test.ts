@@ -39,13 +39,9 @@ describe("StudyOS AI prompt regression", () => {
     expect(prompt).toContain("Never invent a source");
   });
 
-  it("prepares both translation directions for every persisted chat message without changing its id", async () => {
+  it("prepares the requested translation direction and preserves every persisted chat message id", async () => {
     invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({
-      english: [
-        { id: "english-user", content: "Can you explain cloud storage?" },
-        { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
-      ],
-      indonesian: [
+      translations: [
         { id: "english-user", content: "Bisa jelaskan penyimpanan cloud?" },
         { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
       ],
@@ -62,7 +58,7 @@ describe("StudyOS AI prompt regression", () => {
     expect(result).toEqual({ translations: {
       english: [
         { id: "english-user", content: "Can you explain cloud storage?" },
-        { id: "indonesian-ai", content: "Cloud storage stores files over the internet." },
+        { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
       ],
       indonesian: [
         { id: "english-user", content: "Bisa jelaskan penyimpanan cloud?" },
@@ -70,7 +66,7 @@ describe("StudyOS AI prompt regression", () => {
       ],
     } });
     const request = invokeLLM.mock.calls.at(-1)?.[0];
-    expect(request.messages[0].content).toContain("prepare both translation directions");
+    expect(request.messages[0].content).toContain("The opposite language will use the original chat text");
     expect(request.messages[0].content).toContain("Preserve Markdown");
   });
 
