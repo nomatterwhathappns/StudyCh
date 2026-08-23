@@ -90,9 +90,9 @@ export function PersonalAiSettings() {
                 <Button type="button" size="sm" disabled={!apiKey.trim() || pending} onClick={() => saveGeminiKey.mutate({ apiKey: apiKey.trim() })} className="rounded-xl bg-primary text-primary-foreground">
                   {saveGeminiKey.isPending ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <KeyRound className="mr-2 size-3.5" />}{configured ? "Replace key" : "Save key"}
                 </Button>
-                {configured && <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => removeGeminiKey.mutate()} className="rounded-xl border-border text-muted-foreground hover:text-[#BA2D0B]"><Trash2 className="mr-2 size-3.5" />Remove key</Button>}
+                {configured && <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => removeGeminiKey.mutate()} className="rounded-xl border-border text-muted-foreground hover:text-destructive"><Trash2 className="mr-2 size-3.5" />Remove key</Button>}
               </div>
-              {notice && <p role="status" className={`rounded-xl px-3 py-2 text-xs leading-relaxed ${saveGeminiKey.isError || removeGeminiKey.isError ? "bg-[#BA2D0B]/10 text-[#F1C4B8]" : "bg-[#6E7650]/15 text-foreground"}`}>{notice}</p>}
+              {notice && <p role="status" className={`rounded-xl px-3 py-2 text-xs leading-relaxed ${saveGeminiKey.isError || removeGeminiKey.isError ? "bg-destructive/15 text-[#FFE1EC]" : "bg-primary/20 text-foreground"}`}>{notice}</p>}
               <p className="text-[11px] leading-relaxed text-muted-foreground">The label beneath each assistant response shows the actual AI route used. If Gemini is unavailable, StudyOS shows when a fallback is used instead.</p>
             </div>
           )}

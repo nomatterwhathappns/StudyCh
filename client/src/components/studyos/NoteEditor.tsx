@@ -51,7 +51,7 @@ export function NoteEditor({ note, onBack, onRename, onContentChange, onDelete }
             aria-label="Note title"
           />
         </div>
-        <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete note" className="rounded-xl text-[#BA2D0B] hover:bg-[#BA2D0B]/10 hover:text-[#BA2D0B]">
+        <Button variant="ghost" size="icon" onClick={onDelete} aria-label="Delete note" className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive">
           <Trash2 className="size-4" />
         </Button>
       </div>

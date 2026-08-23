@@ -34,26 +34,32 @@
 
 :root, .dark {
   --radius: 0.7rem;
-  --ember: #BA2D0B;
-  --background: #262317;
-  --foreground: #EEF1EF;
-  --card: #2C2820;
-  --card-foreground: #EEF1EF;
-  --popover: #322E1F;
-  --popover-foreground: #EEF1EF;
-  --primary: #4C472F;
-  --primary-foreground: #EEF1EF;
-  --secondary: #322E1F;
-  --secondary-foreground: #EEF1EF;
-  --muted: #322E1F;
-  --muted-foreground: #A8A99A;
-  --accent: #3A3628;
-  --accent-foreground: #EEF1EF;
-  --destructive: #BA2D0B;
-  --destructive-foreground: #EEF1EF;
-  --border: #4C472F;
-  --input: #4C472F;
-  --ring: #EEF1EF;
+  --space-indigo: #2E294E;
+  --pastel-petal: #EFBCD5;
+  --lilac: #BE97C6;
+  --lavender-purple: #8661C1;
+  --charcoal-blue: #4B5267;
+  --sidebar: #25213F;
+  --ember: #EFBCD5;
+  --background: #2E294E;
+  --foreground: #FFF8FF;
+  --card: #4B5267;
+  --card-foreground: #FFF8FF;
+  --popover: #3B3E5A;
+  --popover-foreground: #FFF8FF;
+  --primary: #8661C1;
+  --primary-foreground: #FFFFFF;
+  --secondary: #3B3E5A;
+  --secondary-foreground: #FFF8FF;
+  --muted: #393651;
+  --muted-foreground: #D9C9E2;
+  --accent: #BE97C6;
+  --accent-foreground: #2E294E;
+  --destructive: #C95D87;
+  --destructive-foreground: #FFFFFF;
+  --border: #6D668B;
+  --input: #5C577B;
+  --ring: #EFBCD5;
 }
 
 @layer base {
@@ -70,7 +76,7 @@
   .study-loading span { @apply font-display text-4xl italic text-foreground; }
   .study-loading i { @apply font-mono text-[10px] uppercase tracking-[0.18em] not-italic; }
   .study-dashboard { @apply flex; }
-  .study-sidebar { @apply sticky top-0 flex h-screen w-[220px] shrink-0 flex-col border-r border-border bg-[#242116] px-3 py-4; }
+  .study-sidebar { @apply sticky top-0 flex h-screen w-[220px] shrink-0 flex-col border-r border-border px-3 py-4; background: var(--sidebar); }
   .study-back-button { @apply flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground; }
   .study-kicker { @apply font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground; }
   .study-nav-item { @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs text-muted-foreground transition-all hover:bg-secondary hover:text-foreground; }
@@ -91,14 +97,14 @@
   .study-empty-large span { @apply mt-3 max-w-sm text-base; }
   .study-search { @apply flex h-10 items-center gap-2 rounded-xl border border-border bg-secondary px-3 text-muted-foreground; }
   .study-search input { @apply w-32 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground sm:w-52; }
-  .study-workspace-header { @apply flex h-16 shrink-0 items-center justify-between border-b border-border bg-[#242116] px-4 sm:px-5; }
-  .study-panel-group { background: #28251A; }
+  .study-workspace-header { @apply flex h-16 shrink-0 items-center justify-between border-b border-border px-4 sm:px-5; background: var(--sidebar); }
+  .study-panel-group { background: #25213F; }
   .study-panel { @apply flex h-full min-h-0 flex-col bg-card; }
   .study-source-panel { @apply relative; }
-  .study-chat-panel { background: #262317; }
+  .study-chat-panel { background: var(--background); }
   .study-material-row { @apply flex w-full items-center gap-2 rounded-xl border border-border/70 bg-secondary/35 p-2.5 transition-colors hover:bg-secondary; }
   .study-material-row.is-selected { @apply border-primary bg-primary/30; }
-  .study-inline-delete { @apply flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-card hover:text-[#BA2D0B]; }
+  .study-inline-delete { @apply flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-card hover:text-destructive; }
   .study-tab { @apply flex-1 rounded-lg px-2 py-2 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground transition-colors; }
   .study-tab.is-active { @apply bg-primary text-primary-foreground; }
   .study-translate-button { @apply mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-[11px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground; }
@@ -115,12 +121,12 @@
   .study-chat-message { @apply flex flex-col gap-1; }
   .study-chat-message.is-user { @apply items-end; }
   .study-chat-message.is-ai { @apply items-start; }
-  .study-ai-label { @apply px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[#BA2D0B]; }
+  .study-ai-label { @apply px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--pastel-petal)]; }
   .study-message-bubble { @apply max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed; }
-  .is-user .study-message-bubble { @apply border-border bg-[#3A3628] text-foreground; }
+  .is-user .study-message-bubble { @apply border-primary bg-primary text-primary-foreground; }
   .is-ai .study-message-bubble { @apply border-border bg-card text-foreground; }
   .study-thinking { @apply flex items-center gap-1 py-1; }
-  .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[#BA2D0B]; animation-delay: 0ms; }
+  .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[var(--pastel-petal)]; animation-delay: 0ms; }
   .study-thinking i:nth-child(2) { animation-delay: 120ms; }
   .study-thinking i:nth-child(3) { animation-delay: 240ms; }
   .study-chat-input-shell { @apply mx-auto flex h-12 max-w-xl items-center rounded-2xl border border-border bg-card px-3 transition-all duration-200; }
@@ -129,7 +135,7 @@
   .study-chat-input-shell.has-value input { @apply ml-0 mr-2 w-full text-left; }
   .study-chat-input-shell button { @apply flex size-8 shrink-0 scale-90 items-center justify-center rounded-xl bg-primary text-primary-foreground opacity-0 transition-all duration-200 disabled:opacity-30; }
   .study-chat-input-shell.has-value button { @apply scale-100 opacity-100; }
-  .study-watch-panel { background: #2C2820; }
+  .study-watch-panel { background: var(--card); }
   .study-timer { @apply rounded-2xl border border-border bg-secondary/30 p-4; }
   .study-timer-button { @apply flex min-h-9 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-card px-1 font-mono text-[8px] uppercase tracking-wide text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }
   .study-section-action, .study-pager { @apply flex size-6 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }
@@ -146,14 +152,14 @@
   .study-note-row { @apply flex w-full items-center gap-2 rounded-xl border border-border bg-secondary/35 px-3 py-3 transition-colors hover:bg-secondary; }
   .study-answer { @apply flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-left text-xs text-foreground transition-colors hover:bg-secondary disabled:cursor-default; }
   .study-answer > span { @apply flex size-5 shrink-0 items-center justify-center rounded-md border border-border font-mono text-[9px] text-muted-foreground; }
-  .study-answer.is-correct { border-color: #899171; background: color-mix(in srgb, #4C472F 65%, transparent); }
-  .study-answer.is-wrong { border-color: var(--ember); background: color-mix(in srgb, var(--ember) 12%, transparent); }
+  .study-answer.is-correct { border-color: var(--lilac); background: color-mix(in srgb, var(--lavender-purple) 45%, transparent); }
+  .study-answer.is-wrong { border-color: var(--destructive); background: color-mix(in srgb, var(--destructive) 18%, transparent); }
   .study-note-content { @apply min-h-[360px] text-sm leading-7 text-foreground; }
   .study-note-content > * + * { @apply mt-3; }
   .study-note-content h2 { @apply font-display text-3xl italic; }
   .study-note-content h3 { @apply font-display text-2xl italic; }
   .study-note-content code { @apply rounded bg-secondary px-1.5 py-0.5 font-mono text-xs; }
-  .study-note-content pre { @apply overflow-x-auto rounded-xl bg-[#201d14] p-3; }
+  .study-note-content pre { @apply overflow-x-auto rounded-xl bg-[#25213F] p-3; }
   .study-note-content a { color: var(--ember); text-decoration: underline; }
 }
 
