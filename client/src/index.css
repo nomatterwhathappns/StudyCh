@@ -58,6 +58,10 @@
   --accent-foreground: #26344A;
   --destructive: #C65B88;
   --destructive-foreground: #FFFFFF;
+  --feedback-error-bg: #F9DDE8;
+  --feedback-error-border: #D48CA9;
+  --feedback-error-foreground: #4A243B;
+  --feedback-error-link: #862B58;
   --border: #B9DDE1;
   --input: #A5E2E5;
   --ring: #F2B5D4;
@@ -162,6 +166,8 @@
   .study-note-content code { @apply rounded bg-secondary px-1.5 py-0.5 font-mono text-xs; }
   .study-note-content pre { @apply overflow-x-auto rounded-xl bg-[#D8F2F0] p-3; }
   .study-note-content a { color: var(--ember); text-decoration: underline; }
+  .study-chat-panel p[role="alert"], .study-chat-panel p.rounded-xl.border { border-color: var(--feedback-error-border) !important; background: var(--feedback-error-bg) !important; color: var(--feedback-error-foreground) !important; font-weight: 500; }
+  .study-chat-panel p[role="alert"] button, .study-chat-panel p.rounded-xl.border button { color: var(--feedback-error-link); font-weight: 700; }
 }
 
 @media (max-width: 720px) {

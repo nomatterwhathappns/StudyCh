@@ -68,6 +68,27 @@ describe("Google Gemini API key", () => {
     }
   });
 
+  it("explains a daily Gemini quota limit without presenting it as a short retry", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      text: async () => JSON.stringify({
+        error: {
+          message: "Quota exceeded. Please retry in 53.3s.",
+          details: [{ quotaId: "GenerateRequestsPerDayPerProjectPerModel-FreeTier", quotaValue: "20" }],
+        },
+      }),
+    } as Response);
+    try {
+      await expect(invokeGoogleGemini({ messages: [{ role: "user", content: "Hello" }], maxTokens: 32, apiKey: "test-key" })).rejects.toMatchObject({
+        code: "TOO_MANY_REQUESTS",
+        message: "Kuota harian Gemini untuk personal key ini sudah mencapai batas 20 request. Tunggu reset kuota Google atau gunakan project/key lain yang masih memiliki kuota.",
+      });
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("removes unsupported additionalProperties from nested Google response schemas", () => {
     expect(toGoogleResponseSchema({
       type: "object",

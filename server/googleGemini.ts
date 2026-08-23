@@ -78,6 +78,12 @@ export async function invokeGoogleGemini({ messages, maxTokens, json = false, js
     const detail = await response.text();
     console.error("[Google Gemini] request failed", response.status, detail);
     if (response.status === 429) {
+      const dailyQuota = /GenerateRequestsPerDayPerProjectPerModel/i.test(detail);
+      const quotaValue = detail.match(/"quotaValue"\s*:\s*"?(\d+)/i)?.[1];
+      const retrySeconds = detail.match(/Please retry in\s+([\d.]+)s/i)?.[1];
+      if (dailyQuota) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: `Kuota harian Gemini untuk personal key ini sudah mencapai batas${quotaValue ? ` ${quotaValue} request` : ""}. Tunggu reset kuota Google atau gunakan project/key lain yang masih memiliki kuota.` });
+      }
       throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mencoba lagi." });
     }
     if (response.status === 503) {
