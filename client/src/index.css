@@ -168,6 +168,9 @@
   .study-note-content a { color: var(--ember); text-decoration: underline; }
   .study-chat-panel p[role="alert"], .study-chat-panel p.rounded-xl.border { border-color: var(--feedback-error-border) !important; background: var(--feedback-error-bg) !important; color: var(--feedback-error-foreground) !important; font-weight: 500; }
   .study-chat-panel p[role="alert"] button, .study-chat-panel p.rounded-xl.border button { color: var(--feedback-error-link); font-weight: 700; }
+  .study-cancel-dock-button { @apply inline-flex items-center gap-1.5 rounded-full border bg-card/95 px-3 py-2 text-xs font-semibold shadow-lg backdrop-blur transition-colors; border-color: var(--feedback-error-border); color: var(--feedback-error-foreground); }
+  .study-cancel-dock-button:hover { background: var(--petal-frost); color: var(--feedback-error-link); }
+  .study-cancel-dock-button:focus-visible { outline: 2px solid var(--feedback-error-link); outline-offset: 3px; }
 }
 
 @media (max-width: 720px) {

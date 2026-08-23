@@ -193,4 +193,5 @@
 - [x] Menerapkan palet Space Indigo, Pastel Petal, Lilac, Lavender Purple, dan Charcoal Blue pada UI StudyOS dengan kontras yang tetap jelas
 - [x] Mengganti tema StudyOS ke Frosted Blue, Icy Aqua, Mint Cream, Petal Frost, dan Blush Pop dengan kontras light mode yang jelas
 - [x] Memperbaiki state feedback light theme yang teksnya terlalu pucat atau menyaru dengan latar
-- [ ] Menelusuri dan memperbaiki kegagalan Translate Chat terbaru setelah tema light diterapkan
+- [x] Menelusuri dan memperbaiki kegagalan Translate Chat terbaru setelah tema light diterapkan
+- [x] Memperbaiki kontras tombol dan dock Cancel pada tema pastel light

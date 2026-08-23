@@ -64,7 +64,7 @@ describe("Google Gemini fallback", () => {
       },
     });
 
-    expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 450, timeoutMs: 24_000 }));
+    expect(invokeGoogleGemini).toHaveBeenCalledWith(expect.objectContaining({ maxTokens: 450, timeoutMs: 45_000 }));
     expect(invokeLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-5-mini", maxTokens: 450, maxRetries: 1 }));
   });
 

@@ -86,7 +86,7 @@ export function AiCancellationDock() {
   }, []);
   const active = Object.values(activities);
   if (!active.length) return null;
-  return <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-wrap justify-center gap-2" aria-live="polite">{active.map((activity) => <button key={activity.id} type="button" onClick={activity.cancel} className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full border border-[#BA2D0B]/55 bg-card/95 px-3 py-2 text-xs font-medium text-[#EEF1EF] shadow-lg backdrop-blur transition-colors hover:bg-[#BA2D0B]/20"><X className="size-3.5" />Cancel {activity.label}</button>)}</div>;
+  return <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-wrap justify-center gap-2" aria-live="polite">{active.map((activity) => <button key={activity.id} type="button" onClick={activity.cancel} className="study-cancel-dock-button pointer-events-auto"><X className="size-3.5" />Cancel {activity.label}</button>)}</div>;
 }
 
 export function SourcePanel({ session }: { session: StudySession }) {

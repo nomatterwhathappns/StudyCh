@@ -535,7 +535,7 @@ export const appRouter = router({
             const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
               { role: "system", content: translationSystemPrompt },
               { role: "user", content: JSON.stringify({ messages: batch }) },
-            ], outputBudget, "Balanced", translationSchema, 24_000);
+            ], outputBudget, "Balanced", translationSchema, 45_000);
             if (result.truncated) throw new TRPCError({ code: "BAD_GATEWAY", message: "Translation JSON was truncated." });
             const translated = parseChatTranslations(result.text, batch.map((message) => message.id));
             const originals = batch.map((message) => ({ id: message.id, content: message.content }));
