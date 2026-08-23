@@ -34,32 +34,33 @@
 
 :root, .dark {
   --radius: 0.7rem;
-  --space-indigo: #2E294E;
-  --pastel-petal: #EFBCD5;
-  --lilac: #BE97C6;
-  --lavender-purple: #8661C1;
-  --charcoal-blue: #4B5267;
-  --sidebar: #25213F;
-  --ember: #EFBCD5;
-  --background: #2E294E;
-  --foreground: #FFF8FF;
-  --card: #4B5267;
-  --card-foreground: #FFF8FF;
-  --popover: #3B3E5A;
-  --popover-foreground: #FFF8FF;
-  --primary: #8661C1;
-  --primary-foreground: #FFFFFF;
-  --secondary: #3B3E5A;
-  --secondary-foreground: #FFF8FF;
-  --muted: #393651;
-  --muted-foreground: #D9C9E2;
-  --accent: #BE97C6;
-  --accent-foreground: #2E294E;
-  --destructive: #C95D87;
+  --frosted-blue: #7BDFF2;
+  --icy-aqua: #B2F7EF;
+  --mint-cream: #EFF7F6;
+  --petal-frost: #F7D6E0;
+  --blush-pop: #F2B5D4;
+  --ink: #26344A;
+  --sidebar: #7BDFF2;
+  --ember: #C65B88;
+  --background: #EFF7F6;
+  --foreground: #26344A;
+  --card: #FFFFFF;
+  --card-foreground: #26344A;
+  --popover: #FFFFFF;
+  --popover-foreground: #26344A;
+  --primary: #7BDFF2;
+  --primary-foreground: #26344A;
+  --secondary: #B2F7EF;
+  --secondary-foreground: #26344A;
+  --muted: #E1F3F1;
+  --muted-foreground: #53657A;
+  --accent: #F7D6E0;
+  --accent-foreground: #26344A;
+  --destructive: #C65B88;
   --destructive-foreground: #FFFFFF;
-  --border: #6D668B;
-  --input: #5C577B;
-  --ring: #EFBCD5;
+  --border: #B9DDE1;
+  --input: #A5E2E5;
+  --ring: #F2B5D4;
 }
 
 @layer base {
@@ -98,7 +99,7 @@
   .study-search { @apply flex h-10 items-center gap-2 rounded-xl border border-border bg-secondary px-3 text-muted-foreground; }
   .study-search input { @apply w-32 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground sm:w-52; }
   .study-workspace-header { @apply flex h-16 shrink-0 items-center justify-between border-b border-border px-4 sm:px-5; background: var(--sidebar); }
-  .study-panel-group { background: #25213F; }
+  .study-panel-group { background: #D8F2F0; }
   .study-panel { @apply flex h-full min-h-0 flex-col bg-card; }
   .study-source-panel { @apply relative; }
   .study-chat-panel { background: var(--background); }
@@ -121,12 +122,12 @@
   .study-chat-message { @apply flex flex-col gap-1; }
   .study-chat-message.is-user { @apply items-end; }
   .study-chat-message.is-ai { @apply items-start; }
-  .study-ai-label { @apply px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--pastel-petal)]; }
+  .study-ai-label { @apply px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ember)]; }
   .study-message-bubble { @apply max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed; }
   .is-user .study-message-bubble { @apply border-primary bg-primary text-primary-foreground; }
   .is-ai .study-message-bubble { @apply border-border bg-card text-foreground; }
   .study-thinking { @apply flex items-center gap-1 py-1; }
-  .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[var(--pastel-petal)]; animation-delay: 0ms; }
+  .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[var(--blush-pop)]; animation-delay: 0ms; }
   .study-thinking i:nth-child(2) { animation-delay: 120ms; }
   .study-thinking i:nth-child(3) { animation-delay: 240ms; }
   .study-chat-input-shell { @apply mx-auto flex h-12 max-w-xl items-center rounded-2xl border border-border bg-card px-3 transition-all duration-200; }
@@ -152,14 +153,14 @@
   .study-note-row { @apply flex w-full items-center gap-2 rounded-xl border border-border bg-secondary/35 px-3 py-3 transition-colors hover:bg-secondary; }
   .study-answer { @apply flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-3 text-left text-xs text-foreground transition-colors hover:bg-secondary disabled:cursor-default; }
   .study-answer > span { @apply flex size-5 shrink-0 items-center justify-center rounded-md border border-border font-mono text-[9px] text-muted-foreground; }
-  .study-answer.is-correct { border-color: var(--lilac); background: color-mix(in srgb, var(--lavender-purple) 45%, transparent); }
+  .study-answer.is-correct { border-color: var(--frosted-blue); background: color-mix(in srgb, var(--icy-aqua) 65%, transparent); }
   .study-answer.is-wrong { border-color: var(--destructive); background: color-mix(in srgb, var(--destructive) 18%, transparent); }
   .study-note-content { @apply min-h-[360px] text-sm leading-7 text-foreground; }
   .study-note-content > * + * { @apply mt-3; }
   .study-note-content h2 { @apply font-display text-3xl italic; }
   .study-note-content h3 { @apply font-display text-2xl italic; }
   .study-note-content code { @apply rounded bg-secondary px-1.5 py-0.5 font-mono text-xs; }
-  .study-note-content pre { @apply overflow-x-auto rounded-xl bg-[#25213F] p-3; }
+  .study-note-content pre { @apply overflow-x-auto rounded-xl bg-[#D8F2F0] p-3; }
   .study-note-content a { color: var(--ember); text-decoration: underline; }
 }
 
