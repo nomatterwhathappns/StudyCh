@@ -204,4 +204,4 @@
 - [x] Menambahkan mode StudyOS lokal yang menyimpan data di laptop dan memakai 9router lokal tanpa API key di browser
 - [x] Menyimpan avatar dan dokumen langsung di browser saat mode StudyOS lokal aktif tanpa storage cloud
 - [x] Memperbaiki Translate Chat mode 9router lokal agar hasil terjemahan benar-benar diterapkan ke tampilan chat
-- [ ] Menyelaraskan arah tombol Translate dengan bahasa chat yang sedang tampil agar tidak meminta bahasa yang sama
+- [x] Menyelaraskan arah tombol Translate dengan bahasa chat yang sedang tampil agar tidak meminta bahasa yang sama
