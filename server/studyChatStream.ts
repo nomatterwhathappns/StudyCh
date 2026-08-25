@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { ENV } from "./_core/env";
 import { invokeLLM } from "./_core/llm";
-import { localAiRouterLabel, LOCAL_AI_ROUTER_MODEL, requestLocalAiRouter } from "./localAiRouter";
+import { getLocalAiRouterConfig, localAiRouterLabel, LOCAL_AI_ROUTER_MODEL, requestLocalAiRouter } from "./localAiRouter";
 import { sdk } from "./_core/sdk";
 import {
   builtInProviderLabel,
@@ -269,7 +269,7 @@ export function registerStudyChatStream(app: Express) {
         provider = localAiRouterLabel();
         event(res, "meta", { provider });
         result = await streamLocalAiRouter(messages, maxTokens, timeoutMs, writeToken);
-      } else if (ENV.localStudyMode) {
+      } else if (getLocalAiRouterConfig().enabled) {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Mode StudyOS lokal hanya memakai 9router. Pilih 9router lokal di AI Settings." });
       } else if (input.model === "gemini-3-flash-preview") {
         try {

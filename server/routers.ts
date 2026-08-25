@@ -307,7 +307,7 @@ export async function invokeStudyAI(model: StudyModel, messages: Array<{ role: "
     if (json) return { text: response.text, citations: [], truncated: response.truncated, provider } satisfies StudyAIResult;
     return { ...formatStudyResponse(response.text), truncated: response.truncated, provider } satisfies StudyAIResult;
   }
-  if (ENV.localStudyMode) {
+  if (getLocalAiRouterConfig().enabled) {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Mode StudyOS lokal hanya memakai 9router. Pilih 9router lokal di AI Settings." });
   }
   const invokeBuiltIn = async (candidate: "gpt-5-mini" | "claude-haiku-4-5") => aiText(await invokeLLM({
@@ -453,6 +453,9 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         try {
           const image = decodeAvatarImage(input.imageDataUrl);
+          if (getLocalAiRouterConfig().enabled) {
+            return { url: input.imageDataUrl };
+          }
           const { url } = await storagePut(`studyos/avatars/profile.${image.extension}`, image.bytes, image.contentType);
           return { url };
         } catch (error) {
@@ -471,6 +474,9 @@ export const appRouter = router({
         try {
           const document = await decodeAndExtractDocument(input);
           const safeName = input.name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || `study-material.${document.extension}`;
+          if (getLocalAiRouterConfig().enabled) {
+            return { title: input.name, url: "", content: document.content, format: document.format };
+          }
           const { url } = await storagePut(`studyos/materials/${Date.now()}-${safeName}`, document.bytes, document.contentType);
           return { title: input.name, url, content: document.content, format: document.format };
         } catch (error) {

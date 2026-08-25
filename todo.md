@@ -196,7 +196,8 @@
 - [x] Menelusuri dan memperbaiki kegagalan Translate Chat terbaru setelah tema light diterapkan
 - [x] Memperbaiki kontras tombol dan dock Cancel pada tema pastel light
 - [x] Menilai kompatibilitas, keamanan, dan kebutuhan operasional 9router sebagai opsi provider AI StudyOS
-- [ ] Merancang jalur koneksi aman antara 9router lokal pengguna dan StudyOS yang di-hosting tanpa mengekspos API key
+- [x] Merancang jalur koneksi aman antara 9router lokal pengguna dan StudyOS yang di-hosting tanpa mengekspos API key (tidak dilanjutkan karena pengguna memilih StudyOS lokal di laptop)
 - [x] Menyambungkan StudyOS ke repositori GitHub pengguna untuk alur update melalui push dan pull
 - [ ] Memandu setup StudyOS lokal dari repositori private pengguna sebelum koneksi 9router lokal
 - [x] Menambahkan mode StudyOS lokal yang menyimpan data di laptop dan memakai 9router lokal tanpa API key di browser
+- [x] Menyimpan avatar dan dokumen langsung di browser saat mode StudyOS lokal aktif tanpa storage cloud
