@@ -4,7 +4,6 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { registerStudyChatStream } from "../studyChatStream";
@@ -33,11 +32,17 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  const localStudyMode = process.env.STUDYOS_LOCAL_MODE === "true";
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  registerStorageProxy(app);
-  registerOAuthRoutes(app);
+  if (!localStudyMode) {
+    registerStorageProxy(app);
+    const { registerOAuthRoutes } = await import("./oauth");
+    registerOAuthRoutes(app);
+  } else {
+    console.log("[StudyOS] Local mode enabled: cloud OAuth, storage proxy, and analytics are disabled.");
+  }
   registerStudyChatStream(app);
   // tRPC API
   app.use(
