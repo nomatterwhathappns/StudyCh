@@ -371,6 +371,25 @@ describe("mobile Source and AI flow", () => {
     sourceUi.unmount();
   });
 
+  it("targets Indonesian when the original chat is English, then offers English after the translated view is active", async () => {
+    const englishSession: StudySession = {
+      ...session,
+      chatHistory: [{ id: "english-original", role: "user", content: "What is cloud computing?", createdAt: 1 }],
+    };
+    translateChatMutateAsync.mockResolvedValueOnce({
+      translations: {
+        english: [{ id: "english-original", content: "What is cloud computing?" }],
+        indonesian: [{ id: "english-original", content: "Apa itu komputasi awan?" }],
+      },
+    });
+    const ui = render(<ChatPanel session={englishSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    fireEvent.click(ui.getByLabelText("Translate chat to Indonesian"));
+    await waitFor(() => expect(ui.getByText("Apa itu komputasi awan?")).toBeTruthy());
+    expect(translateChatMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ target: "indonesian" }));
+    expect(ui.getByLabelText("Translate chat to English")).toBeTruthy();
+  });
+
   it.each([["desktop", 1280], ["mobile", 375]] as const)("shows a translation progress indicator while Chat translation is loading on %s", async (_viewport, width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     localStorage.setItem("studyos_translate_mode", "true");
