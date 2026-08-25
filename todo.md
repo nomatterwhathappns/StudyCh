@@ -195,3 +195,6 @@
 - [x] Memperbaiki state feedback light theme yang teksnya terlalu pucat atau menyaru dengan latar
 - [x] Menelusuri dan memperbaiki kegagalan Translate Chat terbaru setelah tema light diterapkan
 - [x] Memperbaiki kontras tombol dan dock Cancel pada tema pastel light
+- [x] Menilai kompatibilitas, keamanan, dan kebutuhan operasional 9router sebagai opsi provider AI StudyOS
+- [ ] Merancang jalur koneksi aman antara 9router lokal pengguna dan StudyOS yang di-hosting tanpa mengekspos API key
+- [ ] Menyambungkan StudyOS ke repositori GitHub pengguna untuk alur update melalui push dan pull
