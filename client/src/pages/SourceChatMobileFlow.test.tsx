@@ -354,6 +354,23 @@ describe("mobile Source and AI flow", () => {
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(2);
   });
 
+  it("starts a fresh Translate request after reload instead of reviving an empty cached view", () => {
+    localStorage.setItem("studyos_translate_mode", "true");
+    localStorage.setItem("studyos_chat_translation_target", "indonesian");
+    const reloadSession: StudySession = {
+      ...session,
+      chatHistory: [{ id: "reload-message", role: "user", content: "Halo", createdAt: 1 }],
+    };
+    const sourceUi = render(<SourcePanel session={reloadSession} />);
+    const ui = render(<ChatPanel session={reloadSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    expect(ui.getByText("Halo")).toBeTruthy();
+    expect(ui.getByLabelText("Translate chat to English")).toBeTruthy();
+    expect(sourceUi.getByRole("button", { name: "Translate to English" })).toBeTruthy();
+    expect(translateChatMutateAsync).not.toHaveBeenCalled();
+    sourceUi.unmount();
+  });
+
   it.each([["desktop", 1280], ["mobile", 375]] as const)("shows a translation progress indicator while Chat translation is loading on %s", async (_viewport, width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     localStorage.setItem("studyos_translate_mode", "true");

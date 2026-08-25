@@ -101,8 +101,8 @@ export function SourcePanel({ session }: { session: StudySession }) {
   const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(session.materials[0]?.id ?? null);
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
-  const [translateChat, setTranslateChat] = useState(() => localStorage.getItem("studyos_translate_mode") === "true");
-  const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">(() => localStorage.getItem("studyos_chat_translation_target") === "indonesian" ? "indonesian" : "english");
+  const [translateChat, setTranslateChat] = useState(false);
+  const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">("english");
   const [translatePending, setTranslatePending] = useState(false);
   const [selection, setSelection] = useState("");
   const [keyTermDraft, setKeyTermDraft] = useState<KeyTermDraft | null>(null);
@@ -198,8 +198,8 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
   const { updateSession, deleteSession, addMessage } = useStudyStore();
   const [input, setInput] = useState(""); const [renaming, setRenaming] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [error, setError] = useState(""); const [translationError, setTranslationError] = useState(""); const [translationRequestVersion, setTranslationRequestVersion] = useState(0); const [streaming, setStreaming] = useState(false); const [streamRecovery, setStreamRecovery] = useState(false); const [streamedText, setStreamedText] = useState(""); const [streamProvider, setStreamProvider] = useState("");
   const followLatestRef = useRef(true); const pendingScrollRef = useRef(false); const streamedTextRef = useRef(""); const streamProviderRef = useRef(""); const streamRecoveryRef = useRef(false); const streamAbortRef = useRef<AbortController | null>(null); const chatRunRef = useRef(0); const translationRunRef = useRef(0); const translatingIdsRef = useRef(new Set<string>()); const translationFailuresRef = useRef(new Set<string>());
-  const [translateChat, setTranslateChat] = useState(() => localStorage.getItem("studyos_translate_mode") === "true");
-  const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">(() => localStorage.getItem("studyos_chat_translation_target") === "indonesian" ? "indonesian" : "english");
+  const [translateChat, setTranslateChat] = useState(false);
+  const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">("english");
   const [translatedMessages, setTranslatedMessages] = useState<ChatTranslationCache>(emptyChatTranslationCache);
   const saveAssistantResponse = (response: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => addMessage(session.id, { role: "assistant", content: response.text, citations: attachMaterialIds(session, response.citations), truncated: response.truncated, ...(response.provider ? { provider: response.provider } : {}) });
   const friendlyChatError = (message: string) => /(?:Respons Chat belum tersedia karena kuota AI provider|Google Gemini sedang membatasi request|Google Gemini sedang tidak tersedia)/i.test(message) ? message : /too_big|too_small|expected string|materials|history/i.test(message) ? "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikannya—silakan kirim ulang pesanmu." : "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
