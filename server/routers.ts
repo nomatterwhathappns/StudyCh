@@ -651,10 +651,23 @@ export const appRouter = router({
         }
         try {
           const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-            { role: "system", content: "You create high-quality learning quizzes. Generate exactly five distinct multiple-choice questions based only on the supplied study material. Each question must have exactly four plausible options, one correct option, and a concise explanation. Return JSON only in this exact shape: {\"questions\":[{\"question\":\"...\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"correct\":0,\"explanation\":\"...\"}]}. The correct field must be a zero-based number from 0 to 3; do not use correctIndex, answer, letters, or option text. No Markdown or commentary." },
+            { role: "system", content: "You create high-quality learning quizzes. Generate exactly five distinct multiple-choice questions based only on the supplied study material. Each question must have exactly four plausible options, one correct option, and a concise one-sentence explanation. Keep every field short enough for all five questions to fit. Return JSON only in this exact shape: {\"questions\":[{\"question\":\"...\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"correct\":0,\"explanation\":\"...\"}]}. The correct field must be a zero-based number from 0 to 3; do not use correctIndex, answer, letters, or option text. No Markdown or commentary." },
             { role: "user", content: `${sourceContext(input.materials)}\n\nGenerate the quiz for the session \"${input.sessionName}\".` },
           ], responseTokenBudget("quiz", input.responseStyle), input.responseStyle, true);
-          return { questions: parseQuizQuestions(result.text) };
+          try {
+            return { questions: parseQuizQuestions(result.text) };
+          } catch (parseError) {
+            if (input.model !== LOCAL_AI_ROUTER_MODEL || !getLocalAiRouterConfig().enabled) throw parseError;
+            const repaired = await invokeStudyAIForUser(ctx.user?.id, input.model, [
+              { role: "system", content: "Reformat the supplied Quiz candidate into valid JSON only. Return exactly five questions with exactly four short options each. Use this shape: {\"questions\":[{\"question\":\"...\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"correct\":0,\"explanation\":\"...\"}]}. correct must be a number 0 to 3. Do not add Markdown or commentary." },
+              { role: "user", content: `Quiz candidate to repair:\n${result.text.slice(0, 12_000)}` },
+            ], responseTokenBudget("quiz", input.responseStyle), input.responseStyle, true);
+            try {
+              return { questions: parseQuizQuestions(repaired.text) };
+            } catch {
+              throw parseError;
+            }
+          }
         } catch (error) {
           if (error instanceof TRPCError) throw error;
           console.error("[StudyOS AI quiz]", error);
