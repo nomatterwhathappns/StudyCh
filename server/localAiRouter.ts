@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 
 export const LOCAL_AI_ROUTER_MODEL = "local-9router" as const;
+export const LOCAL_QUIZ_TIMEOUT_MS = 60_000;
 
 export type LocalAiRouterMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -59,18 +60,27 @@ type LocalAiRouterRequest = {
 
 export async function requestLocalAiRouter({ messages, maxTokens, json = false, stream = false, timeoutMs = 45_000 }: LocalAiRouterRequest) {
   const config = requiredLocalAiRouterConfig();
-  const response = await fetch(`${config.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${config.apiKey}` },
-    body: JSON.stringify({
-      model: config.model,
-      messages,
-      max_tokens: maxTokens,
-      stream,
-      ...(json ? { response_format: { type: "json_object" } } : {}),
-    }),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${config.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${config.apiKey}` },
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        max_tokens: maxTokens,
+        stream,
+        ...(json ? { response_format: { type: "json_object" } } : {}),
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    if ((error as { name?: unknown } | undefined)?.name === "TimeoutError") {
+      console.warn("[StudyOS local 9router] request timed out", { timeoutMs });
+      throw new TRPCError({ code: "TIMEOUT", message: `9router lokal belum menyelesaikan respons dalam ${Math.ceil(timeoutMs / 1_000)} detik. Coba lagi atau pilih preset Quick.` });
+    }
+    throw error;
+  }
   if (response.ok) return response;
 
   const detail = (await response.text()).slice(0, 300);

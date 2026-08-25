@@ -35,4 +35,15 @@ describe("local 9router adapter", () => {
     await expect(requestLocalAiRouter({ messages: [{ role: "user", content: "Halo" }], maxTokens: 120 })).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("turns a local provider timeout into an actionable safe error", async () => {
+    process.env.STUDYOS_LOCAL_MODE = "true";
+    process.env.STUDYOS_LOCAL_AI_ROUTER_URL = "http://127.0.0.1:20127/v1";
+    process.env.STUDYOS_LOCAL_AI_ROUTER_API_KEY = "local-router-key";
+    process.env.STUDYOS_LOCAL_AI_ROUTER_MODEL = "oc/mimo-v2.5-free";
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new DOMException("The operation was aborted due to timeout", "TimeoutError")));
+
+    await expect(requestLocalAiRouter({ messages: [{ role: "user", content: "Buat quiz" }], maxTokens: 900, timeoutMs: 60_000 }))
+      .rejects.toMatchObject({ code: "TIMEOUT", message: expect.stringContaining("60 detik") });
+  });
 });

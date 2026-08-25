@@ -8,6 +8,7 @@ vi.mock("./localAiRouter", async (importOriginal) => {
 });
 
 import { appRouter } from "./routers";
+import { LOCAL_QUIZ_TIMEOUT_MS } from "./localAiRouter";
 import type { TrpcContext } from "./_core/context";
 
 const originalEnvironment = { ...process.env };
@@ -49,9 +50,10 @@ describe("local 9router Quiz recovery", () => {
 
     expect(result.questions).toHaveLength(5);
     expect(invokeLocalAiRouter).toHaveBeenCalledTimes(2);
-    const repairRequest = invokeLocalAiRouter.mock.calls[1]?.[0] as { messages: Array<{ content: string }> };
+    const repairRequest = invokeLocalAiRouter.mock.calls[1]?.[0] as { messages: Array<{ content: string }>; timeoutMs?: number };
     expect(repairRequest.messages[0]?.content).toContain("Reformat the supplied Quiz candidate");
     expect(repairRequest.messages[1]?.content).toContain("Here are five questions");
+    expect(repairRequest.timeoutMs).toBe(LOCAL_QUIZ_TIMEOUT_MS);
   });
 
   it("passes custom question count, option count, and difficulty to the local provider", async () => {
@@ -75,9 +77,10 @@ describe("local 9router Quiz recovery", () => {
 
     expect(result.questions).toHaveLength(3);
     expect(result.questions.every((question) => question.options.length === 2)).toBe(true);
-    const request = invokeLocalAiRouter.mock.calls[0]?.[0] as { messages: Array<{ content: string }> };
+    const request = invokeLocalAiRouter.mock.calls[0]?.[0] as { messages: Array<{ content: string }>; timeoutMs?: number };
     expect(request.messages[0]?.content).toContain("exactly 3 distinct");
     expect(request.messages[0]?.content).toContain("exactly 2 plausible options");
     expect(request.messages[0]?.content).toContain("Hard: test application");
+    expect(request.timeoutMs).toBe(LOCAL_QUIZ_TIMEOUT_MS);
   });
 });

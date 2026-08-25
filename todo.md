@@ -208,3 +208,4 @@
 - [ ] Menstabilkan Generate Quiz melalui 9router lokal agar respons model valid dan dapat dipakai konsisten
 - [x] Menambahkan pengaturan Generate Quiz untuk jumlah soal, jumlah opsi, dan tingkat kesulitan dengan UX yang ringkas
 - [ ] Menjaga panel Watch tetap tampil saat Build a Quiz terbuka dan menutup dialog segera setelah generate berjalan di background
+- [x] Memperpanjang timeout khusus Generate Quiz lokal berdasarkan TimeoutError nyata dari 9router
