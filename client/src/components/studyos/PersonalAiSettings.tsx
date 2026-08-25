@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { KeyRound, Loader2, Settings2, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
-type ProviderModel = "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview";
+type ProviderModel = "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router";
 
 function displayError(error: unknown) {
   return error instanceof Error ? error.message : "StudyOS could not update your Gemini key. Please try again.";
@@ -19,6 +19,7 @@ export function PersonalAiSettings() {
   const [apiKey, setApiKey] = useState("");
   const [notice, setNotice] = useState("");
   const utils = trpc.useUtils();
+  const localRouter = trpc.study.localAiRouterStatus.useQuery(undefined, { staleTime: 30_000 });
   const gemini = trpc.study.personalGeminiStatus.useQuery(undefined, { enabled: open && model === "gemini-3-flash-preview", staleTime: 30_000 });
   const saveGeminiKey = trpc.study.savePersonalGeminiKey.useMutation({
     onSuccess: async (data) => {
@@ -42,8 +43,15 @@ export function PersonalAiSettings() {
       setNotice("");
     }
   }, [open]);
+  useEffect(() => {
+    if (localRouter.data?.enabled && model !== "local-9router") {
+      setModel("local-9router");
+      localStorage.setItem("studyos_ai_model", "local-9router");
+    }
+  }, [localRouter.data?.enabled, model]);
 
   const geminiSelected = model === "gemini-3-flash-preview";
+  const localMode = localRouter.data?.enabled === true;
   const configured = gemini.data?.configured === true;
   const pending = saveGeminiKey.isPending || removeGeminiKey.isPending;
   const saveSettings = () => {
@@ -64,17 +72,17 @@ export function PersonalAiSettings() {
       <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl border-border bg-card text-card-foreground sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-3xl italic">AI settings</DialogTitle>
-          <DialogDescription>Choose a model and response style. A Gemini key is encrypted per account on the server and is never returned to this browser.</DialogDescription>
+          <DialogDescription>{localMode ? "StudyOS lokal memakai 9router di laptop ini. API key provider hanya tersimpan di file .env server lokal dan tidak pernah dikirim ke browser." : "Choose a model and response style. A Gemini key is encrypted per account on the server and is never returned to this browser."}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="ai-model">Model</Label>
-            <select id="ai-model" value={model} onChange={(event) => setModel(event.target.value as ProviderModel)} className="h-10 rounded-xl border border-border bg-secondary px-3 text-sm outline-none">
-              <option value="gpt-5-mini">StudyOS AI gateway · GPT-5 mini</option>
-              <option value="claude-haiku-4-5">StudyOS AI gateway · Claude Haiku</option>
-              <option value="gemini-3-flash-preview">Google · Gemini 3.6 Flash (personal key)</option>
+            <select id="ai-model" value={model} disabled={localMode} onChange={(event) => setModel(event.target.value as ProviderModel)} className="h-10 rounded-xl border border-border bg-secondary px-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-70">
+              {localMode ? <option value="local-9router">9router lokal · {localRouter.data?.configured ? localRouter.data.model : "belum dikonfigurasi"}</option> : <><option value="gpt-5-mini">StudyOS AI gateway · GPT-5 mini</option><option value="claude-haiku-4-5">StudyOS AI gateway · Claude Haiku</option><option value="gemini-3-flash-preview">Google · Gemini 3.6 Flash (personal key)</option></>}
             </select>
           </div>
+
+          {localMode && <div className={`rounded-2xl border p-3 text-xs leading-relaxed ${localRouter.data?.configured ? "border-primary/45 bg-primary/10 text-foreground" : "border-destructive/45 bg-destructive/10 text-foreground"}`}><strong className="block">{localRouter.data?.configured ? "9router lokal siap dipakai" : "9router lokal belum dikonfigurasi"}</strong><p className="mt-1 text-muted-foreground">{localRouter.data?.configured ? "Chat, Translate, Key Terms, dan Quiz akan dikirim dari server StudyOS lokal ke 9router pada laptop ini." : "Salin .env.local.example menjadi .env, lalu isi proxy key dan model 9router. Restart StudyOS setelahnya."}</p></div>}
 
           {geminiSelected && (
             <div className="grid gap-3 rounded-2xl border border-border bg-secondary/35 p-3">

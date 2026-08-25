@@ -36,8 +36,14 @@ export default function StudyWorkspace() {
   const { hydrated, hydrate, profile, sessions, activeSessionId, createSession, setActiveSession } = useStudyStore();
   const [sourceVisible, setSourceVisible] = useState(true);
   const [watchVisible, setWatchVisible] = useState(true);
+  const localAiRouter = trpc.study.localAiRouterStatus.useQuery(undefined, { staleTime: 60_000 });
 
   useEffect(() => { void hydrate(); }, [hydrate]);
+  useEffect(() => {
+    if (localAiRouter.data?.enabled && localStorage.getItem("studyos_ai_model") !== "local-9router") {
+      localStorage.setItem("studyos_ai_model", "local-9router");
+    }
+  }, [localAiRouter.data?.enabled]);
   useEffect(() => {
     if (hydrated && sessions.length === 0) createSession();
     if (hydrated && sessions.length > 0 && !activeSessionId) setActiveSession(sessions[0].id);
@@ -239,7 +245,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
       .finally(() => missing.forEach((message) => translatingIdsRef.current.delete(message.id)));
   }, [translateChat, translationTarget, translatedMessages, translateChatMessages.mutateAsync, translationRequestVersion]);
   useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:chat-translation-status", { detail: { pending: translateChatMessages.isPending, target: translationTarget } })); }, [translateChatMessages.isPending, translationTarget]);
-  const streamChat = async (payload: { sessionName: string; materials: string; translate: boolean; responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed"; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview"; history: Array<{ role: "user" | "assistant"; content: string }> }) => {
+  const streamChat = async (payload: { sessionName: string; materials: string; translate: boolean; responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed"; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; history: Array<{ role: "user" | "assistant"; content: string }> }) => {
     const run = ++chatRunRef.current;
     const controller = new AbortController();
     streamAbortRef.current = controller;
@@ -373,6 +379,6 @@ function CitationChips({ citations, sessionId }: { citations: StudyCitation[]; s
 function fileAsDataUrl(file: File) { return new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onerror = () => reject(new Error("Unable to read this file.")); reader.onload = () => resolve(String(reader.result)); reader.readAsDataURL(file); }); }
 function documentMimeType(file: File): "application/pdf" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "text/plain" | "text/markdown" | "text/csv" | null { const name = file.name.toLowerCase(); if (file.type === "application/pdf" || name.endsWith(".pdf")) return "application/pdf"; if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || name.endsWith(".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"; if (file.type === "text/markdown" || name.endsWith(".md") || name.endsWith(".markdown")) return "text/markdown"; if (file.type === "text/csv" || name.endsWith(".csv")) return "text/csv"; if (file.type === "text/plain" || name.endsWith(".txt")) return "text/plain"; return null; }
 function formatClock(seconds: number) { const mins = Math.floor(seconds / 60).toString().padStart(2, "0"); const secs = (seconds % 60).toString().padStart(2, "0"); return `${mins}:${secs}`; }
-function readAiSettings(): { model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview"; responseStyle: "Fast" | "Balanced" | "Deep" } { const model = localStorage.getItem("studyos_ai_model"); const responseStyle = localStorage.getItem("studyos_ai_style"); return { model: model === "claude-haiku-4-5" || model === "gemini-3-flash-preview" || model === "gpt-5-mini" ? model : "gpt-5-mini", responseStyle: responseStyle === "Fast" || responseStyle === "Concise" ? "Fast" : responseStyle === "Deep" || responseStyle === "Detailed" ? "Deep" : "Balanced" }; }
+function readAiSettings(): { model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; responseStyle: "Fast" | "Balanced" | "Deep" } { const model = localStorage.getItem("studyos_ai_model"); const responseStyle = localStorage.getItem("studyos_ai_style"); return { model: model === "claude-haiku-4-5" || model === "gemini-3-flash-preview" || model === "gpt-5-mini" || model === "local-9router" ? model : "gpt-5-mini", responseStyle: responseStyle === "Fast" || responseStyle === "Concise" ? "Fast" : responseStyle === "Deep" || responseStyle === "Detailed" ? "Deep" : "Balanced" }; }
 function extractText(html: string) { const doc = new DOMParser().parseFromString(html, "text/html"); doc.querySelectorAll("script, style, nav, footer, header, noscript").forEach((node) => node.remove()); return doc.body.textContent?.replace(/\s+/g, " ").trim() ?? ""; }
 function escapeRegExp(value: string) { return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }

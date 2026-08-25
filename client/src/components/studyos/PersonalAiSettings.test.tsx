@@ -18,6 +18,7 @@ vi.mock("@/lib/trpc", () => ({
   trpc: {
     useUtils: () => ({ study: { personalGeminiStatus: { invalidate } } }),
     study: {
+      localAiRouterStatus: { useQuery: () => ({ data: { enabled: false, configured: false, model: null } }) },
       personalGeminiStatus: { useQuery: () => ({ data: { configured: true, keySuffix: "cD9x", model: "gemini-3.6-flash" }, isLoading: false }) },
       savePersonalGeminiKey: { useMutation: () => ({ mutate: saveKey, isPending: false, isError: false }) },
       removePersonalGeminiKey: { useMutation: () => ({ mutate: removeKey, isPending: false, isError: false }) },

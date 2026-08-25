@@ -1,7 +1,9 @@
 import type { Express, Request, Response } from "express";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { ENV } from "./_core/env";
 import { invokeLLM } from "./_core/llm";
+import { localAiRouterLabel, LOCAL_AI_ROUTER_MODEL, requestLocalAiRouter } from "./localAiRouter";
 import { sdk } from "./_core/sdk";
 import {
   builtInProviderLabel,
@@ -19,7 +21,7 @@ const streamInput = z.object({
   materials: z.string().max(10_000),
   translate: z.boolean(),
   responseStyle: z.enum(["Fast", "Balanced", "Deep", "Concise", "Detailed"]),
-  model: z.enum(["gpt-5-mini", "claude-haiku-4-5", "gemini-3-flash-preview"]),
+  model: z.enum(["gpt-5-mini", "claude-haiku-4-5", "gemini-3-flash-preview", LOCAL_AI_ROUTER_MODEL]),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(6_000) })).min(1).max(30),
 });
 
@@ -43,6 +45,7 @@ export function normalizeStreamPayload(body: unknown) {
 }
 
 export function streamErrorMessage(reason: unknown) {
+  if (reason instanceof TRPCError) return reason.message;
   if (reason instanceof z.ZodError) return "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikan data chat—silakan kirim ulang pesanmu.";
   if (reason instanceof Error && /Gemini stream failed \(429\)/i.test(reason.message)) return "Google Gemini sedang membatasi request untuk personal key ini (429). Tunggu sebentar sebelum mengirim pesan lagi.";
   if (reason instanceof Error && /Gemini stream failed \(503\)/i.test(reason.message)) return "Google Gemini sedang tidak tersedia (503). Key kamu sudah tersambung; coba lagi beberapa saat lagi.";
@@ -174,6 +177,33 @@ async function streamBuiltIn(messages: StreamMessage[], model: "gpt-5-mini" | "c
   return { text: finalText, truncated: isOutputTruncated(fallback.choices?.[0]?.finish_reason) };
 }
 
+async function streamLocalAiRouter(messages: StreamMessage[], maxTokens: number, timeoutMs: number, onToken: (token: string) => void): Promise<StreamedAIResult> {
+  const response = await requestLocalAiRouter({ messages, maxTokens, stream: true, timeoutMs });
+  const contentType = response.headers.get("content-type") ?? "";
+  let text = "";
+  let finishReason: string | undefined;
+  if (contentType.includes("application/json")) {
+    const json = await response.json() as { choices?: Array<{ message?: { content?: string }; finish_reason?: string | null }> };
+    text = json.choices?.[0]?.message?.content ?? "";
+    finishReason = json.choices?.[0]?.finish_reason ?? undefined;
+    if (!text.trim()) throw new Error("9router lokal mengembalikan respons kosong.");
+    await emitBufferedStreamTokens(text, onToken);
+    return { text, truncated: isOutputTruncated(finishReason) };
+  }
+  await consumeSse(response, (payload) => {
+    if (payload === "[DONE]") return;
+    try {
+      const token = extractBuiltInStreamContent(payload);
+      if (token) { text += token; onToken(token); }
+      finishReason ??= extractBuiltInStreamFinishReason(payload);
+    } catch {
+      // Ignore keep-alives and malformed non-content frames from the local proxy.
+    }
+  });
+  if (!text.trim()) throw new Error("9router lokal mengembalikan respons kosong.");
+  return { text, truncated: isOutputTruncated(finishReason) };
+}
+
 async function streamGemini(messages: StreamMessage[], apiKey: string, maxTokens: number, timeoutMs: number, onToken: (token: string) => void): Promise<StreamedAIResult> {
   const system = messages.find(message => message.role === "system")?.content ?? "";
   const contents = messages.filter(message => message.role !== "system").map(message => ({
@@ -235,7 +265,13 @@ export function registerStudyChatStream(app: Express) {
       let result: StreamedAIResult = { text: "", truncated: false };
       let provider = "";
 
-      if (input.model === "gemini-3-flash-preview") {
+      if (input.model === LOCAL_AI_ROUTER_MODEL) {
+        provider = localAiRouterLabel();
+        event(res, "meta", { provider });
+        result = await streamLocalAiRouter(messages, maxTokens, timeoutMs, writeToken);
+      } else if (ENV.localStudyMode) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Mode StudyOS lokal hanya memakai 9router. Pilih 9router lokal di AI Settings." });
+      } else if (input.model === "gemini-3-flash-preview") {
         try {
           const credential = await personalGeminiAccess(userId);
           if (!credential.apiKey) throw new Error("No Gemini key is configured.");

@@ -9,6 +9,8 @@ import { apiKeySuffix, decryptProviderCredential, encryptProviderCredential } fr
 import { deleteAiProviderCredential, getAiProviderCredential, saveAiProviderCredential } from "./db";
 import { decodeAndExtractDocument } from "./documentImport";
 import { getGoogleGeminiStatus, invokeGoogleGemini } from "./googleGemini";
+import { ENV } from "./_core/env";
+import { getLocalAiRouterConfig, invokeLocalAiRouter, LOCAL_AI_ROUTER_MODEL, localAiRouterLabel } from "./localAiRouter";
 import { invokeLLM } from "./_core/llm";
 import { storagePut } from "./storage";
 import { systemRouter } from "./_core/systemRouter";
@@ -28,12 +30,15 @@ const responseStyleSchema = z.enum(["Fast", "Balanced", "Deep", "Concise", "Deta
 type ResponseStyle = z.infer<typeof responseStyleSchema>;
 type ResponseMode = "Fast" | "Balanced" | "Deep";
 
+const studyModelSchema = z.enum(["gpt-5-mini", "claude-haiku-4-5", "gemini-3-flash-preview", LOCAL_AI_ROUTER_MODEL]);
+export type StudyModel = z.infer<typeof studyModelSchema>;
+
 const aiInputSchema = z.object({
   sessionName: z.string().min(1).max(100),
   materials: z.string().max(10000),
   translate: z.boolean().default(false),
   responseStyle: responseStyleSchema,
-  model: z.enum(["gpt-5-mini", "claude-haiku-4-5", "gemini-3-flash-preview"]).default("gpt-5-mini"),
+  model: studyModelSchema.default("gpt-5-mini"),
 });
 
 const keyTermDraftSchema = z.object({
@@ -292,10 +297,19 @@ function providerUnavailableError(error: unknown) {
   return new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI is temporarily unavailable. Please try again." });
 }
 
-export async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, geminiAccess?: { apiKey?: string; source: "personal" | "server" }, timeoutMs = providerTimeoutMs(responseStyle)) {
+export async function invokeStudyAI(model: StudyModel, messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, geminiAccess?: { apiKey?: string; source: "personal" | "server" }, timeoutMs = providerTimeoutMs(responseStyle)) {
   const jsonSchema = typeof json === "object" ? json : { name: "studyos_json", schema: { type: "object", additionalProperties: true } };
   let response: { text: string; truncated: boolean };
   let provider: string;
+  if (model === LOCAL_AI_ROUTER_MODEL) {
+    response = await invokeLocalAiRouter({ messages, maxTokens, json: Boolean(json), timeoutMs });
+    provider = localAiRouterLabel();
+    if (json) return { text: response.text, citations: [], truncated: response.truncated, provider } satisfies StudyAIResult;
+    return { ...formatStudyResponse(response.text), truncated: response.truncated, provider } satisfies StudyAIResult;
+  }
+  if (ENV.localStudyMode) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Mode StudyOS lokal hanya memakai 9router. Pilih 9router lokal di AI Settings." });
+  }
   const invokeBuiltIn = async (candidate: "gpt-5-mini" | "claude-haiku-4-5") => aiText(await invokeLLM({
     model: candidate,
     messages,
@@ -345,7 +359,7 @@ export async function invokeStudyAI(model: "gpt-5-mini" | "claude-haiku-4-5" | "
   return { ...formatStudyResponse(response.text), truncated: response.truncated, provider } satisfies StudyAIResult;
 }
 
-async function invokeStudyAIForUser(userId: number | undefined, model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview", messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, timeoutMs?: number) {
+async function invokeStudyAIForUser(userId: number | undefined, model: StudyModel, messages: Array<{ role: "system" | "user" | "assistant"; content: string }>, maxTokens: number, responseStyle: ResponseStyle, json: boolean | StudyJsonSchema = false, timeoutMs?: number) {
   const geminiAccess = model === "gemini-3-flash-preview" ? await personalGeminiAccess(userId) : undefined;
   return invokeStudyAI(model, messages, maxTokens, responseStyle, json, geminiAccess, timeoutMs);
 }
@@ -400,6 +414,10 @@ export const appRouter = router({
   }),
   study: router({
     googleGeminiStatus: publicProcedure.query(() => getGoogleGeminiStatus()),
+    localAiRouterStatus: publicProcedure.query(() => {
+      const config = getLocalAiRouterConfig();
+      return { enabled: config.enabled, configured: config.configured, model: config.model ?? null };
+    }),
     personalGeminiStatus: protectedProcedure.query(async ({ ctx }) => {
       const credential = await getAiProviderCredential(ctx.user.id, GEMINI_PROVIDER);
       return { configured: Boolean(credential), keySuffix: credential?.keySuffix ?? null, model: "gemini-3.6-flash" };
@@ -499,7 +517,7 @@ export const appRouter = router({
     translateChat: publicProcedure
       .input(z.object({
         messages: z.array(chatTranslationItemSchema).min(1).max(6),
-        model: z.enum(["gpt-5-mini", "claude-haiku-4-5", "gemini-3-flash-preview"]).default("gpt-5-mini"),
+        model: studyModelSchema.default("gpt-5-mini"),
         target: z.enum(["english", "indonesian"]),
       }))
       .mutation(async ({ input, ctx }) => {
