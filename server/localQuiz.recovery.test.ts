@@ -53,4 +53,31 @@ describe("local 9router Quiz recovery", () => {
     expect(repairRequest.messages[0]?.content).toContain("Reformat the supplied Quiz candidate");
     expect(repairRequest.messages[1]?.content).toContain("Here are five questions");
   });
+
+  it("passes custom question count, option count, and difficulty to the local provider", async () => {
+    process.env.STUDYOS_LOCAL_MODE = "true";
+    process.env.STUDYOS_LOCAL_AI_ROUTER_URL = "http://127.0.0.1:20127/v1";
+    process.env.STUDYOS_LOCAL_AI_ROUTER_API_KEY = "local-router-key";
+    process.env.STUDYOS_LOCAL_AI_ROUTER_MODEL = "oc/mimo-v2.5-free";
+    const threeQuestionQuiz = {
+      questions: Array.from({ length: 3 }, (_, index) => ({ question: `Question ${index + 1}?`, options: ["One", "Two"], correct: index % 2, explanation: "A short explanation." })),
+    };
+    invokeLocalAiRouter.mockResolvedValueOnce({ text: JSON.stringify(threeQuestionQuiz), truncated: false });
+
+    const result = await appRouter.createCaller(context()).study.quiz({
+      sessionName: "Cloud basics",
+      materials: "[Source: Cloud.md · part 1]\nCloud storage keeps files on remote servers.",
+      translate: false,
+      responseStyle: "Balanced",
+      model: "local-9router",
+      quiz: { difficulty: "hard", questionCount: 3, optionCount: 2 },
+    });
+
+    expect(result.questions).toHaveLength(3);
+    expect(result.questions.every((question) => question.options.length === 2)).toBe(true);
+    const request = invokeLocalAiRouter.mock.calls[0]?.[0] as { messages: Array<{ content: string }> };
+    expect(request.messages[0]?.content).toContain("exactly 3 distinct");
+    expect(request.messages[0]?.content).toContain("exactly 2 plausible options");
+    expect(request.messages[0]?.content).toContain("Hard: test application");
+  });
 });

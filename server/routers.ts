@@ -41,6 +41,12 @@ const aiInputSchema = z.object({
   model: studyModelSchema.default("gpt-5-mini"),
 });
 
+const quizSettingsSchema = z.object({
+  difficulty: z.enum(["easy", "medium", "hard"]).default("medium"),
+  questionCount: z.union([z.literal(3), z.literal(5)]).default(5),
+  optionCount: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(4),
+}).default({ difficulty: "medium", questionCount: 5, optionCount: 4 });
+
 const keyTermDraftSchema = z.object({
   term: z.string().min(1).max(600),
   definition: z.string().min(1).max(1200),
@@ -246,7 +252,7 @@ export function parseKeyTermDraft(content: string) {
 
 const rawQuizQuestionSchema = z.object({
   question: z.string().min(1),
-  options: z.array(z.string().min(1)).length(4),
+  options: z.array(z.string().min(1)).min(2).max(4),
   correct: z.unknown().optional(),
   correctIndex: z.unknown().optional(),
   correct_index: z.unknown().optional(),
@@ -267,9 +273,9 @@ function normalizeQuizCorrectIndex(value: unknown, options: string[]) {
   throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI returned an invalid quiz answer key. Please try again." });
 }
 
-export function parseQuizQuestions(content: string) {
+export function parseQuizQuestions(content: string, settings: z.infer<typeof quizSettingsSchema> = { difficulty: "medium", questionCount: 5, optionCount: 4 }) {
   const parsed = parseJsonObject(content) as { questions?: unknown };
-  const questions = z.array(rawQuizQuestionSchema).length(5).parse(parsed.questions);
+  const questions = z.array(rawQuizQuestionSchema.refine((question) => question.options.length === settings.optionCount, { message: "Unexpected option count" })).length(settings.questionCount).parse(parsed.questions);
   return questions.map(({ correct, correctIndex, correct_index, correctAnswer, answer, ...question }) => ({
     ...question,
     correct: normalizeQuizCorrectIndex(correct ?? correctIndex ?? correct_index ?? correctAnswer ?? answer, question.options),
@@ -644,26 +650,27 @@ export const appRouter = router({
         }
       }),
     quiz: publicProcedure
-      .input(aiInputSchema)
+      .input(aiInputSchema.extend({ quiz: quizSettingsSchema }))
       .mutation(async ({ input, ctx }) => {
         if (!input.materials.trim()) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "Add at least one source before generating a quiz." });
         }
         try {
+          const difficulty = input.quiz.difficulty === "easy" ? "Easy: recall clear facts and definitions." : input.quiz.difficulty === "hard" ? "Hard: test application, comparison, and reasoning from the material." : "Medium: test understanding and simple application from the material.";
           const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-            { role: "system", content: "You create high-quality learning quizzes. Generate exactly five distinct multiple-choice questions based only on the supplied study material. Each question must have exactly four plausible options, one correct option, and a concise one-sentence explanation. Keep every field short enough for all five questions to fit. Return JSON only in this exact shape: {\"questions\":[{\"question\":\"...\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"correct\":0,\"explanation\":\"...\"}]}. The correct field must be a zero-based number from 0 to 3; do not use correctIndex, answer, letters, or option text. No Markdown or commentary." },
+            { role: "system", content: `You create high-quality learning quizzes. Generate exactly ${input.quiz.questionCount} distinct multiple-choice questions based only on the supplied study material. Each question must have exactly ${input.quiz.optionCount} plausible options, one correct option, and a concise one-sentence explanation. ${difficulty} Keep every field short enough for all questions to fit. Return JSON only in this exact shape: {\"questions\":[{\"question\":\"...\",\"options\":[\"...\"],\"correct\":0,\"explanation\":\"...\"}]}. The correct field must be a zero-based number from 0 to ${input.quiz.optionCount - 1}; do not use correctIndex, answer, letters, or option text. No Markdown or commentary.` },
             { role: "user", content: `${sourceContext(input.materials)}\n\nGenerate the quiz for the session \"${input.sessionName}\".` },
           ], responseTokenBudget("quiz", input.responseStyle), input.responseStyle, true);
           try {
-            return { questions: parseQuizQuestions(result.text) };
+            return { questions: parseQuizQuestions(result.text, input.quiz) };
           } catch (parseError) {
             if (input.model !== LOCAL_AI_ROUTER_MODEL || !getLocalAiRouterConfig().enabled) throw parseError;
             const repaired = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-              { role: "system", content: "Reformat the supplied Quiz candidate into valid JSON only. Return exactly five questions with exactly four short options each. Use this shape: {\"questions\":[{\"question\":\"...\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"correct\":0,\"explanation\":\"...\"}]}. correct must be a number 0 to 3. Do not add Markdown or commentary." },
+              { role: "system", content: `Reformat the supplied Quiz candidate into valid JSON only. Return exactly ${input.quiz.questionCount} questions with exactly ${input.quiz.optionCount} short options each. Use this shape: {\"questions\":[{\"question\":\"...\",\"options\":[\"...\"],\"correct\":0,\"explanation\":\"...\"}]}. correct must be a number 0 to ${input.quiz.optionCount - 1}. Do not add Markdown or commentary.` },
               { role: "user", content: `Quiz candidate to repair:\n${result.text.slice(0, 12_000)}` },
             ], responseTokenBudget("quiz", input.responseStyle), input.responseStyle, true);
             try {
-              return { questions: parseQuizQuestions(repaired.text) };
+              return { questions: parseQuizQuestions(repaired.text, input.quiz) };
             } catch {
               throw parseError;
             }
