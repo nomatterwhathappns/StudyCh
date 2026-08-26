@@ -229,3 +229,6 @@
 - [x] Mengaudit seluruh ikon dan aksen hardcoded yang tidak mengikuti token Theme
 - [x] Mengganti warna ikon tetap dengan token semantik yang kontras pada semua tema
 - [x] Memverifikasi konsistensi ikon pada tema terang dan gelap sebelum melanjutkan review pengguna
+- [x] Mengaudit token sidebar Midnight Blue dan Ocean Depths yang membuat teks navigasi tidak terbaca
+- [x] Memperbaiki kontras navigasi, label, dan tombol sidebar pada Midnight Blue serta Ocean Depths
+- [x] Memverifikasi tampilan sidebar dua tema gelap sebelum melanjutkan review akhir
