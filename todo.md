@@ -255,3 +255,6 @@
 - [x] Menambahkan regresi, memverifikasi tampilan composer Chat, lalu push perbaikannya ke GitHub
 - [x] Menambahkan bubble input Chat yang jelas terlihat dari background tanpa mengembalikan kotak composer besar
 - [x] Memverifikasi bubble multiline dan tombol kirim pada desktop-mobile, lalu push refinement ke GitHub
+- [x] Menghilangkan kotak dalam serta scrollbar kasar dari textarea bubble Chat
+- [x] Menempatkan tombol kirim sebagai bubble terpisah di bawah composer tanpa ruang kosong di atasnya
+- [ ] Menambahkan regresi, memverifikasi composer halus desktop-mobile, lalu push refinement ke GitHub

@@ -15,6 +15,9 @@ describe("chat composer layout", () => {
     expect(css).toContain("rounded-[1.4rem] border border-border");
     expect(css).toContain("background: color-mix(in srgb, var(--card) 92%, var(--secondary));");
     expect(css).toContain(".study-chat-input-shell textarea {");
+    expect(css).toContain("border: 0 !important; box-shadow: none !important;");
+    expect(css).toContain("textarea::-webkit-scrollbar-thumb");
+    expect(css).toContain("right: 0; bottom: -3.25rem;");
     expect(css).toContain("field-sizing: content;");
     expect(css).toContain("rounded-full bg-primary text-primary-foreground");
   });
