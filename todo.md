@@ -291,3 +291,6 @@
 - [x] Menghapus kontrol bawaan tabel Markdown yang mengganggu dari bubble Chat
 - [x] Menjaga tabel Chat mengikuti lebar bubble dan hanya scroll mendatar bila diperlukan
 - [x] Menambahkan regresi, memverifikasi tampilan tabel, lalu push perbaikannya ke GitHub
+- [x] Menambahkan field nama teman belajar AI pada Edit Profile dengan default StudyOS dan reset
+- [x] Memakai nama AI pilihan pengguna pada instruksi server serta label bubble Chat
+- [x] Menambahkan regresi persistence, prompt, dan label nama AI lalu push fitur ke GitHub

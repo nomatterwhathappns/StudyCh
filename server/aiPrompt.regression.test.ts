@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 const { invokeLLM } = vi.hoisted(() => ({ invokeLLM: vi.fn() }));
 vi.mock("./_core/llm", () => ({ invokeLLM }));
 
-import { appRouter, formatStudyResponse, parseChatTranslations, parseKeyTermDraft, parseQuizQuestions, responseMode, responseTokenBudget, systemPrompt } from "./routers";
+import { aiCompanionName, appRouter, formatStudyResponse, parseChatTranslations, parseKeyTermDraft, parseQuizQuestions, responseMode, responseTokenBudget, systemPrompt } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
 function context(): TrpcContext {
@@ -22,6 +22,14 @@ describe("StudyOS AI prompt regression", () => {
     expect(responseTokenBudget("chat", "Deep")).toBe(4200);
     expect(systemPrompt("Cloud", "", false, "Fast")).toContain("at most two short paragraphs or four short bullets");
     expect(systemPrompt("Cloud", "", false, "Deep")).toContain("structured and thorough explanation");
+  });
+
+  it("uses the profile-selected companion name safely in new Chat instructions", () => {
+    const prompt = systemPrompt("Cloud", "", false, "Balanced", "Aira");
+    expect(prompt).toContain("You are Aira");
+    expect(prompt).toContain("identify yourself as Aira");
+    expect(aiCompanionName("  Aira!!!  ")).toBe("Aira");
+    expect(aiCompanionName("   ")).toBe("StudyOS");
   });
 
   it("uses the natural study-companion persona and source grounding in chat", async () => {

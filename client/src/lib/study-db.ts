@@ -15,7 +15,7 @@ class StudyDatabase extends Dexie {
 export const studyDb = new StudyDatabase();
 
 export const defaultSnapshot: StudySnapshot = {
-  profile: { name: "Learner" },
+  profile: { name: "Learner", aiName: "StudyOS" },
   sessions: [],
   timers: [],
   activeSessionId: null,
@@ -25,7 +25,7 @@ export async function loadStudySnapshot(): Promise<StudySnapshot> {
   const saved = await studyDb.snapshot.get("studyos");
   if (!saved) return defaultSnapshot;
   return {
-    profile: saved.profile ?? defaultSnapshot.profile,
+    profile: { ...defaultSnapshot.profile, ...(saved.profile ?? {}) },
     sessions: (saved.sessions ?? []).map((session) => ({
       ...session,
       vocabulary: (session.vocabulary ?? []).map((item) => ({

@@ -39,6 +39,7 @@ const aiInputSchema = z.object({
   translate: z.boolean().default(false),
   responseStyle: responseStyleSchema,
   model: studyModelSchema.default("gpt-5-mini"),
+  aiName: z.string().max(80).optional(),
 });
 
 const quizSettingsSchema = z.object({
@@ -90,10 +91,16 @@ function localSelectionTimeoutMs(model: StudyModel) {
   return model === LOCAL_AI_ROUTER_MODEL && getLocalAiRouterConfig().enabled ? LOCAL_SELECTION_TIMEOUT_MS : undefined;
 }
 
-export function systemPrompt(sessionName: string, materials: string, translate: boolean, responseStyle: ResponseStyle) {
+export function aiCompanionName(value?: string) {
+  const normalized = (value ?? "").replace(/[^a-zA-Z0-9 .'-]/g, "").replace(/\s+/g, " ").trim().slice(0, 32);
+  return normalized || "StudyOS";
+}
+
+export function systemPrompt(sessionName: string, materials: string, translate: boolean, responseStyle: ResponseStyle, aiName?: string) {
   const mode = responseMode(responseStyle);
+  const companionName = aiCompanionName(aiName);
   return [
-    "You are StudyOS, a knowledgeable, grounded, and genuinely helpful study companion.",
+    `You are ${companionName}, a knowledgeable, grounded, and genuinely helpful study companion inside the StudyOS app. When the learner asks who you are or refers to you by name, identify yourself as ${companionName}; do not claim your name is StudyOS unless ${companionName} is StudyOS.`,
     `The learner is working in the session: ${sessionName}.`,
     sourceContext(materials),
     "Sound natural and human: answer the learner directly, use smooth conversational sentences, and explain ideas like a patient friend who knows the subject well. Avoid robotic headings, canned praise, excessive exclamation points, and fake certainty. Match the learner's language and level of formality while staying respectful.",
@@ -547,7 +554,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         try {
           const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-            { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle) },
+            { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle, input.aiName) },
             ...input.history.map((message) => ({ role: message.role, content: message.content })),
           ], responseTokenBudget("chat", input.responseStyle), input.responseStyle);
           return result;
@@ -624,7 +631,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         try {
           const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-            { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle) },
+            { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle, input.aiName) },
             ...input.history.map((message) => ({ role: message.role, content: message.content })),
             { role: "user", content: "Continue the immediately preceding answer exactly where it stopped. Do not repeat its opening or recap it; finish the remaining explanation naturally and cite any source-based paragraphs." },
           ], responseTokenBudget("continue", input.responseStyle), input.responseStyle);

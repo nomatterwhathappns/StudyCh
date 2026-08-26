@@ -39,7 +39,7 @@ describe("ProfileEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ imageDataUrl: expect.stringMatching(/^data:image\/png;base64,/) }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: "Alya", avatar: "/manus-storage/studyos/avatars/profile_uploaded.png" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: "Alya", aiName: "StudyOS", avatar: "/manus-storage/studyos/avatars/profile_uploaded.png" }));
   });
 
   it("accepts a JPG file, previews it, and uploads its JPEG data URL", async () => {
@@ -54,5 +54,21 @@ describe("ProfileEditor", () => {
     await waitFor(() => expect(screen.getByAltText("Profile")).toHaveAttribute("src", expect.stringMatching(/^data:image\/jpeg;base64,/)));
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
     await waitFor(() => expect(mutateAsync).toHaveBeenCalledWith({ imageDataUrl: expect.stringMatching(/^data:image\/jpeg;base64,/) }));
+  });
+
+  it("saves a custom AI companion name and can reset it to StudyOS", async () => {
+    const onSave = vi.fn();
+    render(<ProfileEditor profile={{ name: "Alya", aiName: "Aira" }} onSave={onSave} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /edit profile/i }));
+    const input = screen.getByLabelText(/AI study companion name/i);
+    expect(input).toHaveValue("Aira");
+    fireEvent.change(input, { target: { value: "Nara" } });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: "Alya", aiName: "Nara", avatar: undefined }));
+
+    fireEvent.click(screen.getByRole("button", { name: /edit profile/i }));
+    fireEvent.click(screen.getByRole("button", { name: /reset to studyos/i }));
+    expect(screen.getByLabelText(/AI study companion name/i)).toHaveValue("StudyOS");
   });
 });

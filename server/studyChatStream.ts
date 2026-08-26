@@ -22,6 +22,7 @@ const streamInput = z.object({
   translate: z.boolean(),
   responseStyle: z.enum(["Fast", "Balanced", "Deep", "Concise", "Detailed"]),
   model: z.enum(["gpt-5-mini", "claude-haiku-4-5", "gemini-3-flash-preview", LOCAL_AI_ROUTER_MODEL]),
+  aiName: z.string().max(80).optional(),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(6_000) })).min(1).max(30),
   continueAnswer: z.boolean().optional(),
 });
@@ -256,7 +257,7 @@ export function registerStudyChatStream(app: Express) {
         userId = undefined;
       }
       const messages: StreamMessage[] = [
-        { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle) },
+        { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle, input.aiName) },
         ...input.history,
         ...(input.continueAnswer ? [{ role: "user" as const, content: "Continue the immediately preceding answer exactly where it stopped. Do not repeat its opening or recap it; finish the remaining explanation naturally." }] : []),
       ];

@@ -93,6 +93,7 @@ export type TimerEntry = {
 export type Profile = {
   name: string;
   avatar?: string;
+  aiName?: string;
 };
 
 export type StudySnapshot = {

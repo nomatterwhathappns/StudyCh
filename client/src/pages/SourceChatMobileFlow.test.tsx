@@ -4,9 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import type { StudySession } from "@/lib/study-types";
 
-const { uploadDocumentMutate, chatMutate, chatCallbacks, continueMutate, draftKeyTermMutate, draftVocabularyMutate, draftKeyTermShouldFail, translateChatMutateAsync, translateChatIsPending, addMaterial, addMessage, addVocabulary } = vi.hoisted(() => ({
+const { uploadDocumentMutate, chatMutate, chatCallbacks, continueMutate, draftKeyTermMutate, draftVocabularyMutate, draftKeyTermShouldFail, translateChatMutateAsync, translateChatIsPending, addMaterial, addMessage, addVocabulary, profileState } = vi.hoisted(() => ({
   uploadDocumentMutate: vi.fn(), chatMutate: vi.fn(), continueMutate: vi.fn(), draftKeyTermMutate: vi.fn(), draftVocabularyMutate: vi.fn(), draftKeyTermShouldFail: { value: false }, translateChatMutateAsync: vi.fn(), addMaterial: vi.fn(), addMessage: vi.fn(), addVocabulary: vi.fn(),
   translateChatIsPending: { value: false },
+  profileState: { value: { name: "Learner", aiName: "StudyOS" } },
   chatCallbacks: { onSuccess: undefined as undefined | ((value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => void), onError: undefined as undefined | ((reason: { message: string }) => void) },
 }));
 
@@ -26,7 +27,7 @@ vi.mock("@/lib/trpc", () => ({
 }));
 
 vi.mock("@/store/useStudyStore", () => ({
-  useStudyStore: () => ({ addMaterial, deleteMaterial: vi.fn(), addVocabulary, addMessage, updateSession: vi.fn(), deleteSession: vi.fn() }),
+  useStudyStore: () => ({ profile: profileState.value, addMaterial, deleteMaterial: vi.fn(), addVocabulary, addMessage, updateSession: vi.fn(), deleteSession: vi.fn() }),
 }));
 
 import { AiCancellationDock, ChatPanel, SourcePanel } from "./StudyWorkspace";
@@ -186,7 +187,7 @@ describe("mobile Source and AI flow", () => {
     vi.stubGlobal("FileReader", TestFileReader);
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callback(0); return 1; });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(streamingResponse()));
-    uploadDocumentMutate.mockReset(); chatMutate.mockReset(); chatCallbacks.onSuccess = undefined; chatCallbacks.onError = undefined; continueMutate.mockReset(); draftKeyTermMutate.mockReset(); draftVocabularyMutate.mockReset(); draftKeyTermShouldFail.value = false; translateChatMutateAsync.mockReset(); translateChatIsPending.value = false; addMaterial.mockReset(); addMessage.mockReset(); addVocabulary.mockReset();
+    uploadDocumentMutate.mockReset(); chatMutate.mockReset(); chatCallbacks.onSuccess = undefined; chatCallbacks.onError = undefined; continueMutate.mockReset(); draftKeyTermMutate.mockReset(); draftVocabularyMutate.mockReset(); draftKeyTermShouldFail.value = false; translateChatMutateAsync.mockReset(); translateChatIsPending.value = false; profileState.value = { name: "Learner", aiName: "StudyOS" }; addMaterial.mockReset(); addMessage.mockReset(); addVocabulary.mockReset();
     localStorage.clear();
   });
   afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
@@ -643,6 +644,23 @@ describe("mobile Source and AI flow", () => {
     expect(ui.container.querySelectorAll(".study-chat-markdown table td")).toHaveLength(4);
     expect(ui.container.querySelectorAll(".study-chat-markdown button")).toHaveLength(0);
     expect(ui.getByText("Event-driven code")).toBeTruthy();
+  });
+
+  it("uses the profile AI companion name for bubble labels and new stream requests", async () => {
+    profileState.value = { name: "Alya", aiName: "Aira" };
+    const namedSession: StudySession = {
+      ...session,
+      chatHistory: [{ id: "named-answer", role: "assistant", content: "Halo, aku siap bantu belajar.", createdAt: 1 }],
+    };
+    const ui = render(<ChatPanel session={namedSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    expect(ui.getByText("Aira")).toBeTruthy();
+
+    const question = ui.getByLabelText("Ask StudyOS");
+    fireEvent.change(question, { target: { value: "Jelaskan AWS" } });
+    fireEvent.keyDown(question, { key: "Enter" });
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    const payload = JSON.parse((vi.mocked(fetch).mock.calls.at(-1)?.[1] as RequestInit).body as string);
+    expect(payload.aiName).toBe("Aira");
   });
 
   it("creates an AI draft from a selection, allows manual edits, and saves the complete Key Term", () => {
