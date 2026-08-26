@@ -641,6 +641,7 @@ describe("mobile Source and AI flow", () => {
     expect(ui.container.querySelector(".study-chat-markdown h2")?.textContent).toBe("AWS services");
     expect(ui.container.querySelectorAll(".study-chat-markdown table th")).toHaveLength(2);
     expect(ui.container.querySelectorAll(".study-chat-markdown table td")).toHaveLength(4);
+    expect(ui.container.querySelectorAll(".study-chat-markdown button")).toHaveLength(0);
     expect(ui.getByText("Event-driven code")).toBeTruthy();
   });
 

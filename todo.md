@@ -288,3 +288,6 @@
 - [x] Membuat mode Fast memberi jawaban lebih pendek dan langsung ke inti
 - [x] Merender heading dan tabel Markdown jawaban AI dengan aman di Chat
 - [x] Menambahkan regresi, memverifikasi tampilan Chat, lalu push penyempurnaan ke GitHub
+- [x] Menghapus kontrol bawaan tabel Markdown yang mengganggu dari bubble Chat
+- [x] Menjaga tabel Chat mengikuti lebar bubble dan hanya scroll mendatar bila diperlukan
+- [x] Menambahkan regresi, memverifikasi tampilan tabel, lalu push perbaikannya ke GitHub
