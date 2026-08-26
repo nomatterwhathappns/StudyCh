@@ -12,6 +12,7 @@ describe("normal dashboard typography", () => {
     expect(css).toContain(".font-display { font-family: var(--font-sans) !important; font-style: normal !important;");
     expect(css).toContain(".study-profile-card .font-display, .study-workspace-header > button > span:first-child");
     expect(css).toContain("font-family: var(--font-display) !important; font-style: italic !important;");
+    expect(css).toContain(".study-reading-content h3 { @apply mb-4 text-xl font-medium text-foreground; }");
   });
 
   it("removes the visible dash prefix from the reported empty states", () => {

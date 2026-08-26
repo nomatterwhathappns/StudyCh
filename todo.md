@@ -298,3 +298,5 @@
 - [x] Menambahkan regresi keterbacaan label dan push penyempurnaan ke GitHub
 - [x] Menambahkan aksi Change session pada menu titik tiga Chat yang membuka halaman Sessions
 - [x] Menambahkan regresi navigasi Change session dan push penyempurnaan ke GitHub
+- [x] Mengganti judul sumber di panel Source ke font normal
+- [x] Menambahkan regresi tipografi judul sumber dan push penyempurnaan ke GitHub

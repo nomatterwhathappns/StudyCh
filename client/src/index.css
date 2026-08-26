@@ -268,7 +268,7 @@
   .study-selection-popover button { @apply rounded-lg border border-border px-2 py-1 text-[10px] text-foreground hover:bg-secondary; }
   .study-reading-content { @apply min-w-0 whitespace-pre-wrap pr-2 text-sm leading-7 text-muted-foreground; overflow-wrap: anywhere; word-break: break-word; }
   .study-reading-content * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
-  .study-reading-content h3 { @apply mb-4 font-display text-xl italic text-foreground; }
+  .study-reading-content h3 { @apply mb-4 text-xl font-medium text-foreground; }
   .study-vocab-highlight { cursor: help; background: transparent; color: var(--foreground); text-decoration: underline; text-decoration-color: var(--ember); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .study-menu { @apply absolute right-0 top-10 z-30 w-44 rounded-xl border border-border bg-popover p-1.5; box-shadow: 0 12px 28px rgba(0,0,0,.22); }
   .study-menu button { @apply flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs text-muted-foreground hover:bg-secondary hover:text-foreground; }
