@@ -27,6 +27,15 @@ describe("ThemeSettings", () => {
 
     fireEvent.click(ui.getByRole("button", { name: "Shuffle theme" }));
 
-    expect(document.documentElement.dataset.palette).toBe("frosted-blue");
+    expect(document.documentElement.dataset.palette).not.toBe("vintage-rose");
+  });
+
+  it("lets the dashboard picker apply Midnight Blue explicitly", () => {
+    const ui = render(<PaletteProvider><ThemeSettings /></PaletteProvider>);
+
+    fireEvent.click(ui.getByRole("button", { name: /Theme/i }));
+    fireEvent.click(ui.getByRole("button", { name: /Midnight Blue/i }));
+
+    expect(document.documentElement.dataset.palette).toBe("midnight-blue");
   });
 });

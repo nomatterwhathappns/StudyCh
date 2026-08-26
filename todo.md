@@ -214,3 +214,6 @@
 - [x] Memverifikasi aksesibilitas dan tampilan preview tema pada workspace sebelum meminta persetujuan
 - [x] Memperjelas warna ikon dan teks kecil pada tema Vintage Rose agar tidak menyaru dengan background
 - [x] Mengubah kontrol Theme di workspace menjadi tombol Shuffle Theme acak, sambil mempertahankan pemilihan manual di dashboard
+- [x] Merancang peran warna dan kontras untuk palet gelap Black, Carbon Black, Chocolate Plum, Taupe Grey, dan Light Blue
+- [x] Menambahkan palet gelap baru ke pemilih Theme dan siklus Shuffle tanpa push GitHub
+- [x] Memverifikasi preview desktop palet gelap sebelum meminta persetujuan pengguna

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type StudyPalette = "frosted-blue" | "vintage-rose";
+export type StudyPalette = "frosted-blue" | "vintage-rose" | "midnight-blue";
 
 type PaletteContextValue = {
   palette: StudyPalette;
@@ -12,7 +12,7 @@ const PaletteContext = createContext<PaletteContextValue | undefined>(undefined)
 
 function storedPalette(): StudyPalette {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === "frosted-blue" ? "frosted-blue" : "vintage-rose";
+  return stored === "frosted-blue" || stored === "midnight-blue" ? stored : "vintage-rose";
 }
 
 export function PaletteProvider({ children }: { children: React.ReactNode }) {
