@@ -218,7 +218,16 @@ describe("mobile Source and AI flow", () => {
 
     fireEvent.click(ui.getByRole("button", { name: "Session menu" }));
     fireEvent.keyDown(document, { key: "Escape" });
-    await waitFor(() => expect(ui.queryByRole("button", { name: "New session" })).toBeNull());
+    expect(ui.queryByRole("button", { name: "New session" })).toBeNull();
+  });
+
+  it("opens the Sessions page directly from the Chat session menu", () => {
+    const onOpenSessions = vi.fn();
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} onOpenSessions={onOpenSessions} />);
+    fireEvent.click(ui.getByRole("button", { name: "Session menu" }));
+    fireEvent.click(ui.getByRole("button", { name: "Change session" }));
+    expect(onOpenSessions).toHaveBeenCalledTimes(1);
+    expect(ui.queryByRole("button", { name: "Change session" })).toBeNull();
   });
 
   it("shows cancel controls for AI activities and invokes only the selected cancellation handler", async () => {

@@ -296,3 +296,5 @@
 - [x] Menambahkan regresi persistence, prompt, dan label nama AI lalu push fitur ke GitHub
 - [x] Membesarkan label nama AI di atas bubble Chat agar lebih mudah dibaca
 - [x] Menambahkan regresi keterbacaan label dan push penyempurnaan ke GitHub
+- [x] Menambahkan aksi Change session pada menu titik tiga Chat yang membuka halaman Sessions
+- [x] Menambahkan regresi navigasi Change session dan push penyempurnaan ke GitHub

@@ -15,7 +15,11 @@ import { useLocation } from "wouter";
 type DashboardView = "profile" | "sessions" | "vocabulary";
 
 export default function Home() {
-  const [view, setView] = useState<DashboardView>("profile");
+  return <HomeView />;
+}
+
+export function HomeView({ initialView = "profile" }: { initialView?: DashboardView }) {
+  const [view, setView] = useState<DashboardView>(initialView);
   const [location, setLocation] = useLocation();
   const { hydrated, hydrate, profile, sessions, timers, activeSessionId, setActiveSession, updateProfile, updateSession, deleteSession, deleteTimer, deleteVocabulary } = useStudyStore();
 
