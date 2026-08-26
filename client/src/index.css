@@ -279,10 +279,24 @@
   .study-message-bubble { @apply max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed; }
   .is-user .study-message-bubble { border-color: var(--chat-user-border, var(--primary)); background: var(--chat-user-background, var(--primary)); color: var(--chat-user-foreground, var(--primary-foreground)); }
   .is-ai .study-message-bubble { border-color: var(--chat-ai-border, var(--border)); background: var(--chat-ai-background, var(--card)); color: var(--chat-ai-foreground, var(--card-foreground)); }
-  .is-ai .study-message-bubble p + p { margin-top: .65rem; }
-  .is-ai .study-message-bubble ol, .is-ai .study-message-bubble ul { margin: .55rem 0; padding-left: 1.25rem; }
-  .is-ai .study-message-bubble li + li { margin-top: .25rem; }
-  .is-ai .study-message-bubble hr { margin: .85rem 0; border: 0; border-top: 1px solid var(--border); }
+  .study-chat-markdown { overflow-wrap: anywhere; word-break: break-word; }
+  .study-chat-markdown > :first-child { margin-top: 0; }
+  .study-chat-markdown > :last-child { margin-bottom: 0; }
+  .study-chat-markdown p + p { margin-top: .65rem; }
+  .study-chat-markdown h1, .study-chat-markdown h2, .study-chat-markdown h3 { margin: 1rem 0 .45rem; color: var(--chat-ai-foreground, var(--card-foreground)); font-weight: 700; line-height: 1.25; }
+  .study-chat-markdown h1 { font-size: 1.15rem; }
+  .study-chat-markdown h2 { font-size: 1.05rem; }
+  .study-chat-markdown h3 { font-size: .98rem; }
+  .study-chat-markdown ol, .study-chat-markdown ul { margin: .55rem 0; padding-left: 1.25rem; }
+  .study-chat-markdown li + li { margin-top: .25rem; }
+  .study-chat-markdown hr { margin: .85rem 0; border: 0; border-top: 1px solid var(--border); }
+  .study-chat-markdown table { display: block; max-width: 100%; margin: .8rem 0; overflow-x: auto; border-collapse: separate; border-spacing: 0; border: 1px solid var(--border); border-radius: .65rem; }
+  .study-chat-markdown th, .study-chat-markdown td { min-width: 7rem; padding: .45rem .6rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  .study-chat-markdown th { background: color-mix(in srgb, var(--secondary) 75%, transparent); font-weight: 700; }
+  .study-chat-markdown tr:last-child td { border-bottom: 0; }
+  .study-chat-markdown code { border-radius: .3rem; background: color-mix(in srgb, var(--secondary) 85%, transparent); padding: .08rem .3rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em; }
+  .study-chat-markdown pre { max-width: 100%; margin: .75rem 0; overflow-x: auto; border-radius: .65rem; background: color-mix(in srgb, var(--secondary) 72%, transparent); padding: .75rem; }
+  .study-chat-markdown a { color: var(--ember); text-decoration: underline; text-underline-offset: 2px; }
   .study-thinking { @apply flex items-center gap-1 py-1; }
   .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[var(--blush-pop)]; animation-delay: 0ms; }
   .study-thinking i:nth-child(2) { animation-delay: 120ms; }

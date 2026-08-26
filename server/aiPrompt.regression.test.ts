@@ -20,7 +20,7 @@ describe("StudyOS AI prompt regression", () => {
     expect(responseTokenBudget("chat", "Fast")).toBe(900);
     expect(responseTokenBudget("chat", "Balanced")).toBe(2400);
     expect(responseTokenBudget("chat", "Deep")).toBe(4200);
-    expect(systemPrompt("Cloud", "", false, "Fast")).toContain("one short, direct explanation");
+    expect(systemPrompt("Cloud", "", false, "Fast")).toContain("at most two short paragraphs or four short bullets");
     expect(systemPrompt("Cloud", "", false, "Deep")).toContain("structured and thorough explanation");
   });
 

@@ -631,6 +631,19 @@ describe("mobile Source and AI flow", () => {
     }
   });
 
+  it("renders AI Markdown headings and tables as structured content instead of raw symbols", () => {
+    const markdownSession: StudySession = {
+      ...session,
+      chatHistory: [{ id: "markdown-answer", role: "assistant", content: "## AWS services\n\n| Service | Use |\n| --- | --- |\n| EC2 | Virtual server |\n| Lambda | Event-driven code |", createdAt: 1 }],
+    };
+
+    const ui = render(<ChatPanel session={markdownSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    expect(ui.container.querySelector(".study-chat-markdown h2")?.textContent).toBe("AWS services");
+    expect(ui.container.querySelectorAll(".study-chat-markdown table th")).toHaveLength(2);
+    expect(ui.container.querySelectorAll(".study-chat-markdown table td")).toHaveLength(4);
+    expect(ui.getByText("Event-driven code")).toBeTruthy();
+  });
+
   it("creates an AI draft from a selection, allows manual edits, and saves the complete Key Term", () => {
     const ui = render(<SourcePanel session={session} />);
     fireEvent.click(ui.getByRole("button", { name: "Read" }));

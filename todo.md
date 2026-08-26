@@ -285,3 +285,6 @@
 - [x] Memperbaiki Continue answer agar benar-benar melanjutkan respons lokal yang terpotong
 - [x] Menjaga recovery respons Chat lokal tetap tampil live bila streaming awal terputus
 - [x] Menambahkan regresi truncation dan recovery streaming, lalu push perbaikannya ke GitHub
+- [x] Membuat mode Fast memberi jawaban lebih pendek dan langsung ke inti
+- [x] Merender heading dan tabel Markdown jawaban AI dengan aman di Chat
+- [x] Menambahkan regresi, memverifikasi tampilan Chat, lalu push penyempurnaan ke GitHub
