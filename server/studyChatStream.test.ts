@@ -56,6 +56,10 @@ describe("study chat streaming payload", () => {
     expect(isOutputTruncated("stop")).toBe(false);
   });
 
+  it("preserves an explicit live-continuation request through payload normalization", () => {
+    expect(normalizeStreamPayload({ continueAnswer: true, history: [{ role: "assistant", content: "Partial answer" }] })).toMatchObject({ continueAnswer: true });
+  });
+
   it("keeps the full Balanced and Deep output budget when the Gemini path falls back to GPT", () => {
     expect(builtInOutputTokenLimit("gpt-5-mini", 2_400)).toEqual({ max_completion_tokens: 2_400 });
     expect(builtInOutputTokenLimit("gpt-5-mini", 4_200)).toEqual({ max_completion_tokens: 4_200 });

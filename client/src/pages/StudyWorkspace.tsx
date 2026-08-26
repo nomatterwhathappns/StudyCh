@@ -269,11 +269,11 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
       .finally(() => missing.forEach((message) => translatingIdsRef.current.delete(message.id)));
   }, [translateChat, translationTarget, translatedMessages, translateChatMessages.mutateAsync, translationRequestVersion]);
   useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:chat-translation-status", { detail: { pending: translateChatMessages.isPending, target: translationTarget } })); }, [translateChatMessages.isPending, translationTarget]);
-  const streamChat = async (payload: { sessionName: string; materials: string; translate: boolean; responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed"; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; history: Array<{ role: "user" | "assistant"; content: string }> }) => {
+  const streamChat = async (payload: { sessionName: string; materials: string; translate: boolean; responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed"; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; history: Array<{ role: "user" | "assistant"; content: string }>; continueAnswer?: boolean; resumePrefix?: string }) => {
     const run = ++chatRunRef.current;
     const controller = new AbortController();
     streamAbortRef.current = controller;
-    setStreaming(true); setStreamRecovery(false); setStreamedText(""); setStreamProvider(""); streamedTextRef.current = ""; streamProviderRef.current = ""; streamRecoveryRef.current = false;
+    setStreaming(true); setStreamRecovery(false); if (payload.resumePrefix) { setStreamedText(payload.resumePrefix); streamedTextRef.current = payload.resumePrefix; } else { setStreamedText(""); streamedTextRef.current = ""; } setStreamProvider(""); streamProviderRef.current = ""; streamRecoveryRef.current = false;
     try {
       const response = await fetch("/api/study/chat-stream", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", signal: controller.signal, body: JSON.stringify(payload) });
       if (!response.ok || !response.body) throw new Error("Streaming is unavailable.");
@@ -291,7 +291,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
           const data = JSON.parse(raw) as { token?: string; provider?: string; text?: string; citations?: Array<{ title: string; ordinal: number }>; truncated?: boolean; message?: string };
           if (type === "meta" && data.provider) { streamProviderRef.current = data.provider; setStreamProvider(data.provider); }
           if (type === "token" && data.token) { streamedTextRef.current += data.token; setStreamedText((value) => value + data.token); pendingScrollRef.current = true; }
-          if (type === "done" && data.text !== undefined) { if (run === chatRunRef.current) saveAssistantResponse({ text: data.text, citations: data.citations ?? [], truncated: data.truncated ?? false, provider: data.provider }); complete = true; }
+          if (type === "done" && data.text !== undefined) { if (run === chatRunRef.current) saveAssistantResponse({ text: payload.resumePrefix ? `${payload.resumePrefix}\n\n${data.text}` : data.text, citations: data.citations ?? [], truncated: data.truncated ?? false, provider: data.provider }); complete = true; }
           if (type === "error") throw new Error(data.message ?? "StudyOS could not stream this response.");
         }
       }
@@ -300,7 +300,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
       if (run !== chatRunRef.current || (reason instanceof DOMException && reason.name === "AbortError")) return;
       const streamMessage = reason instanceof Error ? reason.message : "";
       if (/Google Gemini sedang (?:membatasi request|tidak tersedia)/i.test(streamMessage)) { clearStreamPreview(); setError(friendlyChatError(streamMessage)); return; }
-      if (streamedTextRef.current.trim()) { streamRecoveryRef.current = true; setStreamRecovery(true); }
+      if (streamedTextRef.current.trim() && !payload.continueAnswer) { const partialText = streamedTextRef.current.trim(); streamRecoveryRef.current = true; setStreamRecovery(true); await streamChat({ ...payload, history: [...payload.history, { role: "assistant", content: partialText }], continueAnswer: true, resumePrefix: partialText }); return; }
       chat.mutate(payload, { onSuccess: (response) => { if (run !== chatRunRef.current) return; saveAssistantResponse(response); clearStreamPreview(); }, onError: (error) => { if (run !== chatRunRef.current) return; const partialText = streamedTextRef.current.trim(); if (streamRecoveryRef.current && partialText) saveAssistantResponse({ text: partialText, citations: [], truncated: true, ...(streamProviderRef.current ? { provider: streamProviderRef.current } : {}) }); clearStreamPreview(); setError(friendlyChatError(error.message)); } });
     } finally {
       if (run === chatRunRef.current) { streamAbortRef.current = null; setStreaming(false); if (!streamRecoveryRef.current) { setStreamedText(""); setStreamProvider(""); streamedTextRef.current = ""; streamProviderRef.current = ""; } }
@@ -314,7 +314,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard }: { session:
   const compactHistory = (history: Array<{ role: "user" | "assistant"; content: string }>) => history.filter((message) => message.content.trim().length > 0).slice(-30).map(({ role, content }) => ({ role, content: content.trim().slice(0, 6_000) }));
   const safeMaterials = (query: string, responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed") => materialContext(session, query, responseStyle).slice(0, 10_000);
   const send = () => { const content = input.trim(); if (!content || chat.isPending || continueAnswer.isPending || streaming || streamRecovery) return; const preferences = readAiSettings(); const payload = { sessionName: session.name, materials: safeMaterials(content, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, history: [...compactHistory(session.chatHistory.slice(-29)), { role: "user" as const, content }] }; setError(""); pendingScrollRef.current = true; addMessage(session.id, { role: "user", content }); setInput(""); scrollToLatest(); pendingScrollRef.current = false; void streamChat(payload); };
-  const continueTruncatedAnswer = () => { if (continueAnswer.isPending || chat.isPending || streaming) return; const preferences = readAiSettings(); const priorQuestion = [...session.chatHistory].reverse().find((message) => message.role === "user")?.content ?? ""; setError(""); pendingScrollRef.current = true; scrollToLatest(); pendingScrollRef.current = false; continueAnswer.mutate({ sessionName: session.name, materials: safeMaterials(priorQuestion, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, history: compactHistory(session.chatHistory.slice(-30)) }); };
+  const continueTruncatedAnswer = () => { if (chat.isPending || streaming || streamRecovery) return; const preferences = readAiSettings(); const priorQuestion = [...session.chatHistory].reverse().find((message) => message.role === "user")?.content ?? ""; setError(""); pendingScrollRef.current = true; scrollToLatest(); pendingScrollRef.current = false; void streamChat({ sessionName: session.name, materials: safeMaterials(priorQuestion, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, history: compactHistory(session.chatHistory.slice(-30)), continueAnswer: true }); };
   const toggleChatTranslation = () => {
     if (translateChatMessages.isPending) return;
     const nextTarget = nextChatTranslationTarget(session.chatHistory, translateChat, translationTarget);

@@ -512,19 +512,22 @@ describe("mobile Source and AI flow", () => {
   it.each([["desktop", 1280], ["mobile", 375]] as const)("keeps streamed text visible instead of returning to dots while fallback prepares the final answer on %s", async (_viewport, width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     const stream = interruptedStreamingResponse();
-    vi.mocked(fetch).mockResolvedValueOnce(stream.response as unknown as Response);
+    const resumedStream = stagedModeStreamingResponse("Balanced");
+    vi.mocked(fetch).mockResolvedValueOnce(stream.response as unknown as Response).mockResolvedValueOnce(resumedStream.response as unknown as Response);
     const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
     const question = ui.getByLabelText("Ask StudyOS");
     fireEvent.change(question, { target: { value: "Jelaskan penyimpanan cloud" } });
     fireEvent.keyDown(question, { key: "Enter" });
 
-    await waitFor(() => expect(ui.getByText(stream.partialText.trim())).toBeTruthy());
-    await waitFor(() => expect(chatMutate).toHaveBeenCalled());
+    await waitFor(() => expect(ui.getByText(/Bagian awal respons tetap terlihat/i)).toBeTruthy());
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
     expect(ui.container.querySelector(".study-thinking")).toBeNull();
-    expect(ui.getByText(stream.partialText.trim())).toBeTruthy();
+    expect(ui.getByText(/Bagian awal respons tetap terlihat/i)).toBeTruthy();
+    await waitFor(() => expect(ui.getByText(/Streaming Balanced: bagian pertama/i)).toBeTruthy());
 
-    act(() => chatCallbacks.onSuccess?.({ text: "Jawaban cadangan sudah selesai.", citations: [], truncated: false, provider: "StudyOS AI gateway · GPT-5 mini" }));
-    await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", expect.objectContaining({ role: "assistant", content: "Jawaban cadangan sudah selesai." })));
+    expect(chatMutate).not.toHaveBeenCalled();
+    resumedStream.releaseSecondChunk();
+    await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", expect.objectContaining({ role: "assistant", content: `${stream.partialText.trim()}\n\n${resumedStream.finalText}` })));
   });
 
   it("explains an exhausted provider quota after the Chat stream falls back", async () => {
@@ -619,10 +622,10 @@ describe("mobile Source and AI flow", () => {
       expect(focusSource).toHaveBeenCalledWith(expect.objectContaining({ detail: { sessionId: "session-mobile", materialId: "plant-source", ordinal: 1 } }));
 
       fireEvent.click(ui.getByRole("button", { name: /Continue answer/i }));
-      expect(continueMutate).toHaveBeenCalledWith(expect.objectContaining({
-        history: [{ role: "user", content: "Jelaskan fotosintesis" }, { role: "assistant", content: "Fotosintesis memakai cahaya." }],
-      }));
-      expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "assistant", content: "Lanjutan yang selesai.", citations: [], truncated: false });
+      expect(continueMutate).not.toHaveBeenCalled();
+      expect(fetch).toHaveBeenCalled();
+      const continuationPayload = JSON.parse((vi.mocked(fetch).mock.calls.at(-1)?.[1] as RequestInit).body as string);
+      expect(continuationPayload).toMatchObject({ continueAnswer: true, history: [{ role: "user", content: "Jelaskan fotosintesis" }, { role: "assistant", content: "Fotosintesis memakai cahaya." }] });
     } finally {
       window.removeEventListener("studyos:focus-source", focusSource);
     }

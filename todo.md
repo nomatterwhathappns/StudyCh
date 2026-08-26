@@ -282,3 +282,6 @@
 - [x] Merender jawaban AI dengan Markdown agar bold, list, dan pemisah tidak tampil sebagai simbol mentah
 - [x] Menutup menu tiga titik session saat klik area lain atau menekan Escape
 - [x] Menambahkan regresi Chat Markdown dan penutupan menu session, lalu push perbaikannya ke GitHub
+- [x] Memperbaiki Continue answer agar benar-benar melanjutkan respons lokal yang terpotong
+- [x] Menjaga recovery respons Chat lokal tetap tampil live bila streaming awal terputus
+- [x] Menambahkan regresi truncation dan recovery streaming, lalu push perbaikannya ke GitHub

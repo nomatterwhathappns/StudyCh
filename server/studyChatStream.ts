@@ -23,6 +23,7 @@ const streamInput = z.object({
   responseStyle: z.enum(["Fast", "Balanced", "Deep", "Concise", "Detailed"]),
   model: z.enum(["gpt-5-mini", "claude-haiku-4-5", "gemini-3-flash-preview", LOCAL_AI_ROUTER_MODEL]),
   history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(6_000) })).min(1).max(30),
+  continueAnswer: z.boolean().optional(),
 });
 
 type StreamInput = z.infer<typeof streamInput>;
@@ -257,10 +258,11 @@ export function registerStudyChatStream(app: Express) {
       const messages: StreamMessage[] = [
         { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle) },
         ...input.history,
+        ...(input.continueAnswer ? [{ role: "user" as const, content: "Continue the immediately preceding answer exactly where it stopped. Do not repeat its opening or recap it; finish the remaining explanation naturally." }] : []),
       ];
-      const maxTokens = responseTokenBudget("chat", input.responseStyle);
+      const maxTokens = input.model === LOCAL_AI_ROUTER_MODEL && getLocalAiRouterConfig().enabled ? Math.max(3_200, responseTokenBudget("chat", input.responseStyle)) : responseTokenBudget("chat", input.responseStyle);
       const mode = responseMode(input.responseStyle);
-      const timeoutMs = providerTimeoutMs(input.responseStyle);
+      const timeoutMs = input.model === LOCAL_AI_ROUTER_MODEL && getLocalAiRouterConfig().enabled ? 45_000 : providerTimeoutMs(input.responseStyle);
       const writeToken = (token: string) => event(res, "token", { token });
       let result: StreamedAIResult = { text: "", truncated: false };
       let provider = "";
