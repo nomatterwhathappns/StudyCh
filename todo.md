@@ -220,3 +220,6 @@
 - [x] Merancang peran warna dan kontras untuk palet Icy Blue, Wisteria Blue, Periwinkle, Cornflower Blue, dan Deep Lilac
 - [x] Menambahkan palet biru-lilac ke pemilih Theme dan siklus Shuffle tanpa push GitHub
 - [x] Memverifikasi preview desktop palet biru-lilac sebelum meminta persetujuan pengguna
+- [x] Merancang peran warna dan kontras untuk palet Prussian Blue, Space Indigo, Dusk Blue, Tropical Teal, dan Neon Ice
+- [x] Menambahkan palet navy-teal ke pemilih Theme dan siklus Shuffle tanpa push GitHub
+- [x] Memverifikasi preview desktop palet navy-teal sebelum meminta persetujuan pengguna

@@ -173,6 +173,41 @@
   --panel-group: #A0DDFF;
 }
 
+:root[data-palette="ocean-depths"] {
+  --frosted-blue: #6FFFE9;
+  --icy-aqua: #C8FFF5;
+  --mint-cream: #1C2541;
+  --petal-frost: #3A506B;
+  --blush-pop: #6FFFE9;
+  --ink: #F1FFFE;
+  --sidebar: #0B132B;
+  --ember: #6FFFE9;
+  --background: #1C2541;
+  --foreground: #F1FFFE;
+  --card: #26395A;
+  --card-foreground: #F1FFFE;
+  --popover: #26395A;
+  --popover-foreground: #F1FFFE;
+  --primary: #6FFFE9;
+  --primary-foreground: #0B132B;
+  --secondary: #3A506B;
+  --secondary-foreground: #F1FFFE;
+  --muted: #314664;
+  --muted-foreground: #C6E7E4;
+  --accent: #5BC0BE;
+  --accent-foreground: #0B132B;
+  --destructive: #FF97AD;
+  --destructive-foreground: #0B132B;
+  --feedback-error-bg: #55374A;
+  --feedback-error-border: #FF97AD;
+  --feedback-error-foreground: #FFECEF;
+  --feedback-error-link: #6FFFE9;
+  --border: #55718B;
+  --input: #3A506B;
+  --ring: #6FFFE9;
+  --panel-group: #0B132B;
+}
+
 @layer base {
   * { @apply border-border outline-ring/60; }
   html, body, #root { min-height: 100%; }
@@ -300,6 +335,12 @@
   :root[data-palette="lilac-sky"] .study-sidebar .study-kicker, :root[data-palette="lilac-sky"] .study-sidebar > div:last-child { color: #D7F2FF; }
   :root[data-palette="lilac-sky"] .study-workspace-header > button > span:last-child { color: #D7F2FF; border-color: #A0DDFF; }
   :root[data-palette="lilac-sky"] .text-\[\#BA2D0B\] { color: var(--ember) !important; }
+  :root[data-palette="ocean-depths"] .study-sidebar, :root[data-palette="ocean-depths"] .study-workspace-header { color: #F1FFFE; }
+  :root[data-palette="ocean-depths"] .study-sidebar .text-muted-foreground, :root[data-palette="ocean-depths"] .study-sidebar .study-nav-item, :root[data-palette="ocean-depths"] .study-sidebar .study-back-button, :root[data-palette="ocean-depths"] .study-sidebar .study-theme-settings, :root[data-palette="ocean-depths"] .study-workspace-header .text-muted-foreground, :root[data-palette="ocean-depths"] .study-workspace-header .study-icon-button, :root[data-palette="ocean-depths"] .study-workspace-header .study-theme-shuffle { color: #6FFFE9; }
+  :root[data-palette="ocean-depths"] .study-sidebar .study-theme-settings strong, :root[data-palette="ocean-depths"] .study-sidebar .study-ai-settings strong { color: #F1FFFE; }
+  :root[data-palette="ocean-depths"] .study-sidebar .study-kicker, :root[data-palette="ocean-depths"] .study-sidebar > div:last-child { color: #C8FFF5; }
+  :root[data-palette="ocean-depths"] .study-workspace-header > button > span:last-child { color: #C8FFF5; border-color: #5BC0BE; }
+  :root[data-palette="ocean-depths"] .text-\[\#BA2D0B\] { color: var(--ember) !important; }
 }
 
 @media (max-width: 720px) {

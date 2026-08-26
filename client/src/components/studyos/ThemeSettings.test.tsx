@@ -47,4 +47,13 @@ describe("ThemeSettings", () => {
 
     expect(document.documentElement.dataset.palette).toBe("lilac-sky");
   });
+
+  it("lets the dashboard picker apply Ocean Depths explicitly", () => {
+    const ui = render(<PaletteProvider><ThemeSettings /></PaletteProvider>);
+
+    fireEvent.click(ui.getByRole("button", { name: /Theme/i }));
+    fireEvent.click(ui.getByRole("button", { name: /Ocean Depths/i }));
+
+    expect(document.documentElement.dataset.palette).toBe("ocean-depths");
+  });
 });
