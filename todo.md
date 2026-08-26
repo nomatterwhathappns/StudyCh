@@ -326,3 +326,6 @@
 - [x] Membatasi tampilan kontrol Cancel saat beberapa aktivitas AI berjalan bersamaan
 - [x] Menormalkan bold Markdown AI yang memakai penanda bintang berlebih
 - [x] Menambahkan regresi kontrol Cancel bertumpuk dan bold Markdown lalu push perbaikannya ke GitHub
+- [x] Merapikan code block jawaban AI agar tidak tampil sebagai kotak bertumpuk
+- [x] Menjaga Translate Chat tetap berjalan saat panel ditutup atau pengguna membuka Profile/Sessions
+- [x] Menambahkan regresi code block dan Translate tahan navigasi lalu push perbaikannya ke GitHub

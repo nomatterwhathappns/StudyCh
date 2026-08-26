@@ -12,6 +12,7 @@ vi.mock("@/lib/trpc", () => ({
     explain: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
     draftKeyTerm: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
     draftVocabulary: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
+    translateChat: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
   } },
 }));
 

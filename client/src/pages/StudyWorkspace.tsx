@@ -241,20 +241,26 @@ export function SourcePanel({ session }: { session: StudySession }) {
 
 export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessions }: { session: StudySession; onNewSession: () => void; onOpenDashboard: () => void; onOpenSessions?: () => void }) {
   const { profile, updateSession, deleteSession, addMessage } = useStudyStore();
+  const sourceAi = useOptionalSourceAiActivity();
+  const translateChatMessages = trpc.study.translateChat.useMutation();
   const aiName = profile.aiName?.trim() || "StudyOS";
   const [input, setInput] = useState(""); const [renaming, setRenaming] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [error, setError] = useState(""); const [translationError, setTranslationError] = useState(""); const [translationRequestVersion, setTranslationRequestVersion] = useState(0); const [streaming, setStreaming] = useState(false); const [streamRecovery, setStreamRecovery] = useState(false); const [streamedText, setStreamedText] = useState(""); const [streamProvider, setStreamProvider] = useState("");
   const followLatestRef = useRef(true); const pendingScrollRef = useRef(false); const streamedTextRef = useRef(""); const streamProviderRef = useRef(""); const streamRecoveryRef = useRef(false); const streamAbortRef = useRef<AbortController | null>(null); const chatRunRef = useRef(0); const translationRunRef = useRef(0); const translatingIdsRef = useRef(new Set<string>()); const translationFailuresRef = useRef(new Set<string>());
   const [translateChat, setTranslateChat] = useState(false);
   const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">("english");
   const [translatedMessages, setTranslatedMessages] = useState<ChatTranslationCache>(emptyChatTranslationCache);
-  const untranslatedMessageCount = translateChat ? session.chatHistory.filter((message) => message.content.trim() && !translatedMessages[translationTarget][message.id]).length : 0;
+  const emptyTranslations = useMemo(emptyChatTranslationCache, []);
+  const savedTranslations = sourceAi ? sourceAi.chatTranslationsFor(session.id) : emptyTranslations;
+  const storedTranslationTarget = sourceAi?.chatTranslationTarget(session.id) ?? null;
+  const translationCache = useMemo(() => ({ english: { ...savedTranslations.english, ...translatedMessages.english }, indonesian: { ...savedTranslations.indonesian, ...translatedMessages.indonesian } }), [savedTranslations, translatedMessages]);
+  const translationPending = sourceAi ? sourceAi.isPending(session.id, "chat-translation") : translateChatMessages.isPending;
+  const untranslatedMessageCount = translateChat ? session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id]).length : 0;
   useEffect(() => { if (!menuOpen) return; const dismiss = (event: PointerEvent) => { if (event.target instanceof Element && event.target.closest(".study-menu, [aria-label='Session menu']")) return; setMenuOpen(false); }; const dismissWithEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setMenuOpen(false); }; document.addEventListener("pointerdown", dismiss); document.addEventListener("keydown", dismissWithEscape); return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", dismissWithEscape); }; }, [menuOpen]);
   const saveAssistantResponse = (response: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => addMessage(session.id, { role: "assistant", content: response.text, citations: attachMaterialIds(session, response.citations), truncated: response.truncated, ...(response.provider ? { provider: response.provider } : {}) });
   const friendlyChatError = (message: string) => /(?:Respons Chat belum tersedia karena kuota AI provider|Google Gemini sedang membatasi request|Google Gemini sedang tidak tersedia)/i.test(message) ? message : /too_big|too_small|expected string|materials|history/i.test(message) ? "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikannya—silakan kirim ulang pesanmu." : "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
   const friendlyTranslationError = (message: string) => /(?:Penerjemahan Chat tidak tersedia karena kuota AI provider|Google Gemini sedang membatasi request|Google Gemini sedang tidak tersedia)/i.test(message) ? message : "Penerjemahan sedang tidak tersedia. Teks asli tetap aman—coba lagi beberapa saat lagi atau gunakan provider AI lain.";
   const clearStreamPreview = () => { setStreaming(false); setStreamRecovery(false); setStreamedText(""); setStreamProvider(""); streamedTextRef.current = ""; streamProviderRef.current = ""; streamRecoveryRef.current = false; };
   const chat = trpc.study.chat.useMutation();
-  const translateChatMessages = trpc.study.translateChat.useMutation();
   const continueAnswer = trpc.study.continue.useMutation({ onSuccess: saveAssistantResponse, onError: (reason) => setError(friendlyChatError(reason.message)) });
   useEffect(() => {
     const syncChatTranslate = (event: Event) => {
@@ -274,13 +280,16 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
     return () => { window.removeEventListener("studyos:chat-translate", syncChatTranslate); window.removeEventListener("storage", syncChatTranslate); };
   }, []);
   useEffect(() => { setTranslatedMessages(emptyChatTranslationCache()); translatingIdsRef.current.clear(); translationFailuresRef.current.clear(); setTranslationError(""); setTranslationRequestVersion(0); }, [session.id]);
+  useEffect(() => { if (storedTranslationTarget) { setTranslateChat(true); setTranslationTarget(storedTranslationTarget); } }, [session.id, storedTranslationTarget]);
+  useEffect(() => { const sourceError = sourceAi?.chatTranslationError(session.id); if (sourceError) setTranslationError(friendlyTranslationError(sourceError)); }, [session.id, sourceAi, sourceAi?.chatTranslationError(session.id)]);
   useEffect(() => {
     if (!translateChat || translationRequestVersion === 0) return;
-    const missing = session.chatHistory.filter((message) => message.content.trim() && !translatedMessages[translationTarget][message.id] && !translatingIdsRef.current.has(message.id) && !translationFailuresRef.current.has(message.id)).slice(0, 6);
+    const missing = session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id] && !translatingIdsRef.current.has(message.id) && !translationFailuresRef.current.has(message.id)).slice(0, 6);
     if (!missing.length) return;
+    const preferences = readAiSettings();
+    if (sourceAi) { sourceAi.startChatTranslation({ sessionId: session.id, sessionName: session.name, model: preferences.model, target: translationTarget, messages: missing.map(({ id, content }) => ({ id, content })) }); return; }
     const run = translationRunRef.current;
     missing.forEach((message) => translatingIdsRef.current.add(message.id));
-    const preferences = readAiSettings();
     void translateChatMessages.mutateAsync({ model: preferences.model, target: translationTarget, messages: missing.map(({ id, content }) => ({ id, content })) })
       .then(({ translations }) => { if (run !== translationRunRef.current) return; setTranslatedMessages((current) => ({ english: { ...current.english, ...Object.fromEntries(translations.english.map((item) => [item.id, item.content])) }, indonesian: { ...current.indonesian, ...Object.fromEntries(translations.indonesian.map((item) => [item.id, item.content])) } })); setTranslationError(""); })
       .catch((reason: unknown) => {
@@ -291,8 +300,8 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
         setTranslationError(friendlyTranslationError(reason instanceof Error ? reason.message : ""));
       })
       .finally(() => missing.forEach((message) => translatingIdsRef.current.delete(message.id)));
-  }, [translateChat, translationTarget, translatedMessages, translateChatMessages.mutateAsync, translationRequestVersion]);
-  useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:chat-translation-status", { detail: { pending: translateChatMessages.isPending, target: translationTarget, untranslatedMessageCount } })); }, [translateChatMessages.isPending, translationTarget, untranslatedMessageCount]);
+  }, [translateChat, translationTarget, translationCache, translateChatMessages.mutateAsync, translationRequestVersion, sourceAi, session.id, session.name]);
+  useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:chat-translation-status", { detail: { pending: translationPending, target: translationTarget, untranslatedMessageCount } })); }, [translationPending, translationTarget, untranslatedMessageCount]);
   const streamChat = async (payload: { sessionName: string; materials: string; translate: boolean; responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed"; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; aiName: string; history: Array<{ role: "user" | "assistant"; content: string }>; continueAnswer?: boolean; resumePrefix?: string }) => {
     const run = ++chatRunRef.current;
     const controller = new AbortController();
@@ -340,15 +349,15 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const send = () => { const content = input.trim(); if (!content || chat.isPending || continueAnswer.isPending || streaming || streamRecovery) return; const preferences = readAiSettings(); const payload = { sessionName: session.name, materials: safeMaterials(content, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, aiName, history: [...compactHistory(session.chatHistory.slice(-29)), { role: "user" as const, content }] }; setError(""); pendingScrollRef.current = true; addMessage(session.id, { role: "user", content }); setInput(""); scrollToLatest(); pendingScrollRef.current = false; void streamChat(payload); };
   const continueTruncatedAnswer = () => { if (chat.isPending || streaming || streamRecovery) return; const preferences = readAiSettings(); const priorQuestion = [...session.chatHistory].reverse().find((message) => message.role === "user")?.content ?? ""; setError(""); pendingScrollRef.current = true; scrollToLatest(); pendingScrollRef.current = false; void streamChat({ sessionName: session.name, materials: safeMaterials(priorQuestion, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, aiName, history: compactHistory(session.chatHistory.slice(-30)), continueAnswer: true }); };
   const toggleChatTranslation = () => {
-    if (translateChatMessages.isPending) return;
+    if (translationPending) return;
     const nextTarget = translateChat && untranslatedMessageCount > 0 ? translationTarget : nextChatTranslationTarget(session.chatHistory, translateChat, translationTarget);
-    translationFailuresRef.current.clear(); setTranslationError(""); setTranslateChat(true); setTranslationTarget(nextTarget); setTranslationRequestVersion((value) => value + 1); localStorage.setItem("studyos_translate_mode", "true"); localStorage.setItem("studyos_chat_translation_target", nextTarget);
+    translationFailuresRef.current.clear(); sourceAi?.clearChatTranslationErrors(session.id); setTranslationError(""); setTranslateChat(true); setTranslationTarget(nextTarget); setTranslationRequestVersion((value) => value + 1); localStorage.setItem("studyos_translate_mode", "true"); localStorage.setItem("studyos_chat_translation_target", nextTarget);
     window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: nextTarget } }));
   };
-  const retryTranslation = () => { if (translateChatMessages.isPending) return; translationFailuresRef.current.clear(); setTranslationError(""); setTranslateChat(true); setTranslationRequestVersion((value) => value + 1); localStorage.setItem("studyos_translate_mode", "true"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: translationTarget } })); };
-  const cancelTranslation = () => { translationRunRef.current += 1; translatingIdsRef.current.clear(); translateChatMessages.reset(); setTranslateChat(false); setTranslationError(""); localStorage.setItem("studyos_translate_mode", "false"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false, target: translationTarget } })); };
+  const retryTranslation = () => { if (translationPending) return; translationFailuresRef.current.clear(); sourceAi?.clearChatTranslationErrors(session.id); setTranslationError(""); setTranslateChat(true); setTranslationRequestVersion((value) => value + 1); localStorage.setItem("studyos_translate_mode", "true"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: translationTarget } })); };
+  const cancelTranslation = () => { translationRunRef.current += 1; translatingIdsRef.current.clear(); if (sourceAi) sourceAi.cancelChatTranslation(session.id); else translateChatMessages.reset(); setTranslateChat(false); setTranslationError(""); localStorage.setItem("studyos_translate_mode", "false"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false, target: translationTarget } })); };
   const cancelChatResponse = () => { chatRunRef.current += 1; streamAbortRef.current?.abort(); streamAbortRef.current = null; chat.reset(); clearStreamPreview(); setError(""); };
-  useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "translate", label: "Translate", pending: translateChatMessages.isPending, cancel: cancelTranslation } })); }, [translateChatMessages.isPending]);
+  useEffect(() => { if (!sourceAi) window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "translate", label: "Translate", pending: translateChatMessages.isPending, cancel: cancelTranslation } })); }, [sourceAi, translateChatMessages.isPending]);
   useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "chat", label: "AI response", pending: streaming || chat.isPending || streamRecovery, cancel: cancelChatResponse } })); }, [streaming, chat.isPending, streamRecovery]);
   const nextTranslationTarget = translateChat && untranslatedMessageCount > 0 ? translationTarget : nextChatTranslationTarget(session.chatHistory, translateChat, translationTarget);
   const nextTranslationLabel = nextTranslationTarget === "english" ? "English" : "Indonesian";

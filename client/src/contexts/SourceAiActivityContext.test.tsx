@@ -3,12 +3,13 @@ import React from "react";
 import { act, fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-const { addVocabulary, addMessage, addQuiz, keyTermCallbacks, quizCallbacks } = vi.hoisted(() => ({
+const { addVocabulary, addMessage, addQuiz, keyTermCallbacks, quizCallbacks, translationCallbacks } = vi.hoisted(() => ({
   addVocabulary: vi.fn(),
   addMessage: vi.fn(),
   addQuiz: vi.fn(),
   keyTermCallbacks: { value: undefined as undefined | { onSuccess?: (draft: { term: string; definition: string; context: string; example: string }) => void } },
   quizCallbacks: { value: undefined as undefined | { onSuccess?: (result: { questions: Array<{ prompt: string; options: string[]; answer: string }> }) => void } },
+  translationCallbacks: { value: undefined as undefined | { onSuccess?: (result: { translations: { english: Array<{ id: string; content: string }>; indonesian: Array<{ id: string; content: string }> } }) => void } },
 }));
 
 vi.mock("@/lib/trpc", () => ({
@@ -18,6 +19,7 @@ vi.mock("@/lib/trpc", () => ({
       draftKeyTerm: { useMutation: () => ({ mutate: (_input: unknown, callbacks: typeof keyTermCallbacks.value) => { keyTermCallbacks.value = callbacks; }, reset: vi.fn() }) },
       draftVocabulary: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn() }) },
       quiz: { useMutation: () => ({ mutate: (_input: unknown, callbacks: typeof quizCallbacks.value) => { quizCallbacks.value = callbacks; }, reset: vi.fn() }) },
+      translateChat: { useMutation: () => ({ mutate: (_input: unknown, callbacks: typeof translationCallbacks.value) => { translationCallbacks.value = callbacks; }, reset: vi.fn() }) },
     },
   },
 }));
@@ -49,6 +51,18 @@ function QuizTaskStarter({ visible }: { visible: boolean }) {
   return <button type="button" onClick={() => sourceAi.startQuiz({ sessionId: "session-a", sessionName: "Biology", materials: "Plants use light.", responseStyle: "Balanced", model: "local-9router", quiz: { difficulty: "medium", questionCount: 3, optionCount: 4 } })}>Start Generate Quiz</button>;
 }
 
+function TranslationTaskStarter({ visible }: { visible: boolean }) {
+  const sourceAi = useSourceAiActivity();
+  if (!visible) return null;
+  return <button type="button" onClick={() => sourceAi.startChatTranslation({ sessionId: "session-a", sessionName: "Biology", model: "local-9router", target: "english", messages: [{ id: "ai-1", content: "Halo" }] })}>Start Translate</button>;
+}
+
+function TranslationTaskStatus() {
+  const sourceAi = useSourceAiActivity();
+  const task = sourceAi.tasks.find((item) => item.kind === "chat-translation");
+  return <p>{task ? task.status : sourceAi.chatTranslationsFor("session-a").english["ai-1"] ?? "idle"}</p>;
+}
+
 describe("Source AI activity provider", () => {
   it("keeps a Save Terms request and its draft when the Source panel unmounts", () => {
     const ui = render(<SourceAiActivityProvider><SourceTaskStarter visible /><SourceTaskStatus /></SourceAiActivityProvider>);
@@ -71,6 +85,17 @@ describe("Source AI activity provider", () => {
 
     expect(addQuiz).toHaveBeenCalledWith("session-a", expect.any(Array));
     expect(ui.getByText("idle")).toBeTruthy();
+  });
+
+  it("keeps a Translate request and its result when the workspace trigger unmounts", () => {
+    const ui = render(<SourceAiActivityProvider><TranslationTaskStarter visible /><TranslationTaskStatus /></SourceAiActivityProvider>);
+    fireEvent.click(ui.getByRole("button", { name: "Start Translate" }));
+    expect(ui.getByText("pending")).toBeTruthy();
+
+    ui.rerender(<SourceAiActivityProvider><TranslationTaskStarter visible={false} /><TranslationTaskStatus /></SourceAiActivityProvider>);
+    act(() => translationCallbacks.value?.onSuccess?.({ translations: { english: [{ id: "ai-1", content: "Hello" }], indonesian: [{ id: "ai-1", content: "Halo" }] } }));
+
+    expect(ui.getByText("Hello")).toBeTruthy();
   });
 
   it("shows a compact activity menu and can cancel a running AI task", () => {
