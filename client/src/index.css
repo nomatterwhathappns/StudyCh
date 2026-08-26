@@ -253,7 +253,7 @@
   .study-workspace-header { @apply flex h-16 shrink-0 items-center justify-between border-b border-border px-4 sm:px-5; background: var(--sidebar); }
   .study-panel-group { background: var(--panel-group); }
   .study-panel { @apply flex h-full min-h-0 flex-col bg-card; }
-  .study-source-panel { @apply relative; }
+  .study-source-panel { @apply relative; --study-selection-x: 50vw; --study-selection-y: 50vh; }
   .study-chat-panel { background: var(--background); }
   .study-material-row { @apply flex w-full items-center gap-2 rounded-xl border border-border/70 bg-secondary/35 p-2.5 transition-colors hover:bg-secondary; }
   .study-material-row.is-selected { @apply border-primary bg-primary/30; }
@@ -263,10 +263,11 @@
   .study-translate-button { @apply mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-[11px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground; }
   .study-translate-button.is-on { border-color: var(--ember); color: var(--foreground); background: color-mix(in srgb, var(--ember) 13%, transparent); }
   .study-mobile-chat-translate { display: none; }
-  .study-selection-popover { @apply absolute bottom-3 left-3 right-3 z-20 rounded-xl border border-border bg-popover p-2 text-xs text-muted-foreground; box-shadow: 0 12px 28px rgba(0,0,0,.22); }
+  .study-selection-popover { @apply fixed z-40 rounded-xl border border-border bg-popover p-2 text-xs text-muted-foreground; left: clamp(0.75rem, var(--study-selection-x), calc(100vw - 0.75rem)); top: clamp(5rem, var(--study-selection-y), calc(100vh - 0.75rem)); width: max-content; max-width: calc(100vw - 1.5rem); transform: translate(-50%, -100%); box-shadow: 0 12px 28px rgba(0,0,0,.22); }
   .study-selection-popover > div { @apply mt-2 flex gap-2; }
   .study-selection-popover button { @apply rounded-lg border border-border px-2 py-1 text-[10px] text-foreground hover:bg-secondary; }
-  .study-reading-content { @apply whitespace-pre-wrap pr-2 text-sm leading-7 text-muted-foreground; }
+  .study-reading-content { @apply min-w-0 whitespace-pre-wrap pr-2 text-sm leading-7 text-muted-foreground; overflow-wrap: anywhere; word-break: break-word; }
+  .study-reading-content * { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
   .study-reading-content h3 { @apply mb-4 font-display text-xl italic text-foreground; }
   .study-vocab-highlight { cursor: help; background: transparent; color: var(--foreground); text-decoration: underline; text-decoration-color: var(--ember); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .study-menu { @apply absolute right-0 top-10 z-30 w-44 rounded-xl border border-border bg-popover p-1.5; box-shadow: 0 12px 28px rgba(0,0,0,.22); }

@@ -270,3 +270,6 @@
 - [x] Menambahkan popup hover pada teks materi untuk vocab tersimpan dengan kata dan arti singkat
 - [x] Menambahkan popup hover pada teks materi untuk terms tersimpan dengan definisi serta detail opsional
 - [x] Menambahkan regresi matching dan interaksi hover, lalu push fitur ke GitHub
+- [x] Mencegah isi source terpotong saat panel Source di-resize pada desktop dan mobile
+- [x] Memindahkan aksi Save Terms, Save Vocab, dan Explain ke popup kecil yang muncul dekat teks terpilih
+- [ ] Menambahkan regresi resize dan popup selection, lalu push refinement ke GitHub
