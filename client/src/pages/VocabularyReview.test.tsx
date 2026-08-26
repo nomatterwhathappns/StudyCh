@@ -47,7 +47,9 @@ describe("Watch vocabulary review", () => {
     expect(ui.getByRole("button", { name: "Close preview" })).toBeTruthy();
     fireEvent.click(ui.getByRole("button", { name: "Close preview" }));
 
-    fireEvent.click(ui.getByRole("button", { name: /Review key terms flashcards/i }));
+    const reviewButton = ui.getByRole("button", { name: /Review key terms flashcards/i });
+    expect(reviewButton.getAttribute("aria-label")).toBe("Review key terms flashcards");
+    fireEvent.click(reviewButton);
     await waitFor(() => expect(ui.getByRole("dialog")).toBeTruthy());
     fireEvent.click(ui.getByRole("button", { name: "Reveal answer" }));
     expect(within(ui.getByRole("dialog")).getByText("Alpha definition")).toBeTruthy();

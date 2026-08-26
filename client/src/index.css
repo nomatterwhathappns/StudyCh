@@ -292,6 +292,10 @@
   .study-section-action, .study-pager { @apply flex size-6 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }
   .study-quiz-button { @apply flex min-h-14 flex-col items-start justify-center rounded-xl border border-border bg-secondary/45 px-3 text-left text-xs text-foreground transition-colors hover:bg-secondary; }
   .study-quiz-button span { @apply mt-1 font-mono text-[9px] uppercase tracking-wide text-muted-foreground; }
+  .study-key-terms-review, [aria-label="Review key terms flashcards"] { @apply inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] transition-[filter,transform] duration-150; border-color: var(--primary) !important; background: var(--primary) !important; color: var(--primary-foreground) !important; }
+  .study-key-terms-review:hover, [aria-label="Review key terms flashcards"]:hover { filter: brightness(1.1); }
+  .study-key-terms-review:active, [aria-label="Review key terms flashcards"]:active { transform: scale(0.97); }
+  .study-key-terms-review:focus-visible, [aria-label="Review key terms flashcards"]:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   .study-key-term-trigger { @apply flex min-h-12 w-full flex-col items-start justify-center rounded-xl border border-border bg-secondary/45 px-3 py-2 text-left text-xs text-foreground transition-colors hover:border-primary/60 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70; }
   .study-key-term-trigger > span { @apply max-w-full font-medium; }
   .study-key-term-trigger em { @apply sr-only; }
