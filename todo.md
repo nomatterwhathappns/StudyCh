@@ -278,4 +278,4 @@
 - [x] Menjaga popup Save Terms, Save Vocab, dan Explain tetap terlihat penuh di tepi panel atau layar
 - [x] Menutup popup selection saat klik area lain atau menekan Escape tanpa mengganggu tombol aksinya
 - [x] Menambah waktu aman untuk aksi selection melalui 9router lokal pada teks yang lebih panjang
-- [ ] Menambahkan regresi batas popup, penutupan, dan timeout lalu push perbaikannya ke GitHub
+- [x] Menambahkan regresi batas popup, penutupan, dan timeout lalu push perbaikannya ke GitHub
