@@ -309,3 +309,6 @@
 - [x] Menjaga Generate Quiz tetap aktif saat panel Watch di-hide atau pengguna membuka Profile/Sessions
 - [x] Menambahkan panel aktivitas AI percobaan untuk melihat proses aktif dan membatalkannya
 - [x] Menambahkan regresi proses Quiz tahan navigasi, panel aktivitas, dan push hasil percobaan ke GitHub
+- [x] Menjaga timer Watch tetap berjalan saat panel di-hide atau pengguna membuka Profile/Sessions
+- [x] Mempertahankan dan menyimpan waktu timer pada session yang benar setelah kembali ke workspace
+- [x] Menambahkan regresi timer tahan navigasi dan push perbaikannya ke GitHub

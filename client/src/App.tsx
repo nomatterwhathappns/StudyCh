@@ -4,6 +4,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { PaletteProvider } from "./contexts/PaletteContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SourceAiActivityProvider } from "./contexts/SourceAiActivityContext";
+import { WatchTimerProvider } from "./contexts/WatchTimerContext";
 import { AiActivityMenu } from "./components/studyos/AiActivityMenu";
 import Home, { HomeView } from "./pages/Home";
 import StudyWorkspace from "./pages/StudyWorkspace";
@@ -15,5 +16,5 @@ function Router() {
 }
 
 export default function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="dark"><PaletteProvider><SourceAiActivityProvider><TooltipProvider><Toaster /><Router /><AiActivityMenu /></TooltipProvider></SourceAiActivityProvider></PaletteProvider></ThemeProvider></ErrorBoundary>;
+  return <ErrorBoundary><ThemeProvider defaultTheme="dark"><PaletteProvider><WatchTimerProvider><SourceAiActivityProvider><TooltipProvider><Toaster /><Router /><AiActivityMenu /></TooltipProvider></SourceAiActivityProvider></WatchTimerProvider></PaletteProvider></ThemeProvider></ErrorBoundary>;
 }

@@ -25,6 +25,7 @@ vi.mock("@/components/studyos/NoteEditor", () => ({ NoteEditor: () => <div>Note 
 
 import { WatchPanel } from "./StudyWorkspace";
 import { SourceAiActivityProvider } from "@/contexts/SourceAiActivityContext";
+import { WatchTimerProvider } from "@/contexts/WatchTimerContext";
 
 const session: StudySession = {
   id: "vocab-session", name: "Memory", createdAt: 0, isPinned: false, materials: [], chatHistory: [],
@@ -35,7 +36,7 @@ const session: StudySession = {
 };
 
 function WatchPanelWithProvider({ session }: { session: StudySession }) {
-  return <SourceAiActivityProvider><WatchPanel session={session} /></SourceAiActivityProvider>;
+  return <WatchTimerProvider><SourceAiActivityProvider><WatchPanel session={session} /></SourceAiActivityProvider></WatchTimerProvider>;
 }
 
 describe("Watch vocabulary review", () => {
