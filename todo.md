@@ -279,3 +279,6 @@
 - [x] Menutup popup selection saat klik area lain atau menekan Escape tanpa mengganggu tombol aksinya
 - [x] Menambah waktu aman untuk aksi selection melalui 9router lokal pada teks yang lebih panjang
 - [x] Menambahkan regresi batas popup, penutupan, dan timeout lalu push perbaikannya ke GitHub
+- [x] Merender jawaban AI dengan Markdown agar bold, list, dan pemisah tidak tampil sebagai simbol mentah
+- [x] Menutup menu tiga titik session saat klik area lain atau menekan Escape
+- [ ] Menambahkan regresi Chat Markdown dan penutupan menu session, lalu push perbaikannya ke GitHub

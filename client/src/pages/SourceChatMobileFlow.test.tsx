@@ -208,6 +208,18 @@ describe("mobile Source and AI flow", () => {
     await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "user", content: longQuestion }));
   });
 
+  it("closes the session three-dot menu when clicking elsewhere or pressing Escape", async () => {
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    fireEvent.click(ui.getByRole("button", { name: "Session menu" }));
+    expect(ui.getByRole("button", { name: "New session" })).toBeTruthy();
+    fireEvent.pointerDown(document.body);
+    await waitFor(() => expect(ui.queryByRole("button", { name: "New session" })).toBeNull());
+
+    fireEvent.click(ui.getByRole("button", { name: "Session menu" }));
+    fireEvent.keyDown(document, { key: "Escape" });
+    await waitFor(() => expect(ui.queryByRole("button", { name: "New session" })).toBeNull());
+  });
+
   it("shows cancel controls for AI activities and invokes only the selected cancellation handler", async () => {
     const cancelTranslation = vi.fn();
     const cancelAddTerms = vi.fn();

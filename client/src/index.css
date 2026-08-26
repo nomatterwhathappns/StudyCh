@@ -279,6 +279,10 @@
   .study-message-bubble { @apply max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed; }
   .is-user .study-message-bubble { border-color: var(--chat-user-border, var(--primary)); background: var(--chat-user-background, var(--primary)); color: var(--chat-user-foreground, var(--primary-foreground)); }
   .is-ai .study-message-bubble { border-color: var(--chat-ai-border, var(--border)); background: var(--chat-ai-background, var(--card)); color: var(--chat-ai-foreground, var(--card-foreground)); }
+  .is-ai .study-message-bubble p + p { margin-top: .65rem; }
+  .is-ai .study-message-bubble ol, .is-ai .study-message-bubble ul { margin: .55rem 0; padding-left: 1.25rem; }
+  .is-ai .study-message-bubble li + li { margin-top: .25rem; }
+  .is-ai .study-message-bubble hr { margin: .85rem 0; border: 0; border-top: 1px solid var(--border); }
   .study-thinking { @apply flex items-center gap-1 py-1; }
   .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[var(--blush-pop)]; animation-delay: 0ms; }
   .study-thinking i:nth-child(2) { animation-delay: 120ms; }
