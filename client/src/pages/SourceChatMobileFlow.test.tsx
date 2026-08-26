@@ -659,16 +659,18 @@ describe("mobile Source and AI flow", () => {
     }
   });
 
-  it("renders AI Markdown headings and tables as structured content instead of raw symbols", () => {
+  it("renders AI Markdown tables full-width and code blocks without raw controls", () => {
     const markdownSession: StudySession = {
       ...session,
-      chatHistory: [{ id: "markdown-answer", role: "assistant", content: "## AWS services\n\n| Service | Use |\n| --- | --- |\n| EC2 | Virtual server |\n| Lambda | Event-driven code |", createdAt: 1 }],
+      chatHistory: [{ id: "markdown-answer", role: "assistant", content: "## AWS services\n\n| Service | Use |\n| --- | --- |\n| EC2 | Virtual server |\n| Lambda | Event-driven code |\n\n```text\nLayer 4 -> TCP makes delivery reliable\n```", createdAt: 1 }],
     };
 
     const ui = render(<ChatPanel session={markdownSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
     expect(ui.container.querySelector(".study-chat-markdown h2")?.textContent).toBe("AWS services");
+    expect(ui.container.querySelector(".study-chat-table-scroll table")).toBeTruthy();
     expect(ui.container.querySelectorAll(".study-chat-markdown table th")).toHaveLength(2);
     expect(ui.container.querySelectorAll(".study-chat-markdown table td")).toHaveLength(4);
+    expect(ui.container.querySelectorAll(".study-chat-markdown [data-streamdown='code-block']")).not.toHaveLength(0);
     expect(ui.container.querySelectorAll(".study-chat-markdown button")).toHaveLength(0);
     expect(ui.getByText("Event-driven code")).toBeTruthy();
   });

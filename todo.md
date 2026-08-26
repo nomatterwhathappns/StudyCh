@@ -318,3 +318,6 @@
 - [x] Melonggarkan jarak angka dan ring pada Countdown Timer percobaan
 - [x] Memadatkan tinggi kartu Watch percobaan agar seimbang dengan Quiz, Key Terms, dan Notes
 - [x] Menjalankan regresi countdown final dan push mode Watch yang disetujui ke GitHub
+- [x] Membuat tabel Markdown AI memakai lebar bubble secara konsisten dan scroll hanya saat perlu
+- [x] Meningkatkan kontras code block AI serta menghapus kontrol bawaan yang mengganggu
+- [x] Menambahkan regresi tabel dan code block Chat lalu push perbaikannya ke GitHub

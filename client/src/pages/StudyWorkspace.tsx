@@ -34,7 +34,7 @@ const emptyChatTranslationCache = (): ChatTranslationCache => ({ english: {}, in
 type ChatTranslationLanguage = "english" | "indonesian";
 
 function ChatMarkdown({ content }: { content: string }) {
-  return <div className="study-chat-markdown"><Streamdown controls={{ table: false }}>{content}</Streamdown></div>;
+  return <div className="study-chat-markdown"><Streamdown controls={{ table: false, code: false }} components={{ table: ({ node: _node, children, ...props }) => <div className="study-chat-table-scroll"><table {...props}>{children}</table></div> }}>{content}</Streamdown></div>;
 }
 
 function inferOriginalChatLanguage(messages: StudySession["chatHistory"]): ChatTranslationLanguage {
