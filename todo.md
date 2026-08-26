@@ -263,4 +263,4 @@
 - [x] Mengganti font dekoratif menjadi font normal pada empty state, heading, kartu Session, dan kartu Key Terms yang ditandai pengguna
 - [x] Menghapus simbol awalan `—` pada empty state yang ditandai pengguna
 - [x] Mempertahankan font dekoratif hanya pada nama profil dan wordmark StudyOS workspace sesuai klarifikasi pengguna
-- [ ] Menambahkan regresi, memverifikasi perubahan font, lalu push refinement ke GitHub
+- [x] Menambahkan regresi, memverifikasi perubahan font, lalu push refinement ke GitHub
