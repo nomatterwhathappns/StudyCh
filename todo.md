@@ -281,4 +281,4 @@
 - [x] Menambahkan regresi batas popup, penutupan, dan timeout lalu push perbaikannya ke GitHub
 - [x] Merender jawaban AI dengan Markdown agar bold, list, dan pemisah tidak tampil sebagai simbol mentah
 - [x] Menutup menu tiga titik session saat klik area lain atau menekan Escape
-- [ ] Menambahkan regresi Chat Markdown dan penutupan menu session, lalu push perbaikannya ke GitHub
+- [x] Menambahkan regresi Chat Markdown dan penutupan menu session, lalu push perbaikannya ke GitHub
