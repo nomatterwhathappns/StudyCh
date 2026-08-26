@@ -266,4 +266,4 @@
 - [x] Menambahkan regresi, memverifikasi perubahan font, lalu push refinement ke GitHub
 - [x] Menambahkan pilihan Save Vocab terpisah dari Save Terms pada teks yang dipilih
 - [x] Menyimpan Save Vocab sebagai kata dan arti saja tanpa definisi, konteks, atau contoh
-- [ ] Menambahkan regresi, memverifikasi Save Vocab dan Save Terms, lalu push fitur ke GitHub
+- [x] Menambahkan regresi, memverifikasi Save Vocab dan Save Terms, lalu push fitur ke GitHub
