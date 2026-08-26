@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import type { StudySession } from "@/lib/study-types";
 
-const { uploadDocumentMutate, chatMutate, chatCallbacks, continueMutate, draftKeyTermMutate, draftKeyTermShouldFail, translateChatMutateAsync, translateChatIsPending, addMaterial, addMessage, addVocabulary } = vi.hoisted(() => ({
-  uploadDocumentMutate: vi.fn(), chatMutate: vi.fn(), continueMutate: vi.fn(), draftKeyTermMutate: vi.fn(), draftKeyTermShouldFail: { value: false }, translateChatMutateAsync: vi.fn(), addMaterial: vi.fn(), addMessage: vi.fn(), addVocabulary: vi.fn(),
+const { uploadDocumentMutate, chatMutate, chatCallbacks, continueMutate, draftKeyTermMutate, draftVocabularyMutate, draftKeyTermShouldFail, translateChatMutateAsync, translateChatIsPending, addMaterial, addMessage, addVocabulary } = vi.hoisted(() => ({
+  uploadDocumentMutate: vi.fn(), chatMutate: vi.fn(), continueMutate: vi.fn(), draftKeyTermMutate: vi.fn(), draftVocabularyMutate: vi.fn(), draftKeyTermShouldFail: { value: false }, translateChatMutateAsync: vi.fn(), addMaterial: vi.fn(), addMessage: vi.fn(), addVocabulary: vi.fn(),
   translateChatIsPending: { value: false },
   chatCallbacks: { onSuccess: undefined as undefined | ((value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => void), onError: undefined as undefined | ((reason: { message: string }) => void) },
 }));
@@ -17,6 +17,7 @@ vi.mock("@/lib/trpc", () => ({
       fetchSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
       uploadDocument: { useMutation: () => ({ mutate: uploadDocumentMutate, isPending: false }) },
       draftKeyTerm: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; definition: string; context: string; example: string }) => void; onError?: (reason: { message: string }) => void }) => { draftKeyTermMutate(input); if (draftKeyTermShouldFail.value) { callbacks?.onError?.({ message: "StudyOS AI could not prepare that Key Term." }); return; } callbacks?.onSuccess?.({ term: "AWS S3", definition: "Object storage from AWS.", context: "It stores objects in buckets.", example: "Store a PDF in an S3 bucket." }); }, reset: vi.fn(), isPending: false }) },
+      draftVocabulary: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; meaning: string }) => void }) => { draftVocabularyMutate(input); callbacks?.onSuccess?.({ term: "photosynthesis", meaning: "fotosintesis" }); }, reset: vi.fn(), isPending: false }) },
       chat: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => void; onError?: (reason: { message: string }) => void }) => { chatCallbacks.onSuccess = callbacks?.onSuccess; chatCallbacks.onError = callbacks?.onError; chatMutate(input); }, reset: vi.fn(), isPending: false }) },
       translateChat: { useMutation: () => ({ mutateAsync: translateChatMutateAsync, reset: vi.fn(), isPending: translateChatIsPending.value }) },
       continue: { useMutation: (options: { onSuccess?: (value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean }) => void }) => ({ mutate: (input: unknown) => { continueMutate(input); options.onSuccess?.({ text: "Lanjutan yang selesai.", citations: [], truncated: false }); }, isPending: false }) },
@@ -185,7 +186,7 @@ describe("mobile Source and AI flow", () => {
     vi.stubGlobal("FileReader", TestFileReader);
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callback(0); return 1; });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(streamingResponse()));
-    uploadDocumentMutate.mockReset(); chatMutate.mockReset(); chatCallbacks.onSuccess = undefined; chatCallbacks.onError = undefined; continueMutate.mockReset(); draftKeyTermMutate.mockReset(); draftKeyTermShouldFail.value = false; translateChatMutateAsync.mockReset(); translateChatIsPending.value = false; addMaterial.mockReset(); addMessage.mockReset(); addVocabulary.mockReset();
+    uploadDocumentMutate.mockReset(); chatMutate.mockReset(); chatCallbacks.onSuccess = undefined; chatCallbacks.onError = undefined; continueMutate.mockReset(); draftKeyTermMutate.mockReset(); draftVocabularyMutate.mockReset(); draftKeyTermShouldFail.value = false; translateChatMutateAsync.mockReset(); translateChatIsPending.value = false; addMaterial.mockReset(); addMessage.mockReset(); addVocabulary.mockReset();
     localStorage.clear();
   });
   afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
@@ -625,7 +626,7 @@ describe("mobile Source and AI flow", () => {
     selection?.removeAllRanges(); selection?.addRange(range);
     fireEvent.mouseUp(reading.closest("article")!);
 
-    fireEvent.click(ui.getByRole("button", { name: "Save term" }));
+    fireEvent.click(ui.getByRole("button", { name: "Save terms" }));
     expect(draftKeyTermMutate).toHaveBeenCalledWith(expect.objectContaining({ selection: expect.stringContaining("Photosynthesis turns light energy into chemical energy in plants.") }));
     fireEvent.change(ui.getByLabelText("Key Term"), { target: { value: "Amazon S3" } });
     fireEvent.click(ui.getByRole("button", { name: "Save Key Term" }));
@@ -643,9 +644,23 @@ describe("mobile Source and AI flow", () => {
     const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
     fireEvent.mouseUp(reading.closest("article")!);
 
-    fireEvent.click(ui.getByRole("button", { name: "Save term" }));
+    fireEvent.click(ui.getByRole("button", { name: "Save terms" }));
     expect(ui.getByText("StudyOS AI could not prepare that Key Term.")).toBeTruthy();
     expect(addVocabulary).not.toHaveBeenCalled();
+    expect(ui.queryByRole("button", { name: "Save Key Term" })).toBeNull();
+  });
+
+  it("saves a selected vocabulary word with its meaning only and skips the detailed editor", () => {
+    const ui = render(<SourcePanel session={session} />);
+    fireEvent.click(ui.getByRole("button", { name: "Read" }));
+    const reading = ui.getByText("Photosynthesis turns light energy into chemical energy in plants.");
+    const range = document.createRange(); range.selectNodeContents(reading);
+    const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
+    fireEvent.mouseUp(reading.closest("article")!);
+
+    fireEvent.click(ui.getByRole("button", { name: "Save vocab" }));
+    expect(draftVocabularyMutate).toHaveBeenCalledWith(expect.objectContaining({ selection: expect.stringContaining("Photosynthesis") }));
+    expect(addVocabulary).toHaveBeenCalledWith("session-mobile", "photosynthesis", "fotosintesis", expect.objectContaining({ sourceExcerpt: expect.stringContaining("Photosynthesis") }));
     expect(ui.queryByRole("button", { name: "Save Key Term" })).toBeNull();
   });
 });

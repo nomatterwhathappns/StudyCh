@@ -134,6 +134,20 @@ describe("StudyOS AI prompt regression", () => {
     expect(request.messages[0].content).toContain("definition one plain-language sentence of at most 180 characters");
   });
 
+  it("returns a compact vocabulary translation without Key Term details", async () => {
+    invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ term: "resilient", meaning: "tangguh" }) }, finish_reason: "stop" }] });
+    const result = await appRouter.createCaller(context()).study.draftVocabulary({
+      sessionName: "English vocabulary", materials: "", translate: false, responseStyle: "Balanced", model: "gpt-5-mini", selection: "resilient",
+    });
+
+    expect(result).toEqual({ term: "resilient", meaning: "tangguh" });
+    const request = invokeLLM.mock.calls.at(-1)?.[0];
+    expect(request.maxTokens).toBe(250);
+    expect(request.messages[0].content).toContain("minimal vocabulary cards");
+    expect(request.messages[0].content).toContain("short, natural Bahasa Indonesia translation");
+    expect(request.messages[0].content).toContain("string fields: term, meaning");
+  });
+
   it("returns a safe gateway error when a Key Term draft is not valid JSON", async () => {
     invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: "This is not JSON." }, finish_reason: "stop" }] });
     await expect(appRouter.createCaller(context()).study.draftKeyTerm({

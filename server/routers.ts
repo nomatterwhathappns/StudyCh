@@ -54,6 +54,11 @@ const keyTermDraftSchema = z.object({
   example: z.string().max(1200),
 });
 
+const vocabularyDraftSchema = z.object({
+  term: z.string().min(1).max(600),
+  meaning: z.string().min(1).max(600),
+});
+
 export function sourceContext(materials: string) {
   return materials.trim()
     ? `Study materials for this session:\n---\n${materials.trim().slice(0, 10000)}\n---`
@@ -248,6 +253,26 @@ export function parseKeyTermDraft(content: string) {
   const fallback = keyTermDraftSchema.safeParse(parseLabelledKeyTermDraft(content));
   if (fallback.success) return compactKeyTermDraft(fallback.data);
   throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI returned an invalid Key Term draft. Please try again." });
+}
+
+function parseVocabularyDraft(content: string) {
+  try {
+    const parsed = vocabularyDraftSchema.safeParse(parseJsonObject(content));
+    if (parsed.success) return { term: compactKeyTermText(parsed.data.term, 80), meaning: compactKeyTermText(parsed.data.meaning, 180, true) };
+  } catch {
+    // Some local providers return labelled text despite the requested JSON shape.
+  }
+  const draft: Record<string, string> = {};
+  for (const line of content.split(/\r?\n/)) {
+    const match = line.match(/^\s*(?:[-*]\s*)?(?:\*{0,2})?([^:：]+?)(?:\*{0,2})?\s*[:：]\s*(.+?)\s*$/);
+    if (!match) continue;
+    const label = normalizedDraftLabel(match[1] ?? "");
+    if (["term", "word", "istilah", "kata"].includes(label)) draft.term ??= match[2] ?? "";
+    if (["meaning", "translation", "arti", "terjemahan"].includes(label)) draft.meaning ??= match[2] ?? "";
+  }
+  const fallback = vocabularyDraftSchema.safeParse(draft);
+  if (fallback.success) return { term: compactKeyTermText(fallback.data.term, 80), meaning: compactKeyTermText(fallback.data.meaning, 180, true) };
+  throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI returned an invalid vocabulary translation. Please try again." });
 }
 
 const rawQuizQuestionSchema = z.object({
@@ -647,6 +672,26 @@ export const appRouter = router({
           if (error instanceof TRPCError) throw error;
           console.error("[StudyOS AI Key Term draft]", error);
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "StudyOS AI could not prepare that Key Term. Please try again." });
+        }
+      }),
+    draftVocabulary: publicProcedure
+      .input(aiInputSchema.extend({ selection: z.string().min(1).max(240) }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
+            { role: "system", content: [
+              "You create minimal vocabulary cards for a personal study app.",
+              "Return one JSON object only with string fields: term, meaning.",
+              "Keep term as the exact selected foreign word or short phrase (maximum 80 characters).",
+              "Meaning must be only a short, natural Bahasa Indonesia translation (maximum 180 characters). Do not add a definition, context, example, label, punctuation explanation, or extra commentary.",
+            ].join("\n\n") },
+            { role: "user", content: `Selected vocabulary:\n${input.selection}` },
+          ], 250, input.responseStyle);
+          return parseVocabularyDraft(result.text);
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("[StudyOS AI vocabulary draft]", error);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "StudyOS AI could not translate that vocabulary. Please try again." });
         }
       }),
     quiz: publicProcedure
