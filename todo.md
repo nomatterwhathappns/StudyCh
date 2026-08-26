@@ -232,3 +232,6 @@
 - [x] Mengaudit token sidebar Midnight Blue dan Ocean Depths yang membuat teks navigasi tidak terbaca
 - [x] Memperbaiki kontras navigasi, label, dan tombol sidebar pada Midnight Blue serta Ocean Depths
 - [x] Memverifikasi tampilan sidebar dua tema gelap sebelum melanjutkan review akhir
+- [x] Mengaudit token foreground/background bubble Chat pada seluruh Theme
+- [x] Menetapkan peran bubble AI netral dan bubble user aksen dengan kontras aman pada semua Theme
+- [x] Memverifikasi keterbacaan Chat pada tema gelap dan terang sebelum melanjutkan review akhir

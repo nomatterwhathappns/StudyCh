@@ -209,7 +209,7 @@
 }
 
 :root[data-palette="fuchsia-noir"] {
-  --frosted-blue: #F4D8ED; --icy-aqua: #FFF1FB; --mint-cream: #2C0E37; --petal-frost: #5C164E; --blush-pop: #CB429F; --ink: #FFF7FC; --sidebar: #2C0E37; --ember: #CB429F; --background: #402039; --foreground: #FFF7FC; --card: #4A204C; --card-foreground: #FFF7FC; --popover: #4A204C; --popover-foreground: #FFF7FC; --primary: #CB429F; --primary-foreground: #2C0E37; --secondary: #690375; --secondary-foreground: #FFF7FC; --muted: #663E63; --muted-foreground: #F3D7EB; --accent: #DAA89B; --accent-foreground: #2C0E37; --destructive: #FF9DBD; --destructive-foreground: #2C0E37; --feedback-error-bg: #66374E; --feedback-error-border: #FF9DBD; --feedback-error-foreground: #FFF1F6; --feedback-error-link: #F4D8ED; --border: #955189; --input: #663E63; --ring: #CB429F; --panel-group: #2C0E37;
+  --frosted-blue: #F4D8ED; --icy-aqua: #FFF1FB; --mint-cream: #2C0E37; --petal-frost: #5C164E; --blush-pop: #CB429F; --ink: #FFF7FC; --sidebar: #2C0E37; --ember: #CB429F; --background: #402039; --foreground: #FFF7FC; --card: #4A204C; --card-foreground: #FFF7FC; --popover: #4A204C; --popover-foreground: #FFF7FC; --primary: #CB429F; --primary-foreground: #2C0E37; --secondary: #690375; --secondary-foreground: #FFF7FC; --muted: #663E63; --muted-foreground: #F3D7EB; --accent: #DAA89B; --accent-foreground: #2C0E37; --destructive: #FF9DBD; --destructive-foreground: #2C0E37; --feedback-error-bg: #66374E; --feedback-error-border: #FF9DBD; --feedback-error-foreground: #FFF1F6; --feedback-error-link: #F4D8ED; --border: #955189; --input: #663E63; --ring: #CB429F; --panel-group: #2C0E37; --chat-user-background: #690375; --chat-user-foreground: #FFF7FC; --chat-user-border: #CB429F;
 }
 
 :root[data-palette="grape-soda"] {
@@ -309,8 +309,8 @@
   .study-chat-message.is-ai { @apply items-start; }
   .study-ai-label { @apply px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ember)]; }
   .study-message-bubble { @apply max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed; }
-  .is-user .study-message-bubble { @apply border-primary bg-primary text-primary-foreground; }
-  .is-ai .study-message-bubble { @apply border-border bg-card text-foreground; }
+  .is-user .study-message-bubble { border-color: var(--chat-user-border, var(--primary)); background: var(--chat-user-background, var(--primary)); color: var(--chat-user-foreground, var(--primary-foreground)); }
+  .is-ai .study-message-bubble { border-color: var(--chat-ai-border, var(--border)); background: var(--chat-ai-background, var(--card)); color: var(--chat-ai-foreground, var(--card-foreground)); }
   .study-thinking { @apply flex items-center gap-1 py-1; }
   .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[var(--blush-pop)]; animation-delay: 0ms; }
   .study-thinking i:nth-child(2) { animation-delay: 120ms; }
