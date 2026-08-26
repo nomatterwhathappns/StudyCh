@@ -257,4 +257,4 @@
 - [x] Memverifikasi bubble multiline dan tombol kirim pada desktop-mobile, lalu push refinement ke GitHub
 - [x] Menghilangkan kotak dalam serta scrollbar kasar dari textarea bubble Chat
 - [x] Menempatkan tombol kirim sebagai bubble terpisah di bawah composer tanpa ruang kosong di atasnya
-- [ ] Menambahkan regresi, memverifikasi composer halus desktop-mobile, lalu push refinement ke GitHub
+- [x] Menambahkan regresi, memverifikasi composer halus desktop-mobile, lalu push refinement ke GitHub
