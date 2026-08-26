@@ -269,4 +269,4 @@
 - [x] Menambahkan regresi, memverifikasi Save Vocab dan Save Terms, lalu push fitur ke GitHub
 - [x] Menambahkan popup hover pada teks materi untuk vocab tersimpan dengan kata dan arti singkat
 - [x] Menambahkan popup hover pada teks materi untuk terms tersimpan dengan definisi serta detail opsional
-- [ ] Menambahkan regresi matching dan interaksi hover, lalu push fitur ke GitHub
+- [x] Menambahkan regresi matching dan interaksi hover, lalu push fitur ke GitHub
