@@ -321,7 +321,27 @@
   .study-activity-popover { @apply w-64 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl; }
   .study-activity-cancel { @apply flex size-7 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-[#BA2D0B]; }
   .study-watch-panel { background: var(--card); }
-  .study-timer { @apply rounded-2xl border border-border bg-secondary/30 p-4; }
+  .study-timer { @apply rounded-2xl border border-border bg-secondary/30 p-3; }
+  .study-timer-v2 { @apply space-y-3; }
+  .study-timer-mode { @apply grid grid-cols-2 rounded-xl border border-border bg-background/35 p-1; }
+  .study-timer-mode button { @apply rounded-lg px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors; }
+  .study-timer-mode button.is-active { background: var(--primary); color: var(--primary-foreground); }
+  .study-timer-face { @apply relative flex min-h-24 flex-col items-center justify-center overflow-hidden rounded-2xl border border-border bg-card px-4 text-center; }
+  .study-timer-face > span { @apply relative z-10 text-3xl font-semibold tracking-tight text-foreground; font-variant-numeric: tabular-nums; }
+  .study-timer-face > small { @apply relative z-10 mt-0.5 text-[9px] font-mono uppercase tracking-[0.12em] text-muted-foreground; }
+  .study-timer-face.is-countdown { min-height: 10rem; }
+  .study-timer-face.is-countdown > span { font-size: 1.8rem; letter-spacing: -0.05em; }
+  .study-timer-ring { @apply absolute inset-0 m-auto size-36 -rotate-90; }
+  .study-timer-setup { @apply space-y-1.5; }
+  .study-timer-presets { @apply grid grid-cols-3 gap-1.5; }
+  .study-timer-presets button, .study-timer-custom button { @apply rounded-lg border border-border bg-card px-2 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground; }
+  .study-timer-presets button.is-active { border-color: var(--primary); color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
+  .study-timer-custom { @apply flex items-center justify-between rounded-lg border border-border bg-background/30 px-2 py-0.5; }
+  .study-timer-custom span { @apply text-[11px] font-medium text-foreground; font-variant-numeric: tabular-nums; }
+  .study-timer-custom button { @apply size-6 p-0 text-sm leading-none; }
+  .study-timer-actions { @apply grid grid-cols-[1fr_auto_auto] gap-1.5; }
+  .study-timer-start { @apply flex min-h-9 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-xs font-medium text-primary-foreground transition-[filter,transform] hover:brightness-110 active:scale-[0.98]; }
+  .study-timer-action { @apply flex min-h-9 items-center justify-center gap-1 rounded-xl border border-border bg-card px-2 text-[9px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }
   .study-timer-button { @apply flex min-h-9 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-card px-1 font-mono text-[8px] uppercase tracking-wide text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }
   .study-section-action, .study-pager { @apply flex size-6 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }
   .study-quiz-button { @apply flex min-h-14 flex-col items-start justify-center rounded-xl border border-border bg-secondary/45 px-3 text-left text-xs text-foreground transition-colors hover:bg-secondary; }

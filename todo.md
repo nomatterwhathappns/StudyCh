@@ -312,3 +312,9 @@
 - [x] Menjaga timer Watch tetap berjalan saat panel di-hide atau pengguna membuka Profile/Sessions
 - [x] Mempertahankan dan menyimpan waktu timer pada session yang benar setelah kembali ke workspace
 - [x] Menambahkan regresi timer tahan navigasi dan push perbaikannya ke GitHub
+- [x] Membuat versi percobaan mode Stopwatch dan Countdown Timer pada Watch
+- [x] Merapikan UI Watch dengan angka waktu besar, switch mode, preset menit, dan kontrol ringkas
+- [x] Menambahkan regresi mode timer dan menyiapkan preview tanpa push GitHub
+- [x] Melonggarkan jarak angka dan ring pada Countdown Timer percobaan
+- [x] Memadatkan tinggi kartu Watch percobaan agar seimbang dengan Quiz, Key Terms, dan Notes
+- [x] Menjalankan regresi countdown final dan push mode Watch yang disetujui ke GitHub
