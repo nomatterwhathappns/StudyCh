@@ -249,4 +249,4 @@
 - [x] Menyimpan checkpoint dan mengirim koleksi tema final ke GitHub setelah persetujuan pengguna
 - [x] Memperbaiki kontras tombol Review Key Terms pada Dusk Grape, Grape Soda, Fuchsia Noir, Velvet Orchid, dan Frosted Blue
 - [x] Menambahkan regresi dan memverifikasi keterbacaan tombol Review Key Terms pada lima tema tersebut
-- [ ] Menyimpan checkpoint dan mengirim perbaikan kontras Key Terms ke GitHub
+- [x] Menyimpan checkpoint dan mengirim perbaikan kontras Key Terms ke GitHub
