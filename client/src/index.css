@@ -68,41 +68,6 @@
   --panel-group: #D8F2F0;
 }
 
-:root[data-palette="vintage-rose"] {
-  --frosted-blue: #8C754D;
-  --icy-aqua: #F2E2C7;
-  --mint-cream: #FFF5E6;
-  --petal-frost: #F6DCE0;
-  --blush-pop: #DF9B6D;
-  --ink: #473144;
-  --sidebar: #473144;
-  --ember: #AF1B3F;
-  --background: #EFC69B;
-  --foreground: #473144;
-  --card: #FFF8EB;
-  --card-foreground: #473144;
-  --popover: #FFF8EB;
-  --popover-foreground: #473144;
-  --primary: #AF1B3F;
-  --primary-foreground: #FFF8EB;
-  --secondary: #CCB69B;
-  --secondary-foreground: #473144;
-  --muted: #EAD5B9;
-  --muted-foreground: #624B4F;
-  --accent: #DF9B6D;
-  --accent-foreground: #473144;
-  --destructive: #8E1B3B;
-  --destructive-foreground: #FFF8EB;
-  --feedback-error-bg: #F7DEE0;
-  --feedback-error-border: #AF1B3F;
-  --feedback-error-foreground: #5A2335;
-  --feedback-error-link: #7B102B;
-  --border: #B28F77;
-  --input: #D9B98F;
-  --ring: #DF9B6D;
-  --panel-group: #CCB69B;
-}
-
 :root[data-palette="midnight-blue"] {
   --frosted-blue: #C1EEFF;
   --icy-aqua: #DDF5FF;
@@ -361,12 +326,6 @@
   .bg-\[\#BA2D0B\] { background-color: var(--ember) !important; }
   .hover\:text-\[\#BA2D0B\]:hover { color: var(--destructive) !important; }
 
-  :root[data-palette="vintage-rose"] .study-sidebar, :root[data-palette="vintage-rose"] .study-workspace-header { color: #FFF8EB; }
-  :root[data-palette="vintage-rose"] .study-sidebar .text-muted-foreground, :root[data-palette="vintage-rose"] .study-sidebar .study-nav-item, :root[data-palette="vintage-rose"] .study-sidebar .study-back-button, :root[data-palette="vintage-rose"] .study-sidebar .study-theme-settings, :root[data-palette="vintage-rose"] .study-workspace-header .text-muted-foreground { color: #F4E1C6; }
-  :root[data-palette="vintage-rose"] .study-sidebar .study-kicker, :root[data-palette="vintage-rose"] .study-sidebar > div:last-child { color: #EFC69B; }
-  :root[data-palette="vintage-rose"] .study-sidebar .study-theme-settings strong, :root[data-palette="vintage-rose"] .study-sidebar .study-ai-settings strong { color: #FFF8EB; }
-  :root[data-palette="vintage-rose"] .study-workspace-header .study-icon-button, :root[data-palette="vintage-rose"] .study-workspace-header .study-theme-shuffle { color: #EFC69B; }
-  :root[data-palette="vintage-rose"] .study-workspace-header .study-icon-button:hover, :root[data-palette="vintage-rose"] .study-workspace-header .study-theme-shuffle:hover { color: #FFF8EB; }
   :root[data-palette="midnight-blue"] .study-sidebar, :root[data-palette="midnight-blue"] .study-workspace-header { color: #F4F8FA; }
   :root[data-palette="midnight-blue"] .study-sidebar .text-muted-foreground, :root[data-palette="midnight-blue"] .study-sidebar .study-nav-item, :root[data-palette="midnight-blue"] .study-sidebar .study-back-button, :root[data-palette="midnight-blue"] .study-sidebar .study-theme-settings, :root[data-palette="midnight-blue"] .study-workspace-header .text-muted-foreground, :root[data-palette="midnight-blue"] .study-workspace-header .study-icon-button, :root[data-palette="midnight-blue"] .study-workspace-header .study-theme-shuffle { color: #C1EEFF; }
   :root[data-palette="midnight-blue"] .study-sidebar .study-theme-settings strong, :root[data-palette="midnight-blue"] .study-sidebar .study-ai-settings strong { color: #F4F8FA; }

@@ -6,7 +6,6 @@ import React, { useState } from "react";
 
 const paletteOptions: Array<{ id: StudyPalette; name: string; description: string; colors: string[] }> = [
   { id: "frosted-blue", name: "Frosted Blue", description: "Tema biru pastel yang sedang dipakai.", colors: ["#7BDFF2", "#B2F7EF", "#EFF7F6", "#F7D6E0", "#F2B5D4"] },
-  { id: "vintage-rose", name: "Vintage Rose", description: "Preview dari Peach Glow, Cherry Rose, Vintage Grape, Khaki Beige, dan Light Bronze.", colors: ["#EFC69B", "#AF1B3F", "#473144", "#CCB69B", "#DF9B6D"] },
   { id: "midnight-blue", name: "Midnight Blue", description: "Tema gelap dari Black, Carbon Black, Chocolate Plum, Taupe Grey, dan Light Blue.", colors: ["#070707", "#28231C", "#513B3C", "#655356", "#C1EEFF"] },
   { id: "lilac-sky", name: "Lilac Sky", description: "Tema biru-lilac dari Icy Blue, Wisteria Blue, Periwinkle, Cornflower Blue, dan Deep Lilac.", colors: ["#A0DDFF", "#758ECD", "#C1CEFE", "#7189FF", "#624CAB"] },
   { id: "ocean-depths", name: "Ocean Depths", description: "Tema navy-teal dari Prussian Blue, Space Indigo, Dusk Blue, Tropical Teal, dan Neon Ice.", colors: ["#0B132B", "#1C2541", "#3A506B", "#5BC0BE", "#6FFFE9"] },
@@ -31,7 +30,7 @@ export function ThemeSettings({ compact = false }: { compact?: boolean }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {compact ? <button type="button" className="study-icon-button" aria-label="Open theme settings"><Palette className="size-4" /></button> : <button type="button" className="study-theme-settings"><span className="flex size-8 items-center justify-center rounded-lg border border-border"><Palette className="size-3.5" /></span><span className="min-w-0 text-left"><small>Theme</small><strong>{paletteOptions.find((option) => option.id === palette)?.name ?? "Vintage Rose"}</strong></span><span className="ml-auto flex gap-0.5" aria-hidden="true">{paletteOptions.find((option) => option.id === palette)?.colors.slice(0, 3).map((color) => <i key={color} className="size-2.5 rounded-full border border-black/10" style={{ backgroundColor: color }} />)}</span></button>}
+        {compact ? <button type="button" className="study-icon-button" aria-label="Open theme settings"><Palette className="size-4" /></button> : <button type="button" className="study-theme-settings"><span className="flex size-8 items-center justify-center rounded-lg border border-border"><Palette className="size-3.5" /></span><span className="min-w-0 text-left"><small>Theme</small><strong>{paletteOptions.find((option) => option.id === palette)?.name ?? "Frosted Blue"}</strong></span><span className="ml-auto flex gap-0.5" aria-hidden="true">{paletteOptions.find((option) => option.id === palette)?.colors.slice(0, 3).map((color) => <i key={color} className="size-2.5 rounded-full border border-black/10" style={{ backgroundColor: color }} />)}</span></button>}
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl border-border bg-card text-card-foreground sm:max-w-lg">
         <DialogHeader>

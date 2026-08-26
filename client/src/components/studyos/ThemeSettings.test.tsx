@@ -12,14 +12,14 @@ afterEach(() => {
 });
 
 describe("ThemeSettings", () => {
-  it("switches to the Vintage Rose palette and saves the browser-local preference", () => {
+  it("falls back from a removed Vintage Rose preference to Frosted Blue", () => {
+    localStorage.setItem("studyos_theme_palette", "vintage-rose");
     const ui = render(<PaletteProvider><ThemeSettings /></PaletteProvider>);
 
+    expect(document.documentElement.dataset.palette).toBe("frosted-blue");
+    expect(localStorage.getItem("studyos_theme_palette")).toBe("frosted-blue");
     fireEvent.click(ui.getByRole("button", { name: /Theme/i }));
-    fireEvent.click(ui.getByRole("button", { name: /Vintage Rose/i }));
-
-    expect(document.documentElement.dataset.palette).toBe("vintage-rose");
-    expect(localStorage.getItem("studyos_theme_palette")).toBe("vintage-rose");
+    expect(ui.queryByRole("button", { name: /Vintage Rose/i })).toBeNull();
   });
 
   it("shuffles to a different available palette without opening the manual picker", () => {
@@ -27,7 +27,7 @@ describe("ThemeSettings", () => {
 
     fireEvent.click(ui.getByRole("button", { name: "Shuffle theme" }));
 
-    expect(document.documentElement.dataset.palette).not.toBe("vintage-rose");
+    expect(document.documentElement.dataset.palette).not.toBe("frosted-blue");
   });
 
   it("lets the dashboard picker apply Midnight Blue explicitly", () => {
