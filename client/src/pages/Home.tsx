@@ -104,7 +104,7 @@ function VocabularyView({ sessions, onDelete }: { sessions: ReturnType<typeof us
 
 function PageHeader({ title, action }: { title: string; action?: React.ReactNode }) { return <header className="flex items-center justify-between gap-4"><h1 className="font-display text-4xl italic tracking-tight sm:text-5xl">{title}</h1>{action}</header>; }
 function StatCard({ icon: Icon, label, value }: { icon: typeof Clock3; label: string; value: string }) { return <article className="study-stat-card"><Icon className="size-4 text-[#BA2D0B]" /><p className="mt-7 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</p><p className="mt-2 font-display text-3xl italic tracking-tight">{value}</p></article>; }
-function EmptyState({ text }: { text: string }) { return <div className="flex h-[220px] items-center justify-center text-center font-display text-lg italic text-muted-foreground"><span>— {text}</span></div>; }
+function EmptyState({ text }: { text: string }) { return <div className="flex h-[220px] items-center justify-center text-center font-display text-lg italic text-muted-foreground"><span>{text}</span></div>; }
 
 function ProfileAvatar({ profile, size = "sm" }: { profile: { name: string; avatar?: string }; size?: "sm" | "lg" }) {
   const sizeClass = size === "lg" ? "size-20 sm:size-24" : "size-9";

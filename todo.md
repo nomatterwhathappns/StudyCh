@@ -260,3 +260,7 @@
 - [x] Menambahkan regresi, memverifikasi composer halus desktop-mobile, lalu push refinement ke GitHub
 - [x] Menyatukan textarea dan area tombol kirim ke dalam satu bubble composer dengan pembagian area internal tanpa garis terlihat
 - [x] Memverifikasi composer satu bubble pada desktop-mobile dan push refinement ke GitHub
+- [x] Mengganti font dekoratif menjadi font normal pada empty state, heading, kartu Session, dan kartu Key Terms yang ditandai pengguna
+- [x] Menghapus simbol awalan `—` pada empty state yang ditandai pengguna
+- [x] Mempertahankan font dekoratif hanya pada nama profil dan wordmark StudyOS workspace sesuai klarifikasi pengguna
+- [ ] Menambahkan regresi, memverifikasi perubahan font, lalu push refinement ke GitHub
