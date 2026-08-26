@@ -212,3 +212,5 @@
 - [x] Merancang pembagian peran warna dari palet Peach Glow, Cherry Rose, Vintage Grape, Khaki Beige, dan Light Bronze
 - [x] Menambahkan kontrol Theme untuk preview palet tanpa push GitHub sebelum persetujuan pengguna
 - [x] Memverifikasi aksesibilitas dan tampilan preview tema pada workspace sebelum meminta persetujuan
+- [x] Memperjelas warna ikon dan teks kecil pada tema Vintage Rose agar tidak menyaru dengan background
+- [x] Mengubah kontrol Theme di workspace menjadi tombol Shuffle Theme acak, sambil mempertahankan pemilihan manual di dashboard

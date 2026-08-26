@@ -3,7 +3,7 @@ import React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { PaletteProvider } from "@/contexts/PaletteContext";
-import { ThemeSettings } from "./ThemeSettings";
+import { ThemeSettings, ThemeShuffleButton } from "./ThemeSettings";
 
 afterEach(() => {
   cleanup();
@@ -20,5 +20,13 @@ describe("ThemeSettings", () => {
 
     expect(document.documentElement.dataset.palette).toBe("vintage-rose");
     expect(localStorage.getItem("studyos_theme_palette")).toBe("vintage-rose");
+  });
+
+  it("shuffles to a different available palette without opening the manual picker", () => {
+    const ui = render(<PaletteProvider><ThemeShuffleButton /></PaletteProvider>);
+
+    fireEvent.click(ui.getByRole("button", { name: "Shuffle theme" }));
+
+    expect(document.documentElement.dataset.palette).toBe("frosted-blue");
   });
 });

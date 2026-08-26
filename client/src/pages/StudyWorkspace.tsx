@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { NoteEditor } from "@/components/studyos/NoteEditor";
 import { defaultQuizGenerationSettings, QuizGeneratorDialog, type QuizGenerationSettings } from "@/components/studyos/QuizGeneratorDialog";
-import { ThemeSettings } from "@/components/studyos/ThemeSettings";
+import { ThemeShuffleButton } from "@/components/studyos/ThemeSettings";
 import { buildAdaptiveMaterialContext, buildMaterialChunks, buildMaterialContextWithCitations, materialChunkDomId } from "@/lib/material-context";
 import { trpc } from "@/lib/trpc";
 import type { Quiz, StudyCitation, StudySession, VocabItem, VocabReviewRating } from "@/lib/study-types";
@@ -74,7 +74,7 @@ export default function StudyWorkspace() {
     <div className="flex h-screen min-h-[600px] flex-col overflow-hidden bg-background text-foreground">
       <header className="study-workspace-header">
         <button type="button" onClick={() => setLocation("/")} className="group flex items-center gap-3 text-left"><span className="font-display text-2xl italic tracking-tight">StudyOS</span><span className="hidden border-l border-border pl-3 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground sm:inline">Learning Companion</span></button>
-        <div className="flex items-center gap-2"><button type="button" onClick={() => setSourceVisible((value) => !value)} className="study-icon-button lg:hidden" aria-label="Toggle source panel">{sourceVisible ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}</button><button type="button" onClick={() => setWatchVisible((value) => !value)} className="study-icon-button lg:hidden" aria-label="Toggle watch panel">{watchVisible ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}</button><ThemeSettings compact /><WorkspaceProfileButton profile={profile} onOpenProfile={() => setLocation("/")} /></div>
+        <div className="flex items-center gap-2"><button type="button" onClick={() => setSourceVisible((value) => !value)} className="study-icon-button lg:hidden" aria-label="Toggle source panel">{sourceVisible ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}</button><button type="button" onClick={() => setWatchVisible((value) => !value)} className="study-icon-button lg:hidden" aria-label="Toggle watch panel">{watchVisible ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}</button><ThemeShuffleButton /><WorkspaceProfileButton profile={profile} onOpenProfile={() => setLocation("/")} /></div>
       </header>
       <main className="min-h-0 flex-1 p-2 sm:p-3">
         <ResizablePanelGroup direction={direction} className="study-panel-group overflow-hidden rounded-2xl border border-border">
