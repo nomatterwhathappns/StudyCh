@@ -65,6 +65,42 @@
   --border: #B9DDE1;
   --input: #A5E2E5;
   --ring: #F2B5D4;
+  --panel-group: #D8F2F0;
+}
+
+:root[data-palette="vintage-rose"] {
+  --frosted-blue: #8C754D;
+  --icy-aqua: #F2E2C7;
+  --mint-cream: #FFF5E6;
+  --petal-frost: #F6DCE0;
+  --blush-pop: #DF9B6D;
+  --ink: #473144;
+  --sidebar: #473144;
+  --ember: #AF1B3F;
+  --background: #EFC69B;
+  --foreground: #473144;
+  --card: #FFF8EB;
+  --card-foreground: #473144;
+  --popover: #FFF8EB;
+  --popover-foreground: #473144;
+  --primary: #AF1B3F;
+  --primary-foreground: #FFF8EB;
+  --secondary: #CCB69B;
+  --secondary-foreground: #473144;
+  --muted: #EAD5B9;
+  --muted-foreground: #624B4F;
+  --accent: #DF9B6D;
+  --accent-foreground: #473144;
+  --destructive: #8E1B3B;
+  --destructive-foreground: #FFF8EB;
+  --feedback-error-bg: #F7DEE0;
+  --feedback-error-border: #AF1B3F;
+  --feedback-error-foreground: #5A2335;
+  --feedback-error-link: #7B102B;
+  --border: #B28F77;
+  --input: #D9B98F;
+  --ring: #DF9B6D;
+  --panel-group: #CCB69B;
 }
 
 @layer base {
@@ -103,7 +139,7 @@
   .study-search { @apply flex h-10 items-center gap-2 rounded-xl border border-border bg-secondary px-3 text-muted-foreground; }
   .study-search input { @apply w-32 bg-transparent text-xs text-foreground outline-none placeholder:text-muted-foreground sm:w-52; }
   .study-workspace-header { @apply flex h-16 shrink-0 items-center justify-between border-b border-border px-4 sm:px-5; background: var(--sidebar); }
-  .study-panel-group { background: #D8F2F0; }
+  .study-panel-group { background: var(--panel-group); }
   .study-panel { @apply flex h-full min-h-0 flex-col bg-card; }
   .study-source-panel { @apply relative; }
   .study-chat-panel { background: var(--background); }
@@ -164,13 +200,21 @@
   .study-note-content h2 { @apply font-display text-3xl italic; }
   .study-note-content h3 { @apply font-display text-2xl italic; }
   .study-note-content code { @apply rounded bg-secondary px-1.5 py-0.5 font-mono text-xs; }
-  .study-note-content pre { @apply overflow-x-auto rounded-xl bg-[#D8F2F0] p-3; }
+  .study-note-content pre { @apply overflow-x-auto rounded-xl p-3; background: var(--panel-group); }
   .study-note-content a { color: var(--ember); text-decoration: underline; }
   .study-chat-panel p[role="alert"], .study-chat-panel p.rounded-xl.border { border-color: var(--feedback-error-border) !important; background: var(--feedback-error-bg) !important; color: var(--feedback-error-foreground) !important; font-weight: 500; }
   .study-chat-panel p[role="alert"] button, .study-chat-panel p.rounded-xl.border button { color: var(--feedback-error-link); font-weight: 700; }
   .study-cancel-dock-button { @apply inline-flex items-center gap-1.5 rounded-full border bg-card/95 px-3 py-2 text-xs font-semibold shadow-lg backdrop-blur transition-colors; border-color: var(--feedback-error-border); color: var(--feedback-error-foreground); }
   .study-cancel-dock-button:hover { background: var(--petal-frost); color: var(--feedback-error-link); }
   .study-cancel-dock-button:focus-visible { outline: 2px solid var(--feedback-error-link); outline-offset: 3px; }
+  .study-theme-settings { @apply flex w-full items-center gap-2 rounded-2xl border border-border bg-secondary/50 p-2.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground; }
+  .study-theme-settings small { @apply block font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground; }
+  .study-theme-settings strong { @apply mt-0.5 block truncate text-xs font-medium text-foreground; }
+
+  :root[data-palette="vintage-rose"] .study-sidebar, :root[data-palette="vintage-rose"] .study-workspace-header { color: #FFF8EB; }
+  :root[data-palette="vintage-rose"] .study-sidebar .text-muted-foreground, :root[data-palette="vintage-rose"] .study-sidebar .study-nav-item, :root[data-palette="vintage-rose"] .study-sidebar .study-back-button, :root[data-palette="vintage-rose"] .study-sidebar .study-theme-settings, :root[data-palette="vintage-rose"] .study-workspace-header .text-muted-foreground { color: #F4E1C6; }
+  :root[data-palette="vintage-rose"] .study-sidebar .study-kicker, :root[data-palette="vintage-rose"] .study-sidebar > div:last-child { color: #EFC69B; }
+  :root[data-palette="vintage-rose"] .study-sidebar .study-theme-settings strong, :root[data-palette="vintage-rose"] .study-sidebar .study-ai-settings strong { color: #FFF8EB; }
 }
 
 @media (max-width: 720px) {

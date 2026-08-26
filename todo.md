@@ -209,3 +209,6 @@
 - [x] Menambahkan pengaturan Generate Quiz untuk jumlah soal, jumlah opsi, dan tingkat kesulitan dengan UX yang ringkas
 - [ ] Menjaga panel Watch tetap tampil saat Build a Quiz terbuka dan menutup dialog segera setelah generate berjalan di background
 - [x] Memperpanjang timeout khusus Generate Quiz lokal berdasarkan TimeoutError nyata dari 9router
+- [x] Merancang pembagian peran warna dari palet Peach Glow, Cherry Rose, Vintage Grape, Khaki Beige, dan Light Bronze
+- [x] Menambahkan kontrol Theme untuk preview palet tanpa push GitHub sebelum persetujuan pengguna
+- [x] Memverifikasi aksesibilitas dan tampilan preview tema pada workspace sebelum meminta persetujuan

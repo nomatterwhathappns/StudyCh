@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PersonalAiSettings } from "@/components/studyos/PersonalAiSettings";
+import { ThemeSettings } from "@/components/studyos/ThemeSettings";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -37,7 +38,8 @@ export default function Home() {
           </nav>
         </div>
         <div className="mt-auto px-2 pb-3">
-          <PersonalAiSettings />
+          <ThemeSettings />
+          <div className="mt-2"><PersonalAiSettings /></div>
           <div className="mt-5 flex items-center gap-2 px-3 text-xs text-muted-foreground">
             <span className="size-2 rounded-full bg-[#BA2D0B]" /> Secure AI workspace
           </div>
