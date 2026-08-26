@@ -309,10 +309,13 @@
   .study-chat-input-shell textarea::-webkit-scrollbar { width: 0.38rem; }
   .study-chat-input-shell textarea::-webkit-scrollbar-track { background: transparent; }
   .study-chat-input-shell textarea::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: color-mix(in srgb, var(--muted-foreground) 48%, transparent); background-clip: content-box; }
-  .study-chat-input-shell button { @apply flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-35 transition-[transform,opacity,filter] duration-150 disabled:opacity-35; position: static; align-self: flex-end; margin-top: 0.25rem; }
-  .study-chat-input-shell.has-value button { @apply opacity-100; }
-  .study-chat-input-shell button:not(:disabled):hover { filter: brightness(1.08); }
-  .study-chat-input-shell button:not(:disabled):active { transform: scale(0.97); }
+  .study-chat-composer-actions { @apply flex min-h-10 shrink-0 items-center justify-end gap-2; align-self: flex-end; margin-top: 0.25rem; }
+  .study-chat-input-shell .study-chat-composer-actions > button { @apply flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-35 transition-[transform,opacity,filter] duration-150 disabled:opacity-35; }
+  .study-chat-input-shell.has-value .study-chat-composer-actions > button { @apply opacity-100; }
+  .study-chat-input-shell .study-chat-composer-actions > button:not(:disabled):hover { filter: brightness(1.08); }
+  .study-chat-input-shell .study-chat-composer-actions > button:not(:disabled):active { transform: scale(0.97); }
+  .study-cancel-controls { @apply flex max-w-52 flex-wrap justify-end gap-1; }
+  .study-cancel-dock-button { @apply inline-flex h-8 items-center gap-1 rounded-full border border-border bg-secondary px-2 text-[10px] text-foreground transition-colors hover:bg-secondary/70; }
   .study-watch-panel { background: var(--card); }
   .study-timer { @apply rounded-2xl border border-border bg-secondary/30 p-4; }
   .study-timer-button { @apply flex min-h-9 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-card px-1 font-mono text-[8px] uppercase tracking-wide text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }

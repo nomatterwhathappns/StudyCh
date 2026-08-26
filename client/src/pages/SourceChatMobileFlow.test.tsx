@@ -26,17 +26,24 @@ vi.mock("@/lib/trpc", () => ({
   },
 }));
 
-vi.mock("@/store/useStudyStore", () => ({
-  useStudyStore: () => ({ profile: profileState.value, addMaterial, deleteMaterial: vi.fn(), addVocabulary, addMessage, updateSession: vi.fn(), deleteSession: vi.fn() }),
-}));
+vi.mock("@/store/useStudyStore", () => {
+  const state = () => ({ profile: profileState.value, addMaterial, deleteMaterial: vi.fn(), addVocabulary, addMessage, updateSession: vi.fn(), deleteSession: vi.fn() });
+  const useStudyStore = Object.assign((selector?: (value: ReturnType<typeof state>) => unknown) => selector ? selector(state()) : state(), { getState: () => ({ ...state(), sessions: [] }) });
+  return { useStudyStore };
+});
 
 import { AiCancellationDock, ChatPanel, SourcePanel } from "./StudyWorkspace";
+import { SourceAiActivityProvider } from "@/contexts/SourceAiActivityContext";
 
 const session: StudySession = {
   id: "session-mobile", name: "Plant biology", createdAt: 1, isPinned: false, materials: [{ id: "plant-source", title: "Plants.md", type: "file", content: "Photosynthesis turns light energy into chemical energy in plants.", format: "MD", createdAt: 1 }], chatHistory: [], vocabulary: [], notes: [], quizzes: [], studySeconds: 0,
 };
 const fastFallbackText = "AWS Lambda menjalankan kode saat dipicu event.";
 const fastFallbackProvider = "StudyOS AI gateway · Fast fallback";
+
+function SourcePanelWithProvider({ session }: { session: StudySession }) {
+  return <SourceAiActivityProvider><SourcePanel session={session} /></SourceAiActivityProvider>;
+}
 
 class TestFileReader {
   result: string | ArrayBuffer | null = null;
@@ -257,11 +264,21 @@ describe("mobile Source and AI flow", () => {
     expect(ui.getByRole("button", { name: "Cancel Generate quiz" })).toBeTruthy();
   });
 
+  it("places active AI cancellation controls in the Chat composer beside Send", () => {
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    act(() => window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "generate-quiz", label: "Generate Quiz", pending: true, cancel: vi.fn() } })));
+
+    const cancel = ui.getByRole("button", { name: "Cancel Generate Quiz" });
+    const send = ui.getByRole("button", { name: "Send message" });
+    expect(cancel.closest(".study-chat-composer")).toBeTruthy();
+    expect(send.closest(".study-chat-composer")).toBe(cancel.closest(".study-chat-composer"));
+  });
+
   it.each([["desktop", 1280], ["mobile", 375]] as const)("keeps a cancelled Chat response out of history on %s", async (_viewport, width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
     const stream = cancelableStreamingResponse();
     vi.mocked(fetch).mockResolvedValueOnce(stream.response as unknown as Response);
-    const ui = render(<><ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} /><AiCancellationDock /></>);
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
     const question = ui.getByLabelText("Ask StudyOS");
     fireEvent.change(question, { target: { value: "Jelaskan bucket S3" } });
     fireEvent.keyDown(question, { key: "Enter" });
@@ -275,7 +292,7 @@ describe("mobile Source and AI flow", () => {
   });
 
   it("accepts a source file and sends a query-aware source context to AI on a narrow viewport", async () => {
-    const sourceUi = render(<SourcePanel session={session} />);
+    const sourceUi = render(<SourcePanelWithProvider session={session} />);
     const input = sourceUi.container.querySelector('input[type="file"]') as HTMLInputElement;
     fireEvent.change(input, { target: { files: [new File(["Plants use light."], "plants.txt", { type: "text/plain" })] } });
     await waitFor(() => expect(uploadDocumentMutate).toHaveBeenCalledWith({ name: "plants.txt", mimeType: "text/plain", dataUrl: "data:text/plain;base64,UGxhbnRzIHVzZSBsaWdodC4=" }));
@@ -336,7 +353,7 @@ describe("mobile Source and AI flow", () => {
         { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
       ],
     } });
-    const sourceUi = render(<SourcePanel session={translatedSession} />);
+    const sourceUi = render(<SourcePanelWithProvider session={translatedSession} />);
     const ui = render(<ChatPanel session={translatedSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
 
     expect(sourceUi.getByRole("button", { name: "Translate to English" })).toBeTruthy();
@@ -401,7 +418,7 @@ describe("mobile Source and AI flow", () => {
       ...session,
       chatHistory: [{ id: "reload-message", role: "user", content: "Halo", createdAt: 1 }],
     };
-    const sourceUi = render(<SourcePanel session={reloadSession} />);
+    const sourceUi = render(<SourcePanelWithProvider session={reloadSession} />);
     const ui = render(<ChatPanel session={reloadSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
 
     expect(ui.getByText("Halo")).toBeTruthy();
@@ -437,7 +454,7 @@ describe("mobile Source and AI flow", () => {
     translateChatIsPending.value = true;
     translateChatMutateAsync.mockReturnValue(new Promise(() => undefined));
     const translatingSession: StudySession = { ...session, chatHistory: [{ id: "pending-message", role: "user", content: "Halo", createdAt: 1 }] };
-    const sourceUi = render(<SourcePanel session={translatingSession} />);
+    const sourceUi = render(<SourcePanelWithProvider session={translatingSession} />);
     const ui = render(<ChatPanel session={translatingSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
 
     act(() => window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: "english", request: true } })));
@@ -459,7 +476,7 @@ describe("mobile Source and AI flow", () => {
         indonesian: [{ id: "retry-message", content: "Halo lagi" }],
       } });
     const retrySession: StudySession = { ...session, chatHistory: [{ id: "retry-message", role: "user", content: "Halo lagi", createdAt: 1 }] };
-    const sourceUi = render(<SourcePanel session={retrySession} />);
+    const sourceUi = render(<SourcePanelWithProvider session={retrySession} />);
     const ui = render(<ChatPanel session={retrySession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
 
     act(() => window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: "english", request: true } })));
@@ -673,7 +690,7 @@ describe("mobile Source and AI flow", () => {
   });
 
   it("creates an AI draft from a selection, allows manual edits, and saves the complete Key Term", () => {
-    const ui = render(<SourcePanel session={session} />);
+    const ui = render(<SourcePanelWithProvider session={session} />);
     fireEvent.click(ui.getByRole("button", { name: "Read" }));
     const reading = ui.getByText("Photosynthesis turns light energy into chemical energy in plants.");
     const range = document.createRange();
@@ -693,7 +710,7 @@ describe("mobile Source and AI flow", () => {
 
   it("shows a drafting error and does not save a Key Term when AI drafting fails", () => {
     draftKeyTermShouldFail.value = true;
-    const ui = render(<SourcePanel session={session} />);
+    const ui = render(<SourcePanelWithProvider session={session} />);
     fireEvent.click(ui.getByRole("button", { name: "Read" }));
     const reading = ui.getByText("Photosynthesis turns light energy into chemical energy in plants.");
     const range = document.createRange(); range.selectNodeContents(reading);
@@ -707,7 +724,7 @@ describe("mobile Source and AI flow", () => {
   });
 
   it("saves a selected vocabulary word with its meaning only and skips the detailed editor", () => {
-    const ui = render(<SourcePanel session={session} />);
+    const ui = render(<SourcePanelWithProvider session={session} />);
     fireEvent.click(ui.getByRole("button", { name: "Read" }));
     const reading = ui.getByText("Photosynthesis turns light energy into chemical energy in plants.");
     const range = document.createRange(); range.selectNodeContents(reading);

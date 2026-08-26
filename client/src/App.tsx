@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { PaletteProvider } from "./contexts/PaletteContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { SourceAiActivityProvider } from "./contexts/SourceAiActivityContext";
 import Home, { HomeView } from "./pages/Home";
 import StudyWorkspace from "./pages/StudyWorkspace";
 import NotFound from "./pages/NotFound";
@@ -13,5 +14,5 @@ function Router() {
 }
 
 export default function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="dark"><PaletteProvider><TooltipProvider><Toaster /><Router /></TooltipProvider></PaletteProvider></ThemeProvider></ErrorBoundary>;
+  return <ErrorBoundary><ThemeProvider defaultTheme="dark"><PaletteProvider><SourceAiActivityProvider><TooltipProvider><Toaster /><Router /></TooltipProvider></SourceAiActivityProvider></PaletteProvider></ThemeProvider></ErrorBoundary>;
 }

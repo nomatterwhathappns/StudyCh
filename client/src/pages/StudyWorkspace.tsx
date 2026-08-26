@@ -7,6 +7,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { NoteEditor } from "@/components/studyos/NoteEditor";
 import { defaultQuizGenerationSettings, QuizGeneratorDialog, type QuizGenerationSettings } from "@/components/studyos/QuizGeneratorDialog";
 import { ThemeShuffleButton } from "@/components/studyos/ThemeSettings";
+import { useOptionalSourceAiActivity, useSourceAiActivity } from "@/contexts/SourceAiActivityContext";
 import { buildAdaptiveMaterialContext, buildMaterialChunks, buildMaterialContextWithCitations, materialChunkDomId } from "@/lib/material-context";
 import { trpc } from "@/lib/trpc";
 import type { Quiz, StudyCitation, StudySession, VocabItem, VocabReviewRating } from "@/lib/study-types";
@@ -88,7 +89,6 @@ export default function StudyWorkspace() {
           {watchVisible && <><ResizableHandle withHandle /><ResizablePanel defaultSize={isMobile ? 37 : 25} minSize={isMobile ? 25 : 19} className="min-h-0"><WatchPanel session={activeSession} /></ResizablePanel></>}
 	        </ResizablePanelGroup>
 	      </main>
-	      <AiCancellationDock />
 	    </div>
 	  );
 }
@@ -96,6 +96,7 @@ export default function StudyWorkspace() {
 type AiActivityDetail = { id: string; label: string; pending: boolean; cancel?: () => void };
 
 export function AiCancellationDock() {
+  const sourceAi = useOptionalSourceAiActivity();
   const [activities, setActivities] = useState<Record<string, AiActivityDetail>>({});
   useEffect(() => {
     const sync = (event: Event) => {
@@ -111,13 +112,14 @@ export function AiCancellationDock() {
     window.addEventListener("studyos:ai-activity", sync);
     return () => window.removeEventListener("studyos:ai-activity", sync);
   }, []);
-  const active = Object.values(activities);
+  const active = [...Object.values(activities), ...(sourceAi?.tasks.filter((task) => task.status === "pending").map((task) => ({ id: task.id, label: task.label, pending: true, cancel: () => sourceAi.cancelTask(task.id) })) ?? [])];
   if (!active.length) return null;
-  return <div className="pointer-events-none fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-wrap justify-center gap-2" aria-live="polite">{active.map((activity) => <button key={activity.id} type="button" onClick={activity.cancel} className="study-cancel-dock-button pointer-events-auto"><X className="size-3.5" />Cancel {activity.label}</button>)}</div>;
+  return <div className="study-cancel-controls" aria-live="polite">{active.map((activity) => <button key={activity.id} type="button" onClick={activity.cancel} className="study-cancel-dock-button"><X className="size-3.5" />Cancel {activity.label}</button>)}</div>;
 }
 
 export function SourcePanel({ session }: { session: StudySession }) {
-  const { addMaterial, deleteMaterial, addVocabulary, addMessage } = useStudyStore();
+  const { addMaterial, deleteMaterial } = useStudyStore();
+  const sourceAi = useSourceAiActivity();
   const [tab, setTab] = useState<"sources" | "read">("sources");
   const [selectedMaterialId, setSelectedMaterialId] = useState<string | null>(session.materials[0]?.id ?? null);
   const [url, setUrl] = useState("");
@@ -126,15 +128,16 @@ export function SourcePanel({ session }: { session: StudySession }) {
   const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">("english");
   const [translatePending, setTranslatePending] = useState(false);
   const [selection, setSelection] = useState("");
-  const [keyTermDraft, setKeyTermDraft] = useState<KeyTermDraft | null>(null);
+  const keyTermTask = sourceAi.tasks.find((task) => task.sessionId === session.id && task.kind === "key-term" && task.status === "review");
+  const sourceError = sourceAi.tasks.find((task) => task.sessionId === session.id && task.status === "error");
+  const keyTermDraft = keyTermTask?.draft ?? null;
+  const setKeyTermDraft = (draft: KeyTermDraft | null) => { if (!draft && keyTermTask) sourceAi.discardTask(keyTermTask.id); };
+  useEffect(() => { if (sourceError?.error) setError(sourceError.error); }, [sourceError?.error]);
   useEffect(() => { const dismiss = (event: PointerEvent) => { if (!(event.target instanceof Element) || event.target.closest(".study-selection-popover")) return; setSelection(""); }; const dismissWithEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setSelection(""); }; document.addEventListener("pointerdown", dismiss); document.addEventListener("keydown", dismissWithEscape); return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", dismissWithEscape); }; }, []);
   const fileRef = useRef<HTMLInputElement>(null);
-  const explainRunRef = useRef(0);
-  const keyTermRunRef = useRef(0);
-  const vocabularyRunRef = useRef(0);
-  const explain = trpc.study.explain.useMutation();
-  const draftKeyTerm = trpc.study.draftKeyTerm.useMutation();
-  const draftVocabulary = trpc.study.draftVocabulary.useMutation();
+  const explain = { isPending: sourceAi.isPending(session.id, "explain") };
+  const draftKeyTerm = { isPending: sourceAi.isPending(session.id, "key-term") };
+  const draftVocabulary = { isPending: sourceAi.isPending(session.id, "vocabulary") };
   const fetchSource = trpc.study.fetchSource.useMutation({
     onSuccess: ({ html, title, url: sourceUrl }) => {
       const content = extractText(html).slice(0, 50000);
@@ -177,16 +180,11 @@ export function SourcePanel({ session }: { session: StudySession }) {
     finally { if (fileRef.current) fileRef.current.value = ""; }
   };
 
-  const saveSelection = () => { if (!selection.trim() || draftKeyTerm.isPending) return; const run = ++keyTermRunRef.current; const preferences = readAiSettings(); setError(""); draftKeyTerm.mutate({ sessionName: session.name, materials: materialContext(session, selection, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, selection: selection.trim() }, { onSuccess: (draft) => { if (run !== keyTermRunRef.current) return; setKeyTermDraft(draft); }, onError: (reason) => { if (run !== keyTermRunRef.current) return; setError(reason.message); } }); };
-  const saveVocabulary = () => { if (!selection.trim() || draftVocabulary.isPending) return; const run = ++vocabularyRunRef.current; const preferences = readAiSettings(); setError(""); draftVocabulary.mutate({ sessionName: session.name, materials: materialContext(session, selection, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, selection: selection.trim() }, { onSuccess: (draft) => { if (run !== vocabularyRunRef.current) return; addVocabulary(session.id, draft.term, draft.meaning, { sourceExcerpt: selection.trim() }); setSelection(""); }, onError: (reason) => { if (run !== vocabularyRunRef.current) return; setError(reason.message); } }); };
-  const saveKeyTermDraft = (draft: KeyTermDraft) => { addVocabulary(session.id, draft.term, draft.definition, { context: draft.context, example: draft.example, sourceExcerpt: selection.trim() }); setKeyTermDraft(null); setSelection(""); };
-  const explainSelection = () => { if (!selection.trim()) return; const run = ++explainRunRef.current; const preferences = readAiSettings(); addMessage(session.id, { role: "user", content: `Explain: ${selection.trim()}` }); explain.mutate({ sessionName: session.name, materials: materialContext(session, selection, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, selection: selection.trim() }, { onSuccess: ({ text, citations, truncated, provider }) => { if (run !== explainRunRef.current) return; addMessage(session.id, { role: "assistant", content: text, citations: attachMaterialIds(session, citations), truncated, ...(provider ? { provider } : {}) }); setSelection(""); }, onError: (reason) => { if (run !== explainRunRef.current) return; setError(reason.message); } }); };
-  const cancelSourceActivity = (activity: "explain" | "key-term" | "vocabulary") => { if (activity === "explain") { explainRunRef.current += 1; explain.reset(); } else if (activity === "key-term") { keyTermRunRef.current += 1; draftKeyTerm.reset(); } else { vocabularyRunRef.current += 1; draftVocabulary.reset(); } setError(""); };
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "explain", label: "Explain", pending: explain.isPending, cancel: () => cancelSourceActivity("explain") } }));
-    window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "key-term", label: "Add Terms", pending: draftKeyTerm.isPending, cancel: () => cancelSourceActivity("key-term") } }));
-    window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "save-vocab", label: "Save Vocab", pending: draftVocabulary.isPending, cancel: () => cancelSourceActivity("vocabulary") } }));
-  }, [explain.isPending, draftKeyTerm.isPending, draftVocabulary.isPending]);
+  const requestFromSelection = () => { const preferences = readAiSettings(); return { sessionId: session.id, sessionName: session.name, materials: materialContext(session, selection, preferences.responseStyle), responseStyle: preferences.responseStyle, model: preferences.model, selection: selection.trim() }; };
+  const saveSelection = () => { if (!selection.trim() || draftKeyTerm.isPending) return; setError(""); sourceAi.startKeyTerm(requestFromSelection()); setSelection(""); };
+  const saveVocabulary = () => { if (!selection.trim() || draftVocabulary.isPending) return; setError(""); sourceAi.startVocabulary(requestFromSelection()); setSelection(""); };
+  const saveKeyTermDraft = (draft: KeyTermDraft) => { if (keyTermTask) sourceAi.saveKeyTerm(keyTermTask.id, draft); setSelection(""); };
+  const explainSelection = () => { if (!selection.trim() || explain.isPending) return; setError(""); sourceAi.startExplain(requestFromSelection()); setSelection(""); };
   useEffect(() => {
     const syncTranslate = (event: Event) => {
       const detail = event instanceof CustomEvent ? event.detail : undefined;
@@ -367,7 +365,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
           {error && <p className="rounded-xl border border-[#BA2D0B]/40 bg-[#BA2D0B]/10 p-3 text-xs text-[#EEF1EF]">{error} <button type="button" onClick={onOpenDashboard} className="underline underline-offset-2">Review AI settings</button></p>}
         </div>
       </ScrollArea>
-      <div className="study-chat-composer"><div className={`study-chat-input-shell ${input ? "has-value" : ""}`}><textarea rows={1} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} placeholder="Ask Anything" aria-label="Ask StudyOS" /><button type="button" onClick={send} disabled={!input.trim() || chat.isPending || continueAnswer.isPending || streaming || streamRecovery} aria-label="Send message"><Send className="size-4" /></button></div></div>
+      <div className="study-chat-composer"><div className={`study-chat-input-shell ${input ? "has-value" : ""}`}><textarea rows={1} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} placeholder="Ask Anything" aria-label="Ask StudyOS" /><div className="study-chat-composer-actions"><AiCancellationDock /><button type="button" onClick={send} disabled={!input.trim() || chat.isPending || continueAnswer.isPending || streaming || streamRecovery} aria-label="Send message"><Send className="size-4" /></button></div></div></div>
     </section>
   );
 }

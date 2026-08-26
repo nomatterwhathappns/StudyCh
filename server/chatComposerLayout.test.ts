@@ -17,7 +17,9 @@ describe("chat composer layout", () => {
     expect(css).toContain(".study-chat-input-shell textarea {");
     expect(css).toContain("border: 0 !important; box-shadow: none !important;");
     expect(css).toContain("textarea::-webkit-scrollbar-thumb");
-    expect(css).toContain("position: static; align-self: flex-end; margin-top: 0.25rem;");
+    expect(css).toContain(".study-chat-composer-actions {");
+    expect(css).toContain("align-self: flex-end; margin-top: 0.25rem;");
+    expect(workspace).toContain("<AiCancellationDock />");
     expect(css).toContain("field-sizing: content;");
     expect(css).toContain("rounded-full bg-primary text-primary-foreground");
   });

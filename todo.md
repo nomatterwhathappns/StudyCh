@@ -302,3 +302,7 @@
 - [x] Menambahkan regresi tipografi judul sumber dan push penyempurnaan ke GitHub
 - [x] Menampilkan tombol hide panel Source dan Watch pada desktop
 - [x] Menambahkan regresi kontrol hide panel desktop dan push penyempurnaan ke GitHub
+- [x] Menjaga proses AI Save Terms, Save Vocab, dan Explain dari panel Source tetap aktif saat panel di-hide atau pengguna membuka Profile
+- [x] Menampilkan status proses Source yang masih berjalan saat pengguna kembali ke workspace
+- [x] Memindahkan tombol Cancel aktivitas AI ke area composer di samping tombol Send Chat
+- [x] Menambahkan regresi proses Source tahan navigasi, Cancel composer, dan push penyempurnaan ke GitHub
