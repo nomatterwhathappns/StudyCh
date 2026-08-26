@@ -7,16 +7,24 @@ import type { StudySession } from "@/lib/study-types";
 const { reviewVocabulary } = vi.hoisted(() => ({ reviewVocabulary: vi.fn() }));
 
 vi.mock("@/lib/trpc", () => ({
-  trpc: { study: { quiz: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) } } },
+  trpc: { study: {
+    quiz: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
+    explain: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
+    draftKeyTerm: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
+    draftVocabulary: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
+  } },
 }));
 
-vi.mock("@/store/useStudyStore", () => ({
-  useStudyStore: () => ({ addTimer: vi.fn(), updateSession: vi.fn(), addQuiz: vi.fn(), saveQuizResult: vi.fn(), addNote: vi.fn(), updateNote: vi.fn(), deleteNote: vi.fn(), reviewVocabulary }),
-}));
+vi.mock("@/store/useStudyStore", () => {
+  const state = { addTimer: vi.fn(), updateSession: vi.fn(), addQuiz: vi.fn(), addVocabulary: vi.fn(), addMessage: vi.fn(), saveQuizResult: vi.fn(), addNote: vi.fn(), updateNote: vi.fn(), deleteNote: vi.fn(), reviewVocabulary, sessions: [] };
+  const useStudyStore = Object.assign((selector?: (value: typeof state) => unknown) => selector ? selector(state) : state, { getState: () => state });
+  return { useStudyStore };
+});
 
 vi.mock("@/components/studyos/NoteEditor", () => ({ NoteEditor: () => <div>Note editor</div> }));
 
 import { WatchPanel } from "./StudyWorkspace";
+import { SourceAiActivityProvider } from "@/contexts/SourceAiActivityContext";
 
 const session: StudySession = {
   id: "vocab-session", name: "Memory", createdAt: 0, isPinned: false, materials: [], chatHistory: [],
@@ -26,13 +34,17 @@ const session: StudySession = {
   vocabulary: ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"].map((term, index) => ({ id: `v${index + 1}`, term, definition: `${term} definition`, createdAt: 0, review: { dueAt: 0, intervalDays: 0, repetitions: 0 } })),
 };
 
+function WatchPanelWithProvider({ session }: { session: StudySession }) {
+  return <SourceAiActivityProvider><WatchPanel session={session} /></SourceAiActivityProvider>;
+}
+
 describe("Watch vocabulary review", () => {
   beforeEach(() => reviewVocabulary.mockReset());
   afterEach(() => cleanup());
 
   it.each([["desktop", 1280], ["mobile", 375]])("shows every saved term in the scrollable list and schedules a flashcard on %s", async (_layout, width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
-    const ui = render(<WatchPanel session={session} />);
+    const ui = render(<WatchPanelWithProvider session={session} />);
     expect(ui.getByText("Alpha")).toBeTruthy();
     expect(ui.getByText("Epsilon")).toBeTruthy();
     expect(ui.queryByRole("button", { name: "Next Key Terms page" })).toBeNull();
@@ -59,7 +71,7 @@ describe("Watch vocabulary review", () => {
 
   it.each([['desktop', 1280], ['mobile', 375]])("keeps every quiz and note available through dedicated scroll areas without quiz pagination on %s", (_layout, width) => {
     Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
-    const ui = render(<WatchPanel session={session} />);
+    const ui = render(<WatchPanelWithProvider session={session} />);
 
     expect(ui.getByText("Quiz 5")).toBeTruthy();
     expect(ui.getByText("Note 5")).toBeTruthy();

@@ -316,6 +316,10 @@
   .study-chat-input-shell .study-chat-composer-actions > button:not(:disabled):active { transform: scale(0.97); }
   .study-cancel-controls { @apply flex max-w-52 flex-wrap justify-end gap-1; }
   .study-cancel-dock-button { @apply inline-flex h-8 items-center gap-1 rounded-full border border-border bg-secondary px-2 text-[10px] text-foreground transition-colors hover:bg-secondary/70; }
+  .study-activity-menu { @apply fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2; }
+  .study-activity-trigger { @apply inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs text-foreground shadow-lg transition-colors hover:bg-secondary; }
+  .study-activity-popover { @apply w-64 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl; }
+  .study-activity-cancel { @apply flex size-7 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-[#BA2D0B]; }
   .study-watch-panel { background: var(--card); }
   .study-timer { @apply rounded-2xl border border-border bg-secondary/30 p-4; }
   .study-timer-button { @apply flex min-h-9 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-card px-1 font-mono text-[8px] uppercase tracking-wide text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }

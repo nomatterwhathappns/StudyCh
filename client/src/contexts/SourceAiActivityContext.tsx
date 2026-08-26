@@ -1,19 +1,20 @@
 import { trpc } from "@/lib/trpc";
 import type { StudyCitation } from "@/lib/study-types";
 import { useStudyStore } from "@/store/useStudyStore";
+import type { QuizGenerationSettings } from "@/components/studyos/QuizGeneratorDialog";
 import React, { createContext, useContext, useMemo, useRef, useState } from "react";
 
-type SourceTaskKind = "explain" | "key-term" | "vocabulary";
+type SourceTaskKind = "explain" | "key-term" | "vocabulary" | "quiz";
 type SourceTaskStatus = "pending" | "review" | "error";
 export type KeyTermDraft = { term: string; definition: string; context: string; example: string };
 
-type SourceTask = {
+export type SourceTask = {
   id: string;
   kind: SourceTaskKind;
   label: string;
   status: SourceTaskStatus;
   sessionId: string;
-  selection: string;
+  selection?: string;
   draft?: KeyTermDraft;
   error?: string;
 };
@@ -27,11 +28,14 @@ type SourceRequest = {
   selection: string;
 };
 
+type QuizRequest = Omit<SourceRequest, "selection"> & { quiz: QuizGenerationSettings };
+
 type SourceAiActivityValue = {
   tasks: SourceTask[];
   startKeyTerm: (request: SourceRequest) => void;
   startVocabulary: (request: SourceRequest) => void;
   startExplain: (request: SourceRequest) => void;
+  startQuiz: (request: QuizRequest) => void;
   cancelTask: (taskId: string) => void;
   discardTask: (taskId: string) => void;
   saveKeyTerm: (taskId: string, draft: KeyTermDraft) => void;
@@ -52,15 +56,17 @@ function sourceCitations(sessionId: string, citations: Array<{ title: string; or
 export function SourceAiActivityProvider({ children }: { children: React.ReactNode }) {
   const addVocabulary = useStudyStore((state) => state.addVocabulary);
   const addMessage = useStudyStore((state) => state.addMessage);
+  const addQuiz = useStudyStore((state) => state.addQuiz);
   const [tasks, setTasks] = useState<SourceTask[]>([]);
   const runs = useRef<Record<string, number>>({});
   const explain = trpc.study.explain.useMutation();
   const draftKeyTerm = trpc.study.draftKeyTerm.useMutation();
   const draftVocabulary = trpc.study.draftVocabulary.useMutation();
+  const quiz = trpc.study.quiz.useMutation();
 
-  const begin = (kind: SourceTaskKind, request: SourceRequest) => {
+  const begin = (kind: SourceTaskKind, request: Pick<SourceRequest, "sessionId" | "sessionName"> & { selection?: string }) => {
     const id = taskId(kind);
-    const label = kind === "key-term" ? "Save Terms" : kind === "vocabulary" ? "Save Vocab" : "Explain";
+    const label = kind === "key-term" ? "Save Terms" : kind === "vocabulary" ? "Save Vocab" : kind === "quiz" ? "Generate Quiz" : "Explain";
     const run = 1;
     runs.current[id] = run;
     setTasks((current) => [...current.filter((task) => !(task.sessionId === request.sessionId && task.kind === kind && task.status === "pending")), { id, kind, label, status: "pending", sessionId: request.sessionId, selection: request.selection }]);
@@ -97,6 +103,14 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
     });
   };
 
+  const startQuiz = (request: QuizRequest) => {
+    const { id, run } = begin("quiz", request);
+    quiz.mutate({ sessionName: request.sessionName, materials: request.materials, translate: false, responseStyle: request.responseStyle, model: request.model, quiz: request.quiz }, {
+      onSuccess: ({ questions }) => { if (runs.current[id] !== run) return; addQuiz(request.sessionId, questions); finish(id, run, () => null); },
+      onError: (reason) => finish(id, run, (task) => ({ ...task, status: "error", error: reason.message })),
+    });
+  };
+
   const cancelTask = (id: string) => {
     const task = tasks.find((entry) => entry.id === id);
     if (!task) return;
@@ -104,6 +118,7 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
     if (task.kind === "explain") explain.reset();
     if (task.kind === "key-term") draftKeyTerm.reset();
     if (task.kind === "vocabulary") draftVocabulary.reset();
+    if (task.kind === "quiz") quiz.reset();
     setTasks((current) => current.filter((entry) => entry.id !== id));
   };
 
@@ -116,7 +131,7 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
   };
 
   const value = useMemo<SourceAiActivityValue>(() => ({
-    tasks, startKeyTerm, startVocabulary, startExplain, cancelTask, discardTask, saveKeyTerm,
+    tasks, startKeyTerm, startVocabulary, startExplain, startQuiz, cancelTask, discardTask, saveKeyTerm,
     isPending: (sessionId, kind) => tasks.some((task) => task.sessionId === sessionId && task.kind === kind && task.status === "pending"),
   }), [tasks]);
 

@@ -306,3 +306,6 @@
 - [x] Menampilkan status proses Source yang masih berjalan saat pengguna kembali ke workspace
 - [x] Memindahkan tombol Cancel aktivitas AI ke area composer di samping tombol Send Chat
 - [x] Menambahkan regresi proses Source tahan navigasi, Cancel composer, dan push penyempurnaan ke GitHub
+- [x] Menjaga Generate Quiz tetap aktif saat panel Watch di-hide atau pengguna membuka Profile/Sessions
+- [x] Menambahkan panel aktivitas AI percobaan untuk melihat proses aktif dan membatalkannya
+- [x] Menambahkan regresi proses Quiz tahan navigasi, panel aktivitas, dan push hasil percobaan ke GitHub

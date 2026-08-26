@@ -371,7 +371,8 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
 }
 
 export function WatchPanel({ session }: { session: StudySession }) {
-  const { addTimer, updateSession, addQuiz, saveQuizResult, addNote, updateNote, deleteNote, reviewVocabulary } = useStudyStore();
+  const { addTimer, updateSession, saveQuizResult, addNote, updateNote, deleteNote, reviewVocabulary } = useStudyStore();
+  const sourceAi = useSourceAiActivity();
   const preferences = readAiSettings();
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
@@ -380,14 +381,11 @@ export function WatchPanel({ session }: { session: StudySession }) {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [previewTerm, setPreviewTerm] = useState<VocabItem | null>(null);
   const [hoveredTermId, setHoveredTermId] = useState<string | null>(null);
-  const [quizError, setQuizError] = useState("");
   const [quizSettingsOpen, setQuizSettingsOpen] = useState(false);
   const [quizSettings, setQuizSettings] = useState<QuizGenerationSettings>(defaultQuizGenerationSettings);
-  const quizRunRef = useRef(0);
-  const quiz = trpc.study.quiz.useMutation();
-  const generateQuiz = (settings: QuizGenerationSettings | React.MouseEvent<HTMLButtonElement> = quizSettings) => { if ("currentTarget" in settings) { setQuizSettingsOpen(true); return; } if (quiz.isPending) return; const run = ++quizRunRef.current; setQuizError(""); setQuizSettingsOpen(false); quiz.mutate({ sessionName: session.name, materials: materialContext(session), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, quiz: settings }, { onSuccess: ({ questions }) => { if (run !== quizRunRef.current) return; const created = addQuiz(session.id, questions); setOpenQuiz(created); }, onError: (reason) => { if (run !== quizRunRef.current) return; setQuizError(reason.message); } }); };
-  const cancelQuiz = () => { quizRunRef.current += 1; quiz.reset(); setQuizError(""); };
-  useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "quiz", label: "Generate Quiz", pending: quiz.isPending, cancel: cancelQuiz } })); }, [quiz.isPending]);
+  const quiz = { isPending: sourceAi.isPending(session.id, "quiz") };
+  const quizError = sourceAi.tasks.find((task) => task.sessionId === session.id && task.kind === "quiz" && task.status === "error")?.error ?? "";
+  const generateQuiz = (settings: QuizGenerationSettings | React.MouseEvent<HTMLButtonElement> = quizSettings) => { if ("currentTarget" in settings) { setQuizSettingsOpen(true); return; } if (quiz.isPending) return; setQuizSettingsOpen(false); sourceAi.startQuiz({ sessionId: session.id, sessionName: session.name, materials: materialContext(session), responseStyle: preferences.responseStyle, model: preferences.model, quiz: settings }); };
   useEffect(() => { if (!running) return; const timer = window.setInterval(() => setSeconds((value) => value + 1), 1000); return () => window.clearInterval(timer); }, [running]);
   const pinTimer = () => { if (!seconds) return; addTimer({ sessionId: session.id, sessionName: session.name, seconds }); updateSession(session.id, { studySeconds: session.studySeconds + seconds }); setSeconds(0); setRunning(false); };
   const vocabSlice = session.vocabulary;
