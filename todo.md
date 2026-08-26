@@ -241,3 +241,6 @@
 - [x] Mengaudit label kecil dan ikon Tea Olive yang masih memakai muted color terlalu gelap
 - [x] Memperbaiki kontras kontrol Theme/AI Settings dan subtitle topbar Tea Olive
 - [x] Memverifikasi penyempurnaan Tea Olive sebelum melanjutkan review akhir
+- [x] Mengaudit token Forest Blush yang membuat sidebar dan topbar workspace tidak terbaca jelas
+- [x] Memperbaiki kontras kontrol sidebar serta topbar Forest Blush
+- [x] Memverifikasi tampilan Forest Blush pada Profile dan workspace sebelum melanjutkan review akhir

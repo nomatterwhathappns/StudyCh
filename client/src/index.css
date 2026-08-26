@@ -394,6 +394,16 @@
   :root[data-palette="tea-olive"] .study-sidebar > div:last-child .text-muted-foreground { color: #D0F1BF !important; }
   :root[data-palette="tea-olive"] .study-workspace-header > button > span:last-child { color: #FFFFFF !important; border-color: #D0F1BF; font-weight: 700; }
   :root[data-palette="tea-olive"] .study-sidebar .study-nav-item.is-active { color: #FFFFFF; }
+  :root[data-palette="forest-blush"] .study-sidebar, :root[data-palette="forest-blush"] .study-workspace-header { color: #FFFDF0; }
+  :root[data-palette="forest-blush"] .study-sidebar .text-muted-foreground, :root[data-palette="forest-blush"] .study-sidebar .study-nav-item, :root[data-palette="forest-blush"] .study-sidebar .study-back-button, :root[data-palette="forest-blush"] .study-sidebar .study-theme-settings, :root[data-palette="forest-blush"] .study-workspace-header .text-muted-foreground, :root[data-palette="forest-blush"] .study-workspace-header .study-icon-button, :root[data-palette="forest-blush"] .study-workspace-header .study-theme-shuffle { color: #FFF4E9; }
+  :root[data-palette="forest-blush"] .study-sidebar .study-theme-settings strong, :root[data-palette="forest-blush"] .study-sidebar .study-ai-settings strong { color: #FFFDF0; }
+  :root[data-palette="forest-blush"] .study-sidebar .study-kicker, :root[data-palette="forest-blush"] .study-sidebar > div:last-child { color: #F7C59F; }
+  :root[data-palette="forest-blush"] .study-sidebar .study-theme-settings small, :root[data-palette="forest-blush"] .study-sidebar .study-ai-settings small, :root[data-palette="forest-blush"] .study-sidebar .study-theme-settings .text-muted-foreground, :root[data-palette="forest-blush"] .study-sidebar .study-ai-settings .text-muted-foreground { color: #FFFDF0 !important; }
+  :root[data-palette="forest-blush"] .study-sidebar .study-theme-settings > span:first-child, :root[data-palette="forest-blush"] .study-sidebar .study-ai-settings > span:first-child { color: #FFFDF0; border-color: #F7C59F; }
+  :root[data-palette="forest-blush"] .study-sidebar .study-theme-settings svg, :root[data-palette="forest-blush"] .study-sidebar .study-ai-settings svg { color: #FFFDF0; }
+  :root[data-palette="forest-blush"] .study-sidebar > div:last-child .text-muted-foreground { color: #F7C59F !important; }
+  :root[data-palette="forest-blush"] .study-workspace-header > button > span:last-child { color: #FFFDF0 !important; border-color: #F7C59F; font-weight: 700; }
+  :root[data-palette="forest-blush"] .study-sidebar .study-nav-item.is-active { background: #F7C59F; color: #183042; }
 }
 
 @media (max-width: 720px) {
