@@ -300,3 +300,5 @@
 - [x] Menambahkan regresi navigasi Change session dan push penyempurnaan ke GitHub
 - [x] Mengganti judul sumber di panel Source ke font normal
 - [x] Menambahkan regresi tipografi judul sumber dan push penyempurnaan ke GitHub
+- [x] Menampilkan tombol hide panel Source dan Watch pada desktop
+- [x] Menambahkan regresi kontrol hide panel desktop dan push penyempurnaan ke GitHub
