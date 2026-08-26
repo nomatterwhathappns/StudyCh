@@ -252,4 +252,4 @@
 - [x] Menyimpan checkpoint dan mengirim perbaikan kontras Key Terms ke GitHub
 - [x] Mengubah composer Chat menjadi bubble bersih tanpa kotak input besar yang terpisah
 - [x] Memastikan pesan panjang di composer Chat membungkus ke baris baru tanpa terpotong pada desktop dan mobile
-- [ ] Menambahkan regresi, memverifikasi tampilan composer Chat, lalu push perbaikannya ke GitHub
+- [x] Menambahkan regresi, memverifikasi tampilan composer Chat, lalu push perbaikannya ke GitHub
