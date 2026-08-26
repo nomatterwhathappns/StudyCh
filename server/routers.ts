@@ -85,6 +85,11 @@ export function providerTimeoutMs(responseStyle: ResponseStyle) {
   return responseMode(responseStyle) === "Fast" ? 8_000 : responseMode(responseStyle) === "Deep" ? 22_000 : 14_000;
 }
 
+const LOCAL_SELECTION_TIMEOUT_MS = 30_000;
+function localSelectionTimeoutMs(model: StudyModel) {
+  return model === LOCAL_AI_ROUTER_MODEL && getLocalAiRouterConfig().enabled ? LOCAL_SELECTION_TIMEOUT_MS : undefined;
+}
+
 export function systemPrompt(sessionName: string, materials: string, translate: boolean, responseStyle: ResponseStyle) {
   const mode = responseMode(responseStyle);
   return [
@@ -637,7 +642,7 @@ export const appRouter = router({
           const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
             { role: "system", content: systemPrompt(input.sessionName, input.materials, input.translate, input.responseStyle) },
             { role: "user", content: `Explain this selected text in a clear learning-focused way. Include a concise definition, why it matters, and one simple example when appropriate:\n\n${input.selection}` },
-          ], responseTokenBudget("explain", input.responseStyle), input.responseStyle);
+          ], responseTokenBudget("explain", input.responseStyle), input.responseStyle, false, localSelectionTimeoutMs(input.model));
           return result;
         } catch (error) {
           if (error instanceof TRPCError) throw error;
@@ -670,7 +675,7 @@ export const appRouter = router({
               required: ["term", "definition", "context", "example"],
               additionalProperties: false,
             },
-          });
+          }, localSelectionTimeoutMs(input.model));
           return parseKeyTermDraft(result.text);
         } catch (error) {
           if (error instanceof TRPCError) throw error;
@@ -693,14 +698,14 @@ export const appRouter = router({
           ];
           let result;
           try {
-            result = await invokeStudyAIForUser(ctx.user?.id, input.model, messages, 250, input.responseStyle);
+            result = await invokeStudyAIForUser(ctx.user?.id, input.model, messages, 250, input.responseStyle, false, localSelectionTimeoutMs(input.model));
           } catch (error) {
             if (!isLocalEmptyVocabularyResponse(error, input.model)) throw error;
             console.warn("[StudyOS AI vocabulary draft] local router returned empty output; retrying once with a simpler prompt");
             result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
               { role: "system", content: "Translate the selected foreign word or short phrase into Bahasa Indonesia. Reply with only valid JSON: {\"term\":\"selected word\",\"meaning\":\"short Indonesian translation\"}. No explanation." },
               { role: "user", content: input.selection },
-            ], 500, input.responseStyle);
+            ], 500, input.responseStyle, false, localSelectionTimeoutMs(input.model));
           }
           return parseVocabularyDraft(result.text);
         } catch (error) {

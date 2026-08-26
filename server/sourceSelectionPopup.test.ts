@@ -11,8 +11,11 @@ describe("source selection popup and overflow", () => {
     expect(workspace).toContain('setProperty("--study-selection-x"');
     expect(workspace).toContain('setProperty("--study-selection-y"');
     expect(css).toContain(".study-selection-popover { @apply fixed z-40");
-    expect(css).toContain("transform: translate(-50%, -100%)");
+    expect(css).toContain("transform: translate(0, -100%)");
     expect(css).toContain(".study-reading-content { @apply min-w-0");
     expect(css).toContain("overflow-wrap: anywhere");
+    expect(workspace).toContain("const popupWidth = 248");
+    expect(workspace).toContain('event.target.closest(".study-selection-popover")');
+    expect(workspace).toContain('event.key === "Escape"');
   });
 });

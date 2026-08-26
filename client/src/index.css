@@ -263,7 +263,7 @@
   .study-translate-button { @apply mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-[11px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground; }
   .study-translate-button.is-on { border-color: var(--ember); color: var(--foreground); background: color-mix(in srgb, var(--ember) 13%, transparent); }
   .study-mobile-chat-translate { display: none; }
-  .study-selection-popover { @apply fixed z-40 rounded-xl border border-border bg-popover p-2 text-xs text-muted-foreground; left: clamp(0.75rem, var(--study-selection-x), calc(100vw - 0.75rem)); top: clamp(5rem, var(--study-selection-y), calc(100vh - 0.75rem)); width: max-content; max-width: calc(100vw - 1.5rem); transform: translate(-50%, -100%); box-shadow: 0 12px 28px rgba(0,0,0,.22); }
+  .study-selection-popover { @apply fixed z-40 rounded-xl border border-border bg-popover p-2 text-xs text-muted-foreground; left: var(--study-selection-x); top: clamp(5rem, var(--study-selection-y), calc(100vh - 0.75rem)); width: max-content; max-width: calc(100vw - 1.5rem); transform: translate(0, -100%); box-shadow: 0 12px 28px rgba(0,0,0,.22); }
   .study-selection-popover > div { @apply mt-2 flex gap-2; }
   .study-selection-popover button { @apply rounded-lg border border-border px-2 py-1 text-[10px] text-foreground hover:bg-secondary; }
   .study-reading-content { @apply min-w-0 whitespace-pre-wrap pr-2 text-sm leading-7 text-muted-foreground; overflow-wrap: anywhere; word-break: break-word; }
