@@ -275,6 +275,10 @@ function parseVocabularyDraft(content: string) {
   throw new TRPCError({ code: "BAD_GATEWAY", message: "StudyOS AI returned an invalid vocabulary translation. Please try again." });
 }
 
+function isLocalEmptyVocabularyResponse(error: unknown, model: StudyModel) {
+  return model === LOCAL_AI_ROUTER_MODEL && getLocalAiRouterConfig().enabled && error instanceof TRPCError && error.code === "BAD_GATEWAY" && /9router lokal mengembalikan respons kosong/i.test(error.message);
+}
+
 const rawQuizQuestionSchema = z.object({
   question: z.string().min(1),
   options: z.array(z.string().min(1)).min(2).max(4),
@@ -678,7 +682,7 @@ export const appRouter = router({
       .input(aiInputSchema.extend({ selection: z.string().min(1).max(240) }))
       .mutation(async ({ input, ctx }) => {
         try {
-          const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
+          const messages: Array<{ role: "system" | "user"; content: string }> = [
             { role: "system", content: [
               "You create minimal vocabulary cards for a personal study app.",
               "Return one JSON object only with string fields: term, meaning.",
@@ -686,7 +690,18 @@ export const appRouter = router({
               "Meaning must be only a short, natural Bahasa Indonesia translation (maximum 180 characters). Do not add a definition, context, example, label, punctuation explanation, or extra commentary.",
             ].join("\n\n") },
             { role: "user", content: `Selected vocabulary:\n${input.selection}` },
-          ], 250, input.responseStyle);
+          ];
+          let result;
+          try {
+            result = await invokeStudyAIForUser(ctx.user?.id, input.model, messages, 250, input.responseStyle);
+          } catch (error) {
+            if (!isLocalEmptyVocabularyResponse(error, input.model)) throw error;
+            console.warn("[StudyOS AI vocabulary draft] local router returned empty output; retrying once with a simpler prompt");
+            result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
+              { role: "system", content: "Translate the selected foreign word or short phrase into Bahasa Indonesia. Reply with only valid JSON: {\"term\":\"selected word\",\"meaning\":\"short Indonesian translation\"}. No explanation." },
+              { role: "user", content: input.selection },
+            ], 500, input.responseStyle);
+          }
           return parseVocabularyDraft(result.text);
         } catch (error) {
           if (error instanceof TRPCError) throw error;
