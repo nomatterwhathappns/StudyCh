@@ -329,3 +329,7 @@
 - [x] Merapikan code block jawaban AI agar tidak tampil sebagai kotak bertumpuk
 - [x] Menjaga Translate Chat tetap berjalan saat panel ditutup atau pengguna membuka Profile/Sessions
 - [x] Menambahkan regresi code block dan Translate tahan navigasi lalu push perbaikannya ke GitHub
+- [x] Menghapus garis ganda pada code block jawaban AI
+- [x] Menampilkan indikator aktivitas AI hanya pada halaman Profile
+- [x] Membuat Cancel Translate langsung membatalkan tampilan proses dan mengabaikan hasil terlambat
+- [x] Menambahkan regresi tiga perbaikan lanjutan lalu push ke GitHub

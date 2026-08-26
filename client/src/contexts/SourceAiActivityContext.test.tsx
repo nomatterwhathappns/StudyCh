@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from "react";
-import { act, fireEvent, render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { addVocabulary, addMessage, addQuiz, keyTermCallbacks, quizCallbacks, translationCallbacks } = vi.hoisted(() => ({
   addVocabulary: vi.fn(),
@@ -63,7 +63,15 @@ function TranslationTaskStatus() {
   return <p>{task ? task.status : sourceAi.chatTranslationsFor("session-a").english["ai-1"] ?? "idle"}</p>;
 }
 
+function TranslationTaskCancel() {
+  const sourceAi = useSourceAiActivity();
+  const task = sourceAi.tasks.find((item) => item.kind === "chat-translation");
+  return task ? <button type="button" onClick={() => sourceAi.cancelTask(task.id)}>Cancel Translate now</button> : null;
+}
+
 describe("Source AI activity provider", () => {
+  afterEach(() => cleanup());
+
   it("keeps a Save Terms request and its draft when the Source panel unmounts", () => {
     const ui = render(<SourceAiActivityProvider><SourceTaskStarter visible /><SourceTaskStatus /></SourceAiActivityProvider>);
     fireEvent.click(ui.getByRole("button", { name: "Start Save Terms" }));
@@ -98,7 +106,19 @@ describe("Source AI activity provider", () => {
     expect(ui.getByText("Hello")).toBeTruthy();
   });
 
+  it("removes Translate immediately and ignores a late result after Cancel", () => {
+    const ui = render(<SourceAiActivityProvider><TranslationTaskStarter visible /><TranslationTaskCancel /><TranslationTaskStatus /></SourceAiActivityProvider>);
+    fireEvent.click(ui.getByRole("button", { name: "Start Translate" }));
+    fireEvent.click(ui.getByRole("button", { name: "Cancel Translate now" }));
+    expect(ui.getByText("idle")).toBeTruthy();
+
+    act(() => translationCallbacks.value?.onSuccess?.({ translations: { english: [{ id: "ai-1", content: "Late hello" }], indonesian: [{ id: "ai-1", content: "Halo terlambat" }] } }));
+    expect(ui.getByText("idle")).toBeTruthy();
+    expect(ui.queryByText("Late hello")).toBeNull();
+  });
+
   it("shows a compact activity menu and can cancel a running AI task", () => {
+    window.history.pushState({}, "", "/");
     const ui = render(<SourceAiActivityProvider><SourceTaskStarter visible /><AiActivityMenu /></SourceAiActivityProvider>);
     fireEvent.click(ui.getByRole("button", { name: "Start Save Terms" }));
     fireEvent.click(ui.getByRole("button", { name: "AI activity" }));
@@ -106,6 +126,14 @@ describe("Source AI activity provider", () => {
     expect(ui.getByRole("status", { name: "AI activities in progress" })).toBeTruthy();
     expect(ui.getByText("Save Terms")).toBeTruthy();
     fireEvent.click(ui.getByRole("button", { name: "Cancel Save Terms" }));
+    expect(ui.queryByRole("button", { name: "AI activity" })).toBeNull();
+  });
+
+  it("keeps the activity indicator out of the workspace and reserves it for Profile", () => {
+    window.history.pushState({}, "", "/studych");
+    const ui = render(<SourceAiActivityProvider><SourceTaskStarter visible /><AiActivityMenu /></SourceAiActivityProvider>);
+    fireEvent.click(ui.getByRole("button", { name: "Start Save Terms" }));
+
     expect(ui.queryByRole("button", { name: "AI activity" })).toBeNull();
   });
 });

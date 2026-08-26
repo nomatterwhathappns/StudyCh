@@ -151,7 +151,11 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
     if (task.kind === "key-term") draftKeyTerm.reset();
     if (task.kind === "vocabulary") draftVocabulary.reset();
     if (task.kind === "quiz") quiz.reset();
-    if (task.kind === "chat-translation") translateChat.reset();
+    if (task.kind === "chat-translation") {
+      translateChat.reset();
+      setChatTranslationTargets((current) => { const next = { ...current }; delete next[task.sessionId]; return next; });
+      window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false } }));
+    }
     setTasks((current) => current.filter((entry) => entry.id !== id));
   };
 
@@ -160,6 +164,7 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
     translateChat.reset();
     setTasks((current) => current.filter((task) => !(task.sessionId === sessionId && task.kind === "chat-translation")));
     setChatTranslationTargets((current) => { const next = { ...current }; delete next[sessionId]; return next; });
+    window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false } }));
   };
 
   const discardTask = (id: string) => setTasks((current) => current.filter((task) => task.id !== id));

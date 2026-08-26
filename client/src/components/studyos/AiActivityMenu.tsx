@@ -2,15 +2,17 @@ import { useSourceAiActivity } from "@/contexts/SourceAiActivityContext";
 import { useStudyStore } from "@/store/useStudyStore";
 import { ChevronUp, Loader2, Sparkles, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 
 export function AiActivityMenu() {
   const { tasks, cancelTask } = useSourceAiActivity();
   const sessions = useStudyStore((state) => state.sessions);
+  const [location] = useLocation();
   const active = tasks.filter((task) => task.status === "pending");
   const [open, setOpen] = useState(false);
 
   useEffect(() => { if (!active.length) setOpen(false); }, [active.length]);
-  if (!active.length) return null;
+  if (!active.length || location !== "/") return null;
 
   return <div className="study-activity-menu">
     {open && <div className="study-activity-popover" role="status" aria-label="AI activities in progress">
