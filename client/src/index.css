@@ -208,6 +208,46 @@
   --panel-group: #0B132B;
 }
 
+:root[data-palette="fuchsia-noir"] {
+  --frosted-blue: #F4D8ED; --icy-aqua: #FFF1FB; --mint-cream: #2C0E37; --petal-frost: #5C164E; --blush-pop: #CB429F; --ink: #FFF7FC; --sidebar: #2C0E37; --ember: #CB429F; --background: #402039; --foreground: #FFF7FC; --card: #4A204C; --card-foreground: #FFF7FC; --popover: #4A204C; --popover-foreground: #FFF7FC; --primary: #CB429F; --primary-foreground: #2C0E37; --secondary: #690375; --secondary-foreground: #FFF7FC; --muted: #663E63; --muted-foreground: #F3D7EB; --accent: #DAA89B; --accent-foreground: #2C0E37; --destructive: #FF9DBD; --destructive-foreground: #2C0E37; --feedback-error-bg: #66374E; --feedback-error-border: #FF9DBD; --feedback-error-foreground: #FFF1F6; --feedback-error-link: #F4D8ED; --border: #955189; --input: #663E63; --ring: #CB429F; --panel-group: #2C0E37;
+}
+
+:root[data-palette="grape-soda"] {
+  --frosted-blue: #E2FCEF; --icy-aqua: #F4FFFA; --mint-cream: #170F11; --petal-frost: #5C164E; --blush-pop: #9B287B; --ink: #FFF8FC; --sidebar: #170F11; --ember: #E2FCEF; --background: #402039; --foreground: #FFF8FC; --card: #5C164E; --card-foreground: #FFF8FC; --popover: #5C164E; --popover-foreground: #FFF8FC; --primary: #9B287B; --primary-foreground: #FFFFFF; --secondary: #5C164E; --secondary-foreground: #FFF8FC; --muted: #633C5E; --muted-foreground: #F6DDF0; --accent: #E2FCEF; --accent-foreground: #170F11; --destructive: #FFAFBD; --destructive-foreground: #170F11; --feedback-error-bg: #6F3E50; --feedback-error-border: #FFAFBD; --feedback-error-foreground: #FFF1F4; --feedback-error-link: #E2FCEF; --border: #945184; --input: #633C5E; --ring: #E2FCEF; --panel-group: #170F11;
+}
+
+:root[data-palette="velvet-orchid"] {
+  --frosted-blue: #FBFBFB; --icy-aqua: #FFF8FC; --mint-cream: #201A23; --petal-frost: #9E4770; --blush-pop: #631D76; --ink: #FBFBFB; --sidebar: #201A23; --ember: #FBFBFB; --background: #2E2532; --foreground: #FBFBFB; --card: #3B2E42; --card-foreground: #FBFBFB; --popover: #3B2E42; --popover-foreground: #FBFBFB; --primary: #631D76; --primary-foreground: #FFFFFF; --secondary: #9E4770; --secondary-foreground: #FFFFFF; --muted: #493A4E; --muted-foreground: #EDE3EB; --accent: #FBFBFB; --accent-foreground: #201A23; --destructive: #FFACC8; --destructive-foreground: #201A23; --feedback-error-bg: #6C405A; --feedback-error-border: #FFACC8; --feedback-error-foreground: #FFF1F6; --feedback-error-link: #FBFBFB; --border: #785371; --input: #493A4E; --ring: #FBFBFB; --panel-group: #201A23;
+}
+
+:root[data-palette="tea-olive"] {
+  --frosted-blue: #D0F1BF; --icy-aqua: #EEFBE7; --mint-cream: #FFFEF2; --petal-frost: #E5EAB9; --blush-pop: #646536; --ink: #29311C; --sidebar: #483D03; --ember: #646536; --background: #D0F1BF; --foreground: #29311C; --card: #FFFEF2; --card-foreground: #29311C; --popover: #FFFEF2; --popover-foreground: #29311C; --primary: #646536; --primary-foreground: #FFFFFF; --secondary: #B6D7B9; --secondary-foreground: #29311C; --muted: #D8E7C8; --muted-foreground: #51624F; --accent: #9ABD97; --accent-foreground: #29311C; --destructive: #A3463A; --destructive-foreground: #FFFFFF; --feedback-error-bg: #FBE1D6; --feedback-error-border: #A3463A; --feedback-error-foreground: #57251E; --feedback-error-link: #483D03; --border: #90AF82; --input: #B6D7B9; --ring: #646536; --panel-group: #B6D7B9;
+}
+
+:root[data-palette="sapphire-blush"] {
+  --frosted-blue: #F6C0D0; --icy-aqua: #FFF1F5; --mint-cream: #1E3231; --petal-frost: #8E7C93; --blush-pop: #F6C0D0; --ink: #F9FCFC; --sidebar: #1E3231; --ember: #F6C0D0; --background: #485665; --foreground: #F9FCFC; --card: #596878; --card-foreground: #F9FCFC; --popover: #596878; --popover-foreground: #F9FCFC; --primary: #F6C0D0; --primary-foreground: #1E3231; --secondary: #8E7C93; --secondary-foreground: #FFFFFF; --muted: #63727F; --muted-foreground: #E6E8EC; --accent: #D0A5C0; --accent-foreground: #1E3231; --destructive: #FFABC1; --destructive-foreground: #1E3231; --feedback-error-bg: #734D5D; --feedback-error-border: #FFABC1; --feedback-error-foreground: #FFF1F5; --feedback-error-link: #F6C0D0; --border: #8493A0; --input: #63727F; --ring: #F6C0D0; --panel-group: #1E3231;
+}
+
+:root[data-palette="grape-rose"] {
+  --frosted-blue: #FFD4D4; --icy-aqua: #FFF2F4; --mint-cream: #272727; --petal-frost: #FF9FE5; --blush-pop: #FF858D; --ink: #FFF9FA; --sidebar: #272727; --ember: #FF9FE5; --background: #2B50AA; --foreground: #FFF9FA; --card: #365EBA; --card-foreground: #FFF9FA; --popover: #365EBA; --popover-foreground: #FFF9FA; --primary: #FF858D; --primary-foreground: #272727; --secondary: #5D78C5; --secondary-foreground: #FFFFFF; --muted: #4567BA; --muted-foreground: #E2E8FF; --accent: #FF9FE5; --accent-foreground: #272727; --destructive: #FFBCC3; --destructive-foreground: #272727; --feedback-error-bg: #713C5C; --feedback-error-border: #FFBCC3; --feedback-error-foreground: #FFF2F4; --feedback-error-link: #FFD4D4; --border: #7592DC; --input: #5D78C5; --ring: #FF9FE5; --panel-group: #272727;
+}
+
+:root[data-palette="ink-berry"] {
+  --frosted-blue: #14FFF7; --icy-aqua: #D9FFFE; --mint-cream: #1D8A99; --petal-frost: #7C77B9; --blush-pop: #14FFF7; --ink: #F1FFFF; --sidebar: #1D8A99; --ember: #14FFF7; --background: #7C77B9; --foreground: #F1FFFF; --card: #615FA1; --card-foreground: #F1FFFF; --popover: #615FA1; --popover-foreground: #F1FFFF; --primary: #14FFF7; --primary-foreground: #17383F; --secondary: #8FBFE0; --secondary-foreground: #17383F; --muted: #6B75A8; --muted-foreground: #EBFFFF; --accent: #0BC9CD; --accent-foreground: #17383F; --destructive: #FFB3C6; --destructive-foreground: #17383F; --feedback-error-bg: #744D70; --feedback-error-border: #FFB3C6; --feedback-error-foreground: #FFF0F5; --feedback-error-link: #14FFF7; --border: #A19CDF; --input: #8FBFE0; --ring: #14FFF7; --panel-group: #1D8A99;
+}
+
+:root[data-palette="forest-blush"] {
+  --frosted-blue: #F7C59F; --icy-aqua: #FFF4E9; --mint-cream: #EFEFD0; --petal-frost: #F7C59F; --blush-pop: #FF6B35; --ink: #183042; --sidebar: #004E89; --ember: #FF6B35; --background: #EFEFD0; --foreground: #183042; --card: #FFFDF0; --card-foreground: #183042; --popover: #FFFDF0; --popover-foreground: #183042; --primary: #004E89; --primary-foreground: #FFFFFF; --secondary: #F7C59F; --secondary-foreground: #183042; --muted: #E5E8C6; --muted-foreground: #4B5E64; --accent: #FF6B35; --accent-foreground: #FFFFFF; --destructive: #A63E38; --destructive-foreground: #FFFFFF; --feedback-error-bg: #FADFD5; --feedback-error-border: #A63E38; --feedback-error-foreground: #58251E; --feedback-error-link: #004E89; --border: #99B8B0; --input: #F7C59F; --ring: #FF6B35; --panel-group: #F7C59F;
+}
+
+:root[data-palette="noir-saffron"] {
+  --frosted-blue: #59F8E8; --icy-aqua: #DFFFFA; --mint-cream: #03191E; --petal-frost: #941C2F; --blush-pop: #59F8E8; --ink: #F4FFFF; --sidebar: #03191E; --ember: #59F8E8; --background: #03191E; --foreground: #F4FFFF; --card: #12333B; --card-foreground: #F4FFFF; --popover: #12333B; --popover-foreground: #F4FFFF; --primary: #20A4F3; --primary-foreground: #FFFFFF; --secondary: #1C5160; --secondary-foreground: #F4FFFF; --muted: #174653; --muted-foreground: #C7E8EE; --accent: #59F8E8; --accent-foreground: #03191E; --destructive: #FF9DB0; --destructive-foreground: #03191E; --feedback-error-bg: #592B35; --feedback-error-border: #FF9DB0; --feedback-error-foreground: #FFF0F3; --feedback-error-link: #59F8E8; --border: #34707B; --input: #1C5160; --ring: #59F8E8; --panel-group: #03191E;
+}
+
+:root[data-palette="dusk-grape"] {
+  --frosted-blue: #9BA9E5; --icy-aqua: #EBEEFF; --mint-cream: #30292F; --petal-frost: #5F5AA2; --blush-pop: #9BA9E5; --ink: #F8F8FF; --sidebar: #30292F; --ember: #9BA9E5; --background: #413F54; --foreground: #F8F8FF; --card: #4D4C5D; --card-foreground: #F8F8FF; --popover: #4D4C5D; --popover-foreground: #F8F8FF; --primary: #5F5AA2; --primary-foreground: #FFFFFF; --secondary: #355691; --secondary-foreground: #FFFFFF; --muted: #555566; --muted-foreground: #DFE2F2; --accent: #9BA9E5; --accent-foreground: #30292F; --destructive: #FFADBD; --destructive-foreground: #30292F; --feedback-error-bg: #643F52; --feedback-error-border: #FFADBD; --feedback-error-foreground: #FFF0F5; --feedback-error-link: #9BA9E5; --border: #76778F; --input: #555566; --ring: #9BA9E5; --panel-group: #30292F;
+}
+
 @layer base {
   * { @apply border-border outline-ring/60; }
   html, body, #root { min-height: 100%; }

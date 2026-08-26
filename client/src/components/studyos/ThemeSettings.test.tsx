@@ -56,4 +56,21 @@ describe("ThemeSettings", () => {
 
     expect(document.documentElement.dataset.palette).toBe("ocean-depths");
   });
+
+  it("shows the complete batch collection in the manual picker", () => {
+    const ui = render(<PaletteProvider><ThemeSettings /></PaletteProvider>);
+
+    fireEvent.click(ui.getByRole("button", { name: /Theme/i }));
+
+    expect(ui.getByRole("button", { name: /Fuchsia Noir/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Tea Olive/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Sapphire Blush/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Grape Rose/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Ink Berry/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Forest Blush/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Noir Saffron/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Grape Soda/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Velvet Orchid/i })).toBeTruthy();
+    expect(ui.getByRole("button", { name: /Dusk Grape/i })).toBeTruthy();
+  });
 });

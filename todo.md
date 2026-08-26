@@ -223,3 +223,6 @@
 - [x] Merancang peran warna dan kontras untuk palet Prussian Blue, Space Indigo, Dusk Blue, Tropical Teal, dan Neon Ice
 - [x] Menambahkan palet navy-teal ke pemilih Theme dan siklus Shuffle tanpa push GitHub
 - [x] Memverifikasi preview desktop palet navy-teal sebelum meminta persetujuan pengguna
+- [x] Mengekstrak dan mengatalogkan 10 palet baru untuk review Theme kolektif
+- [x] Menambahkan seluruh palet batch baru ke pemilih Theme dan siklus Shuffle tanpa push GitHub
+- [x] Menjalankan regresi lengkap serta menyiapkan review koleksi tema langsung di aplikasi
