@@ -294,3 +294,5 @@
 - [x] Menambahkan field nama teman belajar AI pada Edit Profile dengan default StudyOS dan reset
 - [x] Memakai nama AI pilihan pengguna pada instruksi server serta label bubble Chat
 - [x] Menambahkan regresi persistence, prompt, dan label nama AI lalu push fitur ke GitHub
+- [x] Membesarkan label nama AI di atas bubble Chat agar lebih mudah dibaca
+- [x] Menambahkan regresi keterbacaan label dan push penyempurnaan ke GitHub

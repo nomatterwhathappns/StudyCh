@@ -275,7 +275,7 @@
   .study-chat-message { @apply flex flex-col gap-1; }
   .study-chat-message.is-user { @apply items-end; }
   .study-chat-message.is-ai { @apply items-start; }
-  .study-ai-label { @apply px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--ember)]; }
+  .study-ai-label { @apply px-1 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--ember)]; }
   .study-message-bubble { @apply max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed; }
   .is-user .study-message-bubble { border-color: var(--chat-user-border, var(--primary)); background: var(--chat-user-background, var(--primary)); color: var(--chat-user-foreground, var(--primary-foreground)); }
   .is-ai .study-message-bubble { border-color: var(--chat-ai-border, var(--border)); background: var(--chat-ai-background, var(--card)); color: var(--chat-ai-foreground, var(--card-foreground)); }

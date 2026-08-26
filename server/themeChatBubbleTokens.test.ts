@@ -11,5 +11,6 @@ describe("theme chat bubble tokens", () => {
     expect(css).toContain("background: var(--chat-ai-background, var(--card))");
     expect(css).toContain("color: var(--chat-ai-foreground, var(--card-foreground))");
     expect(css).toContain("--chat-user-background: #690375; --chat-user-foreground: #FFF7FC; --chat-user-border: #CB429F;");
+    expect(css).toContain(".study-ai-label { @apply px-1 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--ember)]; }");
   });
 });
