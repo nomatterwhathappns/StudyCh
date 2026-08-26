@@ -190,6 +190,23 @@ describe("mobile Source and AI flow", () => {
   });
   afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
+  it.each([["desktop", 1280], ["mobile", 375]] as const)("uses a multiline composer that preserves long text and sends only on Enter on %s", async (_viewport, width) => {
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: width });
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const question = ui.getByLabelText("Ask StudyOS") as HTMLTextAreaElement;
+    const longQuestion = "Jelaskan hubungan antara Amazon S3, bucket, object storage, IAM policy, dan encryption untuk penyimpanan file aplikasi dengan contoh yang mudah dipahami.";
+
+    expect(question.tagName).toBe("TEXTAREA");
+    expect(question.closest(".study-chat-input-shell")).toBeTruthy();
+    fireEvent.change(question, { target: { value: longQuestion } });
+    expect(question.value).toBe(longQuestion);
+    fireEvent.keyDown(question, { key: "Enter", shiftKey: true });
+    expect(addMessage).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(question, { key: "Enter" });
+    await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "user", content: longQuestion }));
+  });
+
   it("shows cancel controls for AI activities and invokes only the selected cancellation handler", async () => {
     const cancelTranslation = vi.fn();
     const cancelAddTerms = vi.fn();

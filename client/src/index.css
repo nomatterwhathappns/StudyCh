@@ -280,12 +280,14 @@
   .study-thinking i { @apply size-1.5 animate-bounce rounded-full bg-[var(--blush-pop)]; animation-delay: 0ms; }
   .study-thinking i:nth-child(2) { animation-delay: 120ms; }
   .study-thinking i:nth-child(3) { animation-delay: 240ms; }
-  .study-chat-input-shell { @apply mx-auto flex h-12 max-w-xl items-center rounded-2xl border border-border bg-card px-3 transition-all duration-200; }
-  .study-chat-input-shell:focus-within { @apply border-primary; }
-  .study-chat-input-shell input { @apply mx-auto w-44 bg-transparent text-center text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground sm:w-60; }
-  .study-chat-input-shell.has-value input { @apply ml-0 mr-2 w-full text-left; }
-  .study-chat-input-shell button { @apply flex size-8 shrink-0 scale-90 items-center justify-center rounded-xl bg-primary text-primary-foreground opacity-0 transition-all duration-200 disabled:opacity-30; }
-  .study-chat-input-shell.has-value button { @apply scale-100 opacity-100; }
+  .study-chat-composer { @apply px-4 py-3; background: color-mix(in srgb, var(--background) 88%, transparent); }
+  .study-chat-input-shell { @apply mx-auto flex max-w-xl items-end gap-2; }
+  .study-chat-input-shell textarea { @apply min-h-10 max-h-32 flex-1 resize-none bg-transparent px-1 py-2 text-left text-sm leading-6 text-foreground outline-none placeholder:text-muted-foreground; field-sizing: content; overflow-y: auto; }
+  .study-chat-input-shell textarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 0.75rem; }
+  .study-chat-input-shell button { @apply flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-35 transition-[transform,opacity,filter] duration-150 disabled:opacity-35; }
+  .study-chat-input-shell.has-value button { @apply opacity-100; }
+  .study-chat-input-shell button:not(:disabled):hover { filter: brightness(1.08); }
+  .study-chat-input-shell button:not(:disabled):active { transform: scale(0.97); }
   .study-watch-panel { background: var(--card); }
   .study-timer { @apply rounded-2xl border border-border bg-secondary/30 p-4; }
   .study-timer-button { @apply flex min-h-9 flex-col items-center justify-center gap-1 rounded-xl border border-border bg-card px-1 font-mono text-[8px] uppercase tracking-wide text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-35; }
