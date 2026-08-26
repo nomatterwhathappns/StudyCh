@@ -356,6 +356,10 @@
   .study-theme-settings small { @apply block font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground; }
   .study-theme-settings strong { @apply mt-0.5 block truncate text-xs font-medium text-foreground; }
   .study-theme-shuffle { @apply flex size-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground; }
+  /* Legacy warm-red UI accents now inherit the active theme instead of competing with it. */
+  .text-\[\#BA2D0B\]:not([role="alert"]) { color: var(--ember) !important; }
+  .bg-\[\#BA2D0B\] { background-color: var(--ember) !important; }
+  .hover\:text-\[\#BA2D0B\]:hover { color: var(--destructive) !important; }
 
   :root[data-palette="vintage-rose"] .study-sidebar, :root[data-palette="vintage-rose"] .study-workspace-header { color: #FFF8EB; }
   :root[data-palette="vintage-rose"] .study-sidebar .text-muted-foreground, :root[data-palette="vintage-rose"] .study-sidebar .study-nav-item, :root[data-palette="vintage-rose"] .study-sidebar .study-back-button, :root[data-palette="vintage-rose"] .study-sidebar .study-theme-settings, :root[data-palette="vintage-rose"] .study-workspace-header .text-muted-foreground { color: #F4E1C6; }
@@ -363,24 +367,20 @@
   :root[data-palette="vintage-rose"] .study-sidebar .study-theme-settings strong, :root[data-palette="vintage-rose"] .study-sidebar .study-ai-settings strong { color: #FFF8EB; }
   :root[data-palette="vintage-rose"] .study-workspace-header .study-icon-button, :root[data-palette="vintage-rose"] .study-workspace-header .study-theme-shuffle { color: #EFC69B; }
   :root[data-palette="vintage-rose"] .study-workspace-header .study-icon-button:hover, :root[data-palette="vintage-rose"] .study-workspace-header .study-theme-shuffle:hover { color: #FFF8EB; }
-  :root[data-palette="vintage-rose"] .text-\[\#BA2D0B\] { color: var(--ember) !important; }
   :root[data-palette="midnight-blue"] .study-sidebar, :root[data-palette="midnight-blue"] .study-workspace-header { color: #F4F8FA; }
   :root[data-palette="midnight-blue"] .study-sidebar .text-muted-foreground, :root[data-palette="midnight-blue"] .study-sidebar .study-nav-item, :root[data-palette="midnight-blue"] .study-sidebar .study-back-button, :root[data-palette="midnight-blue"] .study-sidebar .study-theme-settings, :root[data-palette="midnight-blue"] .study-workspace-header .text-muted-foreground, :root[data-palette="midnight-blue"] .study-workspace-header .study-icon-button, :root[data-palette="midnight-blue"] .study-workspace-header .study-theme-shuffle { color: #C1EEFF; }
   :root[data-palette="midnight-blue"] .study-sidebar .study-theme-settings strong, :root[data-palette="midnight-blue"] .study-sidebar .study-ai-settings strong { color: #F4F8FA; }
   :root[data-palette="midnight-blue"] .study-sidebar .study-kicker, :root[data-palette="midnight-blue"] .study-sidebar > div:last-child { color: #E4DADC; }
-  :root[data-palette="midnight-blue"] .text-\[\#BA2D0B\] { color: var(--ember) !important; }
   :root[data-palette="lilac-sky"] .study-sidebar, :root[data-palette="lilac-sky"] .study-workspace-header { color: #FFFFFF; }
   :root[data-palette="lilac-sky"] .study-sidebar .text-muted-foreground, :root[data-palette="lilac-sky"] .study-sidebar .study-nav-item, :root[data-palette="lilac-sky"] .study-sidebar .study-back-button, :root[data-palette="lilac-sky"] .study-sidebar .study-theme-settings, :root[data-palette="lilac-sky"] .study-workspace-header .text-muted-foreground, :root[data-palette="lilac-sky"] .study-workspace-header .study-icon-button, :root[data-palette="lilac-sky"] .study-workspace-header .study-theme-shuffle { color: #ECE9FF; }
   :root[data-palette="lilac-sky"] .study-sidebar .study-theme-settings strong, :root[data-palette="lilac-sky"] .study-sidebar .study-ai-settings strong { color: #FFFFFF; }
   :root[data-palette="lilac-sky"] .study-sidebar .study-kicker, :root[data-palette="lilac-sky"] .study-sidebar > div:last-child { color: #D7F2FF; }
   :root[data-palette="lilac-sky"] .study-workspace-header > button > span:last-child { color: #D7F2FF; border-color: #A0DDFF; }
-  :root[data-palette="lilac-sky"] .text-\[\#BA2D0B\] { color: var(--ember) !important; }
   :root[data-palette="ocean-depths"] .study-sidebar, :root[data-palette="ocean-depths"] .study-workspace-header { color: #F1FFFE; }
   :root[data-palette="ocean-depths"] .study-sidebar .text-muted-foreground, :root[data-palette="ocean-depths"] .study-sidebar .study-nav-item, :root[data-palette="ocean-depths"] .study-sidebar .study-back-button, :root[data-palette="ocean-depths"] .study-sidebar .study-theme-settings, :root[data-palette="ocean-depths"] .study-workspace-header .text-muted-foreground, :root[data-palette="ocean-depths"] .study-workspace-header .study-icon-button, :root[data-palette="ocean-depths"] .study-workspace-header .study-theme-shuffle { color: #6FFFE9; }
   :root[data-palette="ocean-depths"] .study-sidebar .study-theme-settings strong, :root[data-palette="ocean-depths"] .study-sidebar .study-ai-settings strong { color: #F1FFFE; }
   :root[data-palette="ocean-depths"] .study-sidebar .study-kicker, :root[data-palette="ocean-depths"] .study-sidebar > div:last-child { color: #C8FFF5; }
   :root[data-palette="ocean-depths"] .study-workspace-header > button > span:last-child { color: #C8FFF5; border-color: #5BC0BE; }
-  :root[data-palette="ocean-depths"] .text-\[\#BA2D0B\] { color: var(--ember) !important; }
 }
 
 @media (max-width: 720px) {

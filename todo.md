@@ -226,3 +226,6 @@
 - [x] Mengekstrak dan mengatalogkan 10 palet baru untuk review Theme kolektif
 - [x] Menambahkan seluruh palet batch baru ke pemilih Theme dan siklus Shuffle tanpa push GitHub
 - [x] Menjalankan regresi lengkap serta menyiapkan review koleksi tema langsung di aplikasi
+- [x] Mengaudit seluruh ikon dan aksen hardcoded yang tidak mengikuti token Theme
+- [x] Mengganti warna ikon tetap dengan token semantik yang kontras pada semua tema
+- [x] Memverifikasi konsistensi ikon pada tema terang dan gelap sebelum melanjutkan review pengguna
