@@ -253,3 +253,5 @@
 - [x] Mengubah composer Chat menjadi bubble bersih tanpa kotak input besar yang terpisah
 - [x] Memastikan pesan panjang di composer Chat membungkus ke baris baru tanpa terpotong pada desktop dan mobile
 - [x] Menambahkan regresi, memverifikasi tampilan composer Chat, lalu push perbaikannya ke GitHub
+- [x] Menambahkan bubble input Chat yang jelas terlihat dari background tanpa mengembalikan kotak composer besar
+- [ ] Memverifikasi bubble multiline dan tombol kirim pada desktop-mobile, lalu push refinement ke GitHub
