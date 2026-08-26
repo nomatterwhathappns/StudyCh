@@ -258,3 +258,5 @@
 - [x] Menghilangkan kotak dalam serta scrollbar kasar dari textarea bubble Chat
 - [x] Menempatkan tombol kirim sebagai bubble terpisah di bawah composer tanpa ruang kosong di atasnya
 - [x] Menambahkan regresi, memverifikasi composer halus desktop-mobile, lalu push refinement ke GitHub
+- [x] Menyatukan textarea dan area tombol kirim ke dalam satu bubble composer dengan pembagian area internal tanpa garis terlihat
+- [ ] Memverifikasi composer satu bubble pada desktop-mobile dan push refinement ke GitHub
