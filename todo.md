@@ -323,3 +323,6 @@
 - [x] Menambahkan regresi tabel dan code block Chat lalu push perbaikannya ke GitHub
 - [x] Memastikan cache Translate memproses jawaban AI baru tanpa perlu refresh
 - [x] Menambahkan regresi Translate jawaban AI baru dan push perbaikannya ke GitHub
+- [x] Membatasi tampilan kontrol Cancel saat beberapa aktivitas AI berjalan bersamaan
+- [x] Menormalkan bold Markdown AI yang memakai penanda bintang berlebih
+- [x] Menambahkan regresi kontrol Cancel bertumpuk dan bold Markdown lalu push perbaikannya ke GitHub

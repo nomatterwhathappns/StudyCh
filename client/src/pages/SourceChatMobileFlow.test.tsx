@@ -238,7 +238,7 @@ describe("mobile Source and AI flow", () => {
     expect(ui.queryByRole("button", { name: "Change session" })).toBeNull();
   });
 
-  it("shows cancel controls for AI activities and invokes only the selected cancellation handler", async () => {
+  it("keeps several cancel controls inside a compact task menu and invokes only the selected handler", async () => {
     const cancelTranslation = vi.fn();
     const cancelAddTerms = vi.fn();
     const cancelQuiz = vi.fn();
@@ -250,6 +250,10 @@ describe("mobile Source and AI flow", () => {
       window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "generate-quiz", label: "Generate quiz", pending: true, cancel: cancelQuiz } }));
     });
 
+    expect(ui.getByRole("button", { name: "Manage 3 AI tasks" })).toBeTruthy();
+    expect(ui.queryByRole("button", { name: "Cancel Translate chat" })).toBeNull();
+    fireEvent.click(ui.getByRole("button", { name: "Manage 3 AI tasks" }));
+    expect(ui.getByRole("status", { name: "Active AI tasks" }).closest(".study-cancel-controls")).toBeTruthy();
     fireEvent.click(ui.getByRole("button", { name: "Cancel Translate chat" }));
     expect(cancelTranslation).toHaveBeenCalledTimes(1);
     expect(cancelAddTerms).not.toHaveBeenCalled();
@@ -261,8 +265,7 @@ describe("mobile Source and AI flow", () => {
     expect(cancelQuiz).toHaveBeenCalledTimes(1);
     act(() => window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "translate-chat", label: "Translate chat", pending: false } })));
     await waitFor(() => expect(ui.queryByRole("button", { name: "Cancel Translate chat" })).toBeNull());
-    expect(ui.getByRole("button", { name: "Cancel Add Terms" })).toBeTruthy();
-    expect(ui.getByRole("button", { name: "Cancel Generate quiz" })).toBeTruthy();
+    expect(ui.getByRole("button", { name: "Manage 2 AI tasks" })).toBeTruthy();
   });
 
   it("places active AI cancellation controls in the Chat composer beside Send", () => {
@@ -666,7 +669,7 @@ describe("mobile Source and AI flow", () => {
   it("renders AI Markdown tables full-width and code blocks without raw controls", () => {
     const markdownSession: StudySession = {
       ...session,
-      chatHistory: [{ id: "markdown-answer", role: "assistant", content: "## AWS services\n\n| Service | Use |\n| --- | --- |\n| EC2 | Virtual server |\n| Lambda | Event-driven code |\n\n```text\nLayer 4 -> TCP makes delivery reliable\n```", createdAt: 1 }],
+      chatHistory: [{ id: "markdown-answer", role: "assistant", content: "## AWS services\n\n**** AWS services cover servers and event-driven code:***\n\n| Service | Use |\n| --- | --- |\n| EC2 | Virtual server |\n| Lambda | Event-driven code |\n\n```text\nLayer 4 -> TCP makes delivery reliable\n```", createdAt: 1 }],
     };
 
     const ui = render(<ChatPanel session={markdownSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
@@ -676,6 +679,8 @@ describe("mobile Source and AI flow", () => {
     expect(ui.container.querySelectorAll(".study-chat-markdown table td")).toHaveLength(4);
     expect(ui.container.querySelectorAll(".study-chat-markdown [data-streamdown='code-block']")).not.toHaveLength(0);
     expect(ui.container.querySelectorAll(".study-chat-markdown button")).toHaveLength(0);
+    expect(ui.getByText("AWS services cover servers and event-driven code:")).toBeTruthy();
+    expect(ui.queryByText(/\*{3,}/)).toBeNull();
     expect(ui.getByText("Event-driven code")).toBeTruthy();
   });
 

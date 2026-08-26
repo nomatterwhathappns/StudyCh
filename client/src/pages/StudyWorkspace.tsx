@@ -33,8 +33,17 @@ const emptyChatTranslationCache = (): ChatTranslationCache => ({ english: {}, in
 
 type ChatTranslationLanguage = "english" | "indonesian";
 
+function normalizeChatMarkdown(content: string) {
+  let insideCodeBlock = false;
+  return content.split(/(\r?\n)/).map((line) => {
+    if (line.trimStart().startsWith("```")) { insideCodeBlock = !insideCodeBlock; return line; }
+    if (insideCodeBlock) return line;
+    return line.replace(/^(\s*)\*{3,}\s*(.+?)\s*\*{3,}\s*$/, "$1**$2**");
+  }).join("");
+}
+
 function ChatMarkdown({ content }: { content: string }) {
-  return <div className="study-chat-markdown"><Streamdown controls={{ table: false, code: false }} components={{ table: ({ node: _node, children, ...props }) => <div className="study-chat-table-scroll"><table {...props}>{children}</table></div> }}>{content}</Streamdown></div>;
+  return <div className="study-chat-markdown"><Streamdown controls={{ table: false, code: false }} components={{ table: ({ node: _node, children, ...props }) => <div className="study-chat-table-scroll"><table {...props}>{children}</table></div> }}>{normalizeChatMarkdown(content)}</Streamdown></div>;
 }
 
 function inferOriginalChatLanguage(messages: StudySession["chatHistory"]): ChatTranslationLanguage {
@@ -99,6 +108,7 @@ type AiActivityDetail = { id: string; label: string; pending: boolean; cancel?: 
 export function AiCancellationDock() {
   const sourceAi = useOptionalSourceAiActivity();
   const [activities, setActivities] = useState<Record<string, AiActivityDetail>>({});
+  const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     const sync = (event: Event) => {
       const detail = event instanceof CustomEvent ? event.detail as AiActivityDetail | undefined : undefined;
@@ -114,8 +124,13 @@ export function AiCancellationDock() {
     return () => window.removeEventListener("studyos:ai-activity", sync);
   }, []);
   const active = [...Object.values(activities), ...(sourceAi?.tasks.filter((task) => task.status === "pending").map((task) => ({ id: task.id, label: task.label, pending: true, cancel: () => sourceAi.cancelTask(task.id) })) ?? [])];
+  useEffect(() => { if (active.length < 2) setExpanded(false); }, [active.length]);
   if (!active.length) return null;
-  return <div className="study-cancel-controls" aria-live="polite">{active.map((activity) => <button key={activity.id} type="button" onClick={activity.cancel} className="study-cancel-dock-button"><X className="size-3.5" />Cancel {activity.label}</button>)}</div>;
+  if (active.length === 1) return <div className="study-cancel-controls" aria-live="polite"><button type="button" onClick={active[0].cancel} className="study-cancel-dock-button"><X className="size-3.5" />Cancel {active[0].label}</button></div>;
+  return <div className="study-cancel-controls" aria-live="polite">
+    <button type="button" aria-label={`Manage ${active.length} AI tasks`} aria-expanded={expanded} onClick={() => setExpanded((value) => !value)} className="study-cancel-summary"><Loader2 className="size-3.5 animate-spin" />{active.length} AI tasks</button>
+    {expanded && <div className="study-cancel-popover" role="status" aria-label="Active AI tasks">{active.map((activity) => <button key={activity.id} type="button" onClick={activity.cancel} className="study-cancel-dock-button"><X className="size-3.5" />Cancel {activity.label}</button>)}</div>}
+  </div>;
 }
 
 export function SourcePanel({ session }: { session: StudySession }) {
