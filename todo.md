@@ -274,4 +274,4 @@
 - [x] Memindahkan aksi Save Terms, Save Vocab, dan Explain ke popup kecil yang muncul dekat teks terpilih
 - [x] Menambahkan regresi resize dan popup selection, lalu push refinement ke GitHub
 - [x] Memperbaiki Save Vocab saat 9router lokal mengembalikan respons kosong
-- [ ] Menambahkan regresi respons kosong Save Vocab dan push perbaikannya ke GitHub
+- [x] Menambahkan regresi respons kosong Save Vocab dan push perbaikannya ke GitHub
