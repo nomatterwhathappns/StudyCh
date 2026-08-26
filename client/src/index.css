@@ -387,7 +387,12 @@
   :root[data-palette="tea-olive"] .study-sidebar .text-muted-foreground, :root[data-palette="tea-olive"] .study-sidebar .study-nav-item, :root[data-palette="tea-olive"] .study-sidebar .study-back-button, :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings, :root[data-palette="tea-olive"] .study-workspace-header .text-muted-foreground, :root[data-palette="tea-olive"] .study-workspace-header .study-icon-button, :root[data-palette="tea-olive"] .study-workspace-header .study-theme-shuffle { color: #EEFBE7; }
   :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings strong, :root[data-palette="tea-olive"] .study-sidebar .study-ai-settings strong { color: #FFFEF2; }
   :root[data-palette="tea-olive"] .study-sidebar .study-kicker, :root[data-palette="tea-olive"] .study-sidebar > div:last-child { color: #D0F1BF; }
-  :root[data-palette="tea-olive"] .study-workspace-header > button > span:last-child { color: #D0F1BF; border-color: #9ABD97; }
+  :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings small, :root[data-palette="tea-olive"] .study-sidebar .study-ai-settings small, :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings .text-muted-foreground, :root[data-palette="tea-olive"] .study-sidebar .study-ai-settings .text-muted-foreground { color: #FFFEF2 !important; }
+  :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings > span:first-child, :root[data-palette="tea-olive"] .study-sidebar .study-ai-settings > span:first-child { color: #FFFEF2; border-color: #D0F1BF; }
+  :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings svg, :root[data-palette="tea-olive"] .study-sidebar .study-ai-settings svg { color: #FFFEF2; }
+  :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings [aria-hidden="true"] i { border-color: #EEFBE7; }
+  :root[data-palette="tea-olive"] .study-sidebar > div:last-child .text-muted-foreground { color: #D0F1BF !important; }
+  :root[data-palette="tea-olive"] .study-workspace-header > button > span:last-child { color: #FFFFFF !important; border-color: #D0F1BF; font-weight: 700; }
   :root[data-palette="tea-olive"] .study-sidebar .study-nav-item.is-active { color: #FFFFFF; }
 }
 

@@ -238,3 +238,6 @@
 - [x] Mengaudit token Tea Olive yang membuat teks sidebar Profile dan topbar workspace tidak terbaca
 - [x] Memperbaiki kontras navigasi, label, tombol, dan topbar pada Tea Olive
 - [x] Memverifikasi tampilan Tea Olive pada Profile serta workspace sebelum melanjutkan review akhir
+- [x] Mengaudit label kecil dan ikon Tea Olive yang masih memakai muted color terlalu gelap
+- [x] Memperbaiki kontras kontrol Theme/AI Settings dan subtitle topbar Tea Olive
+- [x] Memverifikasi penyempurnaan Tea Olive sebelum melanjutkan review akhir
