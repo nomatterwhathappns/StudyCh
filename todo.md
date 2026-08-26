@@ -235,3 +235,6 @@
 - [x] Mengaudit token foreground/background bubble Chat pada seluruh Theme
 - [x] Menetapkan peran bubble AI netral dan bubble user aksen dengan kontras aman pada semua Theme
 - [x] Memverifikasi keterbacaan Chat pada tema gelap dan terang sebelum melanjutkan review akhir
+- [x] Mengaudit token Tea Olive yang membuat teks sidebar Profile dan topbar workspace tidak terbaca
+- [x] Memperbaiki kontras navigasi, label, tombol, dan topbar pada Tea Olive
+- [x] Memverifikasi tampilan Tea Olive pada Profile serta workspace sebelum melanjutkan review akhir

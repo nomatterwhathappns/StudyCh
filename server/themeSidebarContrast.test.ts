@@ -8,5 +8,7 @@ describe("dark theme sidebar contrast", () => {
 
     expect(css).toContain(':root[data-palette="midnight-blue"] .study-sidebar .study-nav-item.is-active { color: #070707; }');
     expect(css).toContain(':root[data-palette="ocean-depths"] .study-sidebar .study-nav-item.is-active { color: #0B132B; }');
+    expect(css).toContain(':root[data-palette="tea-olive"] .study-sidebar .study-nav-item.is-active { color: #FFFFFF; }');
+    expect(css).toContain(':root[data-palette="tea-olive"] .study-sidebar, :root[data-palette="tea-olive"] .study-workspace-header { color: #FFFEF2; }');
   });
 });

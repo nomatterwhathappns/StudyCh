@@ -383,6 +383,12 @@
   :root[data-palette="ocean-depths"] .study-sidebar .study-kicker, :root[data-palette="ocean-depths"] .study-sidebar > div:last-child { color: #C8FFF5; }
   :root[data-palette="ocean-depths"] .study-workspace-header > button > span:last-child { color: #C8FFF5; border-color: #5BC0BE; }
   :root[data-palette="ocean-depths"] .study-sidebar .study-nav-item.is-active { color: #0B132B; }
+  :root[data-palette="tea-olive"] .study-sidebar, :root[data-palette="tea-olive"] .study-workspace-header { color: #FFFEF2; }
+  :root[data-palette="tea-olive"] .study-sidebar .text-muted-foreground, :root[data-palette="tea-olive"] .study-sidebar .study-nav-item, :root[data-palette="tea-olive"] .study-sidebar .study-back-button, :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings, :root[data-palette="tea-olive"] .study-workspace-header .text-muted-foreground, :root[data-palette="tea-olive"] .study-workspace-header .study-icon-button, :root[data-palette="tea-olive"] .study-workspace-header .study-theme-shuffle { color: #EEFBE7; }
+  :root[data-palette="tea-olive"] .study-sidebar .study-theme-settings strong, :root[data-palette="tea-olive"] .study-sidebar .study-ai-settings strong { color: #FFFEF2; }
+  :root[data-palette="tea-olive"] .study-sidebar .study-kicker, :root[data-palette="tea-olive"] .study-sidebar > div:last-child { color: #D0F1BF; }
+  :root[data-palette="tea-olive"] .study-workspace-header > button > span:last-child { color: #D0F1BF; border-color: #9ABD97; }
+  :root[data-palette="tea-olive"] .study-sidebar .study-nav-item.is-active { color: #FFFFFF; }
 }
 
 @media (max-width: 720px) {
