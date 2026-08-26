@@ -321,3 +321,5 @@
 - [x] Membuat tabel Markdown AI memakai lebar bubble secara konsisten dan scroll hanya saat perlu
 - [x] Meningkatkan kontras code block AI serta menghapus kontrol bawaan yang mengganggu
 - [x] Menambahkan regresi tabel dan code block Chat lalu push perbaikannya ke GitHub
+- [x] Memastikan cache Translate memproses jawaban AI baru tanpa perlu refresh
+- [x] Menambahkan regresi Translate jawaban AI baru dan push perbaikannya ke GitHub

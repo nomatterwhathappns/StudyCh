@@ -372,7 +372,7 @@ describe("mobile Source and AI flow", () => {
     sourceUi.unmount();
   });
 
-  it("switches cached language directions instantly and translates a new message only after another user request", async () => {
+  it("keeps the active direction for a new AI answer until the user requests its translation", async () => {
     const cacheSession: StudySession = {
       ...session,
       chatHistory: [
@@ -397,18 +397,22 @@ describe("mobile Source and AI flow", () => {
 
     fireEvent.click(ui.getByLabelText("Translate chat to Indonesian"));
     await waitFor(() => expect(ui.getByText("Selamat datang")).toBeTruthy());
+    await waitFor(() => expect(ui.getByLabelText("Translate chat to English")).toBeTruthy());
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
 
     ui.rerender(<ChatPanel session={{ ...cacheSession, chatHistory: [...cacheSession.chatHistory, { id: "new-ai", role: "assistant", content: "New study tip", createdAt: 3 }] }} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
     await waitFor(() => expect(ui.getByText("New study tip")).toBeTruthy());
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(ui.getByLabelText("Translate chat to English"));
+    fireEvent.click(ui.getByLabelText("Translate chat to Indonesian"));
     await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledTimes(2));
     expect((translateChatMutateAsync.mock.calls.at(-1)?.[0] as { messages: Array<{ id: string }> }).messages).toEqual([{ id: "new-ai", content: "New study tip" }]);
+    expect((translateChatMutateAsync.mock.calls.at(-1)?.[0] as { target: string }).target).toBe("indonesian");
 
-    fireEvent.click(ui.getByLabelText("Translate chat to Indonesian"));
     await waitFor(() => expect(ui.getByText("Tips belajar baru")).toBeTruthy());
+    expect(ui.getByLabelText("Translate chat to English")).toBeTruthy();
+    fireEvent.click(ui.getByLabelText("Translate chat to English"));
+    await waitFor(() => expect(ui.getByText("New study tip")).toBeTruthy());
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(2);
   });
 
@@ -462,7 +466,7 @@ describe("mobile Source and AI flow", () => {
 
     expect(ui.getByRole("status").textContent).toContain("Translating new chat messages to English");
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translating to English…" })).toBeTruthy());
-    expect((ui.getByLabelText("Translate chat to Indonesian") as HTMLButtonElement).disabled).toBe(true);
+    expect((ui.getByLabelText("Translate chat to English") as HTMLButtonElement).disabled).toBe(true);
     sourceUi.unmount();
   });
 
