@@ -217,3 +217,6 @@
 - [x] Merancang peran warna dan kontras untuk palet gelap Black, Carbon Black, Chocolate Plum, Taupe Grey, dan Light Blue
 - [x] Menambahkan palet gelap baru ke pemilih Theme dan siklus Shuffle tanpa push GitHub
 - [x] Memverifikasi preview desktop palet gelap sebelum meminta persetujuan pengguna
+- [x] Merancang peran warna dan kontras untuk palet Icy Blue, Wisteria Blue, Periwinkle, Cornflower Blue, dan Deep Lilac
+- [x] Menambahkan palet biru-lilac ke pemilih Theme dan siklus Shuffle tanpa push GitHub
+- [x] Memverifikasi preview desktop palet biru-lilac sebelum meminta persetujuan pengguna

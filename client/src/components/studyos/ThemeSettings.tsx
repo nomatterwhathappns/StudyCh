@@ -8,6 +8,7 @@ const paletteOptions: Array<{ id: StudyPalette; name: string; description: strin
   { id: "frosted-blue", name: "Frosted Blue", description: "Tema biru pastel yang sedang dipakai.", colors: ["#7BDFF2", "#B2F7EF", "#EFF7F6", "#F7D6E0", "#F2B5D4"] },
   { id: "vintage-rose", name: "Vintage Rose", description: "Preview dari Peach Glow, Cherry Rose, Vintage Grape, Khaki Beige, dan Light Bronze.", colors: ["#EFC69B", "#AF1B3F", "#473144", "#CCB69B", "#DF9B6D"] },
   { id: "midnight-blue", name: "Midnight Blue", description: "Tema gelap dari Black, Carbon Black, Chocolate Plum, Taupe Grey, dan Light Blue.", colors: ["#070707", "#28231C", "#513B3C", "#655356", "#C1EEFF"] },
+  { id: "lilac-sky", name: "Lilac Sky", description: "Tema biru-lilac dari Icy Blue, Wisteria Blue, Periwinkle, Cornflower Blue, dan Deep Lilac.", colors: ["#A0DDFF", "#758ECD", "#C1CEFE", "#7189FF", "#624CAB"] },
 ];
 
 export function ThemeSettings({ compact = false }: { compact?: boolean }) {

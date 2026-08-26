@@ -38,4 +38,13 @@ describe("ThemeSettings", () => {
 
     expect(document.documentElement.dataset.palette).toBe("midnight-blue");
   });
+
+  it("lets the dashboard picker apply Lilac Sky explicitly", () => {
+    const ui = render(<PaletteProvider><ThemeSettings /></PaletteProvider>);
+
+    fireEvent.click(ui.getByRole("button", { name: /Theme/i }));
+    fireEvent.click(ui.getByRole("button", { name: /Lilac Sky/i }));
+
+    expect(document.documentElement.dataset.palette).toBe("lilac-sky");
+  });
 });
