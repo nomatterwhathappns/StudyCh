@@ -401,3 +401,7 @@
 - [x] Mempertahankan dialog Search setelah satu hasil berhasil ditambahkan
 - [x] Memberi status Added pada hasil Search yang sudah masuk ke sesi agar tidak terduplikasi
 - [x] Menambahkan regresi penambahan beberapa hasil Search sebelum meminta persetujuan push
+- [x] Mengubah grid Key Terms desktop menjadi library/list yang mudah dipindai
+- [x] Menambahkan pencarian istilah dan ringkasan jumlah hasil pada halaman Key Terms
+- [x] Memindahkan context tambahan ke detail yang tidak memenuhi tampilan utama
+- [x] Merapikan aksi hapus Key Terms dan menambahkan regresi sebelum meminta persetujuan push
