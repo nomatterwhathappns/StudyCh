@@ -379,3 +379,7 @@
 - [x] Menambahkan regresi Source panel sempit dan menyiapkan preview tanpa push GitHub
 - [x] Menghapus gaya truncate yang menimpa pembungkus judul Source panjang
 - [x] Memverifikasi judul Search benar-benar membungkus dua baris pada panel sempit
+- [x] Merancang ulang workspace tablet agar panel tidak saling menekan atau terpotong
+- [x] Membuat navigasi ringkas Source, Chat, dan Watch untuk workspace HP
+- [x] Memastikan proses AI dan timer tetap berjalan saat pengguna berpindah panel responsive
+- [x] Menambahkan regresi serta preview tablet-HP tanpa push GitHub

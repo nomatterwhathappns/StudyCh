@@ -14,7 +14,6 @@ import { trpc } from "@/lib/trpc";
 import type { Quiz, StudyCitation, StudySession, VocabItem, VocabReviewRating } from "@/lib/study-types";
 import { compactKeyTermText, formatDuration, isVocabularyDue, plainText, scoreQuiz, vocabularyDueAt } from "@/lib/study-utils";
 import { useStudyStore } from "@/store/useStudyStore";
-import { useIsMobile } from "@/hooks/useMobile";
 import { BookOpenText, ChevronLeft, ChevronRight, CircleHelp, Clock3, Compass, ExternalLink, FileText, FolderOpen, FolderPlus, GripVertical, Languages, Loader2, MessageCircleQuestion, MoreHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Pause, Pin, Play, Plus, RotateCcw, Search, Send, Sparkles, Trash2, Upload, X } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
@@ -62,12 +61,36 @@ export function WorkspaceProfileButton({ profile, onOpenProfile }: { profile: { 
   return <button type="button" onClick={onOpenProfile} className={profile.avatar ? "size-9 overflow-hidden rounded-full border border-border" : "study-avatar size-9"} aria-label="Open profile">{profile.avatar ? <img src={profile.avatar} alt="Profile" className="size-full object-cover" /> : (profile.name || "L").slice(0, 1).toUpperCase()}</button>;
 }
 
+type CompactWorkspacePanel = "source" | "chat" | "watch";
+
+function useIsCompactWorkspace() {
+  const [isCompact, setIsCompact] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1023px)");
+    const sync = () => setIsCompact(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+  return isCompact;
+}
+
+export function CompactWorkspaceNavigation({ activePanel, onChange }: { activePanel: CompactWorkspacePanel; onChange: (panel: CompactWorkspacePanel) => void }) {
+  const tabs: Array<{ id: CompactWorkspacePanel; label: string; icon: React.ReactNode }> = [
+    { id: "source", label: "Source", icon: <BookOpenText className="size-4" /> },
+    { id: "chat", label: "Chat", icon: <MessageCircleQuestion className="size-4" /> },
+    { id: "watch", label: "Watch", icon: <Clock3 className="size-4" /> },
+  ];
+  return <nav className="study-compact-panel-nav" aria-label="Workspace panels">{tabs.map((tab) => <button key={tab.id} type="button" onClick={() => onChange(tab.id)} aria-pressed={activePanel === tab.id} className={`study-compact-panel-tab ${activePanel === tab.id ? "is-active" : ""}`}>{tab.icon}<span>{tab.label}</span></button>)}</nav>;
+}
+
 export default function StudyWorkspace() {
-  const isMobile = useIsMobile();
+  const isCompact = useIsCompactWorkspace();
   const [, setLocation] = useLocation();
   const { hydrated, hydrate, profile, sessions, activeSessionId, createSession, setActiveSession } = useStudyStore();
   const [sourceVisible, setSourceVisible] = useState(true);
   const [watchVisible, setWatchVisible] = useState(true);
+  const [compactPanel, setCompactPanel] = useState<CompactWorkspacePanel>("chat");
   const localAiRouter = trpc.study.localAiRouterStatus.useQuery(undefined, { staleTime: 60_000 });
 
   useEffect(() => { void hydrate(); }, [hydrate]);
@@ -80,27 +103,23 @@ export default function StudyWorkspace() {
     if (hydrated && sessions.length === 0) createSession();
     if (hydrated && sessions.length > 0 && !activeSessionId) setActiveSession(sessions[0].id);
   }, [hydrated, sessions.length, activeSessionId, createSession, setActiveSession]);
+  useEffect(() => { if (!isCompact) setCompactPanel("chat"); }, [isCompact]);
 
   const activeSession = sessions.find((session) => session.id === activeSessionId) ?? sessions[0];
   if (!hydrated || !activeSession) return <div className="study-loading"><span>StudyOS</span><i>Preparing a fresh study session</i></div>;
 
   const createAndFocus = () => { const id = createSession(); setActiveSession(id); };
-  const direction = isMobile ? "vertical" : "horizontal";
   return (
     <div className="flex h-screen min-h-[600px] flex-col overflow-hidden bg-background text-foreground">
       <header className="study-workspace-header">
         <button type="button" onClick={() => setLocation("/")} className="group flex items-center gap-3 text-left"><span className="font-display text-2xl italic tracking-tight">StudyOS</span><span className="hidden border-l border-border pl-3 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground sm:inline">Learning Companion</span></button>
-        <div className="flex items-center gap-2"><button type="button" onClick={() => setSourceVisible((value) => !value)} className="study-icon-button" aria-label="Toggle source panel">{sourceVisible ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}</button><button type="button" onClick={() => setWatchVisible((value) => !value)} className="study-icon-button" aria-label="Toggle watch panel">{watchVisible ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}</button><ThemeShuffleButton /><WorkspaceProfileButton profile={profile} onOpenProfile={() => setLocation("/")} /></div>
+        <div className="flex items-center gap-2">{!isCompact && <><button type="button" onClick={() => setSourceVisible((value) => !value)} className="study-icon-button" aria-label="Toggle source panel">{sourceVisible ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}</button><button type="button" onClick={() => setWatchVisible((value) => !value)} className="study-icon-button" aria-label="Toggle watch panel">{watchVisible ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}</button></>}<ThemeShuffleButton /><WorkspaceProfileButton profile={profile} onOpenProfile={() => setLocation("/")} /></div>
       </header>
-      <main className="min-h-0 flex-1 p-2 sm:p-3">
-        <ResizablePanelGroup direction={direction} className="study-panel-group overflow-hidden rounded-2xl border border-border">
-          {sourceVisible && <><ResizablePanel defaultSize={isMobile ? 28 : 22} minSize={isMobile ? 20 : 17} className="min-h-0"><SourcePanel session={activeSession} /></ResizablePanel><ResizableHandle withHandle /></>}
-          <ResizablePanel minSize={isMobile ? 35 : 35} className="min-h-0"><ChatPanel session={activeSession} onNewSession={createAndFocus} onOpenDashboard={() => setLocation("/")} onOpenSessions={() => setLocation("/sessions")} /></ResizablePanel>
-          {watchVisible && <><ResizableHandle withHandle /><ResizablePanel defaultSize={isMobile ? 37 : 25} minSize={isMobile ? 25 : 19} className="min-h-0"><WatchPanel session={activeSession} /></ResizablePanel></>}
-	        </ResizablePanelGroup>
-	      </main>
-	    </div>
-	  );
+      <main className={`min-h-0 flex-1 ${isCompact ? "p-0" : "p-2 sm:p-3"}`}>
+        {isCompact ? <section className="study-compact-workspace"><div className="min-h-0 flex-1"><div className={compactPanel === "source" ? "h-full min-h-0" : "hidden"}><SourcePanel session={activeSession} /></div><div className={compactPanel === "chat" ? "h-full min-h-0" : "hidden"}><ChatPanel session={activeSession} onNewSession={createAndFocus} onOpenDashboard={() => setLocation("/")} onOpenSessions={() => setLocation("/sessions")} /></div><div className={compactPanel === "watch" ? "h-full min-h-0" : "hidden"}><WatchPanel session={activeSession} /></div></div><CompactWorkspaceNavigation activePanel={compactPanel} onChange={setCompactPanel} /></section> : <ResizablePanelGroup direction="horizontal" className="study-panel-group overflow-hidden rounded-2xl border border-border">{sourceVisible && <><ResizablePanel defaultSize={22} minSize={17} className="min-h-0"><SourcePanel session={activeSession} /></ResizablePanel><ResizableHandle withHandle /></>}<ResizablePanel minSize={35} className="min-h-0"><ChatPanel session={activeSession} onNewSession={createAndFocus} onOpenDashboard={() => setLocation("/")} onOpenSessions={() => setLocation("/sessions")} /></ResizablePanel>{watchVisible && <><ResizableHandle withHandle /><ResizablePanel defaultSize={25} minSize={19} className="min-h-0"><WatchPanel session={activeSession} /></ResizablePanel></>}</ResizablePanelGroup>}
+      </main>
+    </div>
+  );
 }
 
 type AiActivityDetail = { id: string; label: string; pending: boolean; cancel?: () => void };
