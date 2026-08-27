@@ -535,7 +535,8 @@ describe("mobile Source and AI flow", () => {
 
     act(() => window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: "english", request: true } })));
 
-    expect(ui.getByRole("status").textContent).toContain("Translating new chat messages to English");
+    expect(ui.getByRole("status").textContent).toContain("Translating to English");
+    expect(ui.getByRole("progressbar", { name: "Translation progress" }).getAttribute("aria-valuenow")).toBe("4");
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translating to English…" })).toBeTruthy());
     expect((ui.getByLabelText("Translate chat to English") as HTMLButtonElement).disabled).toBe(true);
     sourceUi.unmount();

@@ -317,7 +317,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const sourceAi = useOptionalSourceAiActivity();
   const translateChatMessages = trpc.study.translateChat.useMutation();
   const aiName = profile.aiName?.trim() || "StudyOS";
-  const [input, setInput] = useState(""); const [renaming, setRenaming] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [error, setError] = useState(""); const [translationError, setTranslationError] = useState(""); const [translationRequestVersion, setTranslationRequestVersion] = useState(0); const [streaming, setStreaming] = useState(false); const [streamRecovery, setStreamRecovery] = useState(false); const [streamedText, setStreamedText] = useState(""); const [streamProvider, setStreamProvider] = useState("");
+  const [input, setInput] = useState(""); const [renaming, setRenaming] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [error, setError] = useState(""); const [translationError, setTranslationError] = useState(""); const [translationRequestVersion, setTranslationRequestVersion] = useState(0); const [translationProgress, setTranslationProgress] = useState<number | null>(null); const [streaming, setStreaming] = useState(false); const [streamRecovery, setStreamRecovery] = useState(false); const [streamedText, setStreamedText] = useState(""); const [streamProvider, setStreamProvider] = useState("");
   const followLatestRef = useRef(true); const pendingScrollRef = useRef(false); const streamedTextRef = useRef(""); const streamProviderRef = useRef(""); const streamRecoveryRef = useRef(false); const streamAbortRef = useRef<AbortController | null>(null); const chatRunRef = useRef(0); const translationRunRef = useRef(0); const translatingIdsRef = useRef(new Set<string>()); const translationFailuresRef = useRef(new Set<string>());
   const [translateChat, setTranslateChat] = useState(false);
   const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">("english");
@@ -368,6 +368,19 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   useEffect(() => { setTranslatedMessages(emptyChatTranslationCache()); translatingIdsRef.current.clear(); translationFailuresRef.current.clear(); setTranslationError(""); setTranslationRequestVersion(0); }, [session.id]);
   useEffect(() => { if (storedTranslationTarget) { setTranslateChat(true); setTranslationTarget(storedTranslationTarget); } }, [session.id, storedTranslationTarget]);
   useEffect(() => { const sourceError = sourceAi?.chatTranslationError(session.id); if (sourceError) setTranslationError(friendlyTranslationError(sourceError)); }, [session.id, sourceAi, sourceAi?.chatTranslationError(session.id)]);
+  useEffect(() => {
+    if (!translationPending) return;
+    setTranslationProgress((current) => current === null ? 4 : current);
+    const timer = window.setInterval(() => setTranslationProgress((current) => { const value = current ?? 4; return Math.min(90, Math.max(4, value + (value < 35 ? 5 : value < 70 ? 3 : 1))); }), 280);
+    return () => window.clearInterval(timer);
+  }, [translationPending]);
+  useEffect(() => {
+    if (translationPending || translationProgress === null) return;
+    if (translationError) { setTranslationProgress(null); return; }
+    setTranslationProgress(100);
+    const timer = window.setTimeout(() => setTranslationProgress(null), 260);
+    return () => window.clearTimeout(timer);
+  }, [translationPending, translationProgress, translationError]);
   useEffect(() => {
     if (!translateChat || translationRequestVersion === 0) return;
     const missing = session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id] && !translatingIdsRef.current.has(message.id) && !translationFailuresRef.current.has(message.id)).slice(0, 6);
@@ -465,10 +478,10 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
             <button type="button" onClick={() => { if (window.confirm("Delete this session and all of its study data?")) { deleteSession(session.id); setMenuOpen(false); } }} className="text-[#BA2D0B]"><Trash2 className="size-3.5" />Delete session</button>
           </div>}
         </div>
-      </div>
+        </div>
+        {translationProgress !== null ? <div role="status" aria-live="polite" className="study-translation-progress"><div className="flex items-center justify-between gap-3"><span>Translating to {translationTarget === "english" ? "English" : "Indonesian"}</span><strong>{translationProgress}%</strong></div><div role="progressbar" aria-label="Translation progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={translationProgress} className="study-translation-progress-track"><i style={{ width: `${translationProgress}%` }} /></div></div> : null}
       <ScrollArea className="study-chat-scroll-area h-0 min-h-0 flex-1 overflow-hidden">
         <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-5 p-5 sm:p-8">
-          {translateChat && translateChatMessages.isPending ? <p role="status" className="font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">Translating new chat messages to {translationTarget === "english" ? "English" : "Indonesian"}…</p> : null}
           {session.chatHistory.length ? session.chatHistory.map((message, index) => {
             const content = translateChat ? translationCache[translationTarget][message.id] ?? message.content : message.content;
             return <div key={message.id} className={`study-chat-message ${message.role === "user" ? "is-user" : "is-ai"}`}>

@@ -427,3 +427,6 @@
 - [x] Menghapus efek bubble Translate bertahap yang mengganggu tumpukan Chat
 - [x] Mengembalikan hasil Translate langsung tanpa bubble tambahan
 - [x] Memverifikasi regresi Translate setelah efek live dihapus
+- [x] Menampilkan indikator progres Translate berupa bar dan persentase di bawah header Chat
+- [x] Menghitung progres Translate dari pesan yang berhasil diterima dan menyembunyikan indikator pada 100%
+- [x] Menambahkan regresi indikator progres Translate lalu push perbaikan yang disetujui ke GitHub
