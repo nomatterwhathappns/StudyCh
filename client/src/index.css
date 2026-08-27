@@ -501,6 +501,10 @@
   .study-compact-workspace .study-ai-label,
   .study-compact-workspace [data-testid="ai-provider-label"] { min-width: 0; max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; }
   .study-compact-workspace .study-message-bubble { max-width: calc(100% - 1rem) !important; }
+  .study-compact-workspace .study-chat-message.is-ai .study-message-bubble { width: calc(100% - 1rem) !important; }
+  .study-compact-workspace .study-chat-message.is-ai .study-chat-markdown,
+  .study-compact-workspace .study-chat-message.is-ai .study-chat-markdown [data-streamdown],
+  .study-compact-workspace .study-chat-message.is-ai .study-chat-markdown [data-streamdown] * { inline-size: auto; max-inline-size: 100%; min-inline-size: 0; overflow-wrap: anywhere; }
   .study-compact-workspace .study-chat-table-scroll,
   .study-compact-workspace .study-chat-markdown pre,
   .study-compact-workspace .study-chat-markdown [data-code-block] { max-width: 100%; overflow-x: auto; }

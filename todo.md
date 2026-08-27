@@ -442,3 +442,7 @@
 - [x] Menjaga input Ask Anything dan navigasi bawah tetap terlihat pada mode Chat landscape pendek
 - [x] Menambahkan regresi responsive Chat pada ukuran 344×882, 430×932, 914×412, 956×440, dan desktop 1200px+
 - [x] Menyampaikan kesimpulan hasil tes responsive kepada pengguna tanpa push GitHub
+- [x] Mendorong perbaikan responsive Chat yang disetujui ke GitHub
+- [x] Menelusuri sumber overflow bubble Chat yang masih memotong teks pada HP portrait 360–440px
+- [x] Memperbaiki pembungkus renderer Chat yang menyebabkan isi bubble meluber pada HP portrait
+- [x] Memverifikasi Chat pada HP portrait serta melindungi tablet dan desktop sebelum melapor tanpa push

@@ -18,6 +18,8 @@ describe("responsive Chat workspace", () => {
     expect(styles).toContain("@media (max-width: 1199px)");
     expect(styles).toContain(".study-compact-workspace .study-chat-panel { height: 100%; }");
     expect(styles).toContain(".study-compact-workspace .study-message-bubble { max-width: calc(100% - 1rem) !important; }");
+    expect(styles).toContain(".study-compact-workspace .study-chat-message.is-ai .study-message-bubble { width: calc(100% - 1rem) !important; }");
+    expect(styles).toContain("max-inline-size: 100%; min-inline-size: 0; overflow-wrap: anywhere;");
     expect(styles).toContain(".study-compact-workspace .study-chat-composer { flex: 0 0 auto;");
     expect(styles).toContain(".study-compact-panel-nav { flex: 0 0 auto; }");
   });
