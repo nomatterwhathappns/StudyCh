@@ -398,3 +398,6 @@
 - [x] Menilai kontras dan visibilitas bubble pesan pengguna pada Chat mobile (digantikan setelah screenshot menunjukkan pesan terdorong keluar oleh overflow lebar)
 - [x] Memastikan pesan pengguna tetap berada di dalam batas panel ketika riwayat Chat panjang (ditangani oleh batas lebar bubble)
 - [x] Menambahkan regresi bubble pengguna mobile (dicakup oleh regresi respons dan tabel Chat lebar)
+- [x] Mempertahankan dialog Search setelah satu hasil berhasil ditambahkan
+- [x] Memberi status Added pada hasil Search yang sudah masuk ke sesi agar tidak terduplikasi
+- [x] Menambahkan regresi penambahan beberapa hasil Search sebelum meminta persetujuan push

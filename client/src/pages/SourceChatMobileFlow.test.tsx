@@ -16,7 +16,7 @@ vi.mock("@/lib/trpc", () => ({
     study: {
       explain: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
       fetchSource: { useMutation: (options?: { onSuccess?: (value: { html: string; title: string; url: string }) => void }) => ({ mutate: (input: { url: string }) => { fetchSourceMutate(input); options?.onSuccess?.({ html: "<main>Readable source text.</main>", title: "source.example", url: input.url }); }, isPending: false }) },
-      searchSources: { useMutation: (options?: { onSuccess?: (value: { results: Array<{ id: string; scope: "web" | "academic"; title: string; url: string; summary: string; metadata: string }> }) => void }) => ({ mutate: (input: unknown) => { searchSourcesMutate(input); options?.onSuccess?.({ results: [{ id: "web-aws", scope: "web", title: "AWS Lambda guide", url: "https://docs.aws.amazon.com/lambda/", summary: "An introduction to AWS Lambda.", metadata: "docs.aws.amazon.com" }] }); }, isPending: false }) },
+      searchSources: { useMutation: (options?: { onSuccess?: (value: { results: Array<{ id: string; scope: "web" | "academic"; title: string; url: string; summary: string; metadata: string }> }) => void }) => ({ mutate: (input: unknown) => { searchSourcesMutate(input); options?.onSuccess?.({ results: [{ id: "web-aws", scope: "web", title: "AWS Lambda guide", url: "https://docs.aws.amazon.com/lambda/", summary: "An introduction to AWS Lambda.", metadata: "docs.aws.amazon.com" }, { id: "web-s3", scope: "web", title: "Amazon S3 guide", url: "https://docs.aws.amazon.com/s3/", summary: "An introduction to Amazon S3.", metadata: "docs.aws.amazon.com" }] }); }, isPending: false }) },
       uploadDocument: { useMutation: () => ({ mutate: uploadDocumentMutate, isPending: false }) },
       draftKeyTerm: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; definition: string; context: string; example: string }) => void; onError?: (reason: { message: string }) => void }) => { draftKeyTermMutate(input); if (draftKeyTermShouldFail.value) { callbacks?.onError?.({ message: "StudyOS AI could not prepare that Key Term." }); return; } callbacks?.onSuccess?.({ term: "AWS S3", definition: "Object storage from AWS.", context: "It stores objects in buckets.", example: "Store a PDF in an S3 bucket." }); }, reset: vi.fn(), isPending: false }) },
       draftVocabulary: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; meaning: string }) => void }) => { draftVocabularyMutate(input); callbacks?.onSuccess?.({ term: "photosynthesis", meaning: "fotosintesis" }); }, reset: vi.fn(), isPending: false }) },
@@ -340,16 +340,21 @@ describe("mobile Source and AI flow", () => {
     const resultList = ui.getByTestId("source-search-results");
     expect(resultList.className).toContain("study-source-search-results");
     expect(resultList.className).toContain("overflow-y-auto");
-    expect(ui.getByRole("button", { name: "Add source" })).toBeTruthy();
+    expect(ui.getAllByRole("button", { name: "Add source" })).toHaveLength(2);
     fireEvent.click(ui.getByRole("button", { name: "Academic" }));
     expect(ui.getByPlaceholderText("Search papers, journals, or researchers")).toBeTruthy();
     fireEvent.click(ui.getByRole("button", { name: "Web" }));
     fireEvent.change(ui.getByPlaceholderText("Search a topic, guide, or article"), { target: { value: "AWS Lambda" } });
     fireEvent.click(ui.getByRole("button", { name: "Search" }));
     await waitFor(() => expect(searchSourcesMutate).toHaveBeenLastCalledWith({ query: "AWS Lambda", scope: "web" }));
-    fireEvent.click(ui.getByRole("button", { name: "Add source" }));
+    fireEvent.click(ui.getAllByRole("button", { name: "Add source" })[0]);
     await waitFor(() => expect(fetchSourceMutate).toHaveBeenCalledWith({ url: "https://docs.aws.amazon.com/lambda/" }));
     expect(addMaterial).toHaveBeenCalledWith("session-mobile", { title: "AWS Lambda guide", type: "url", url: "https://docs.aws.amazon.com/lambda/", content: "Readable source text.", sourceDomain: "docs.aws.amazon.com" });
+    expect(ui.getByText("Find a source")).toBeTruthy();
+    expect((ui.getByRole("button", { name: "Added" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(ui.getByRole("button", { name: "Add source" }));
+    await waitFor(() => expect(fetchSourceMutate).toHaveBeenLastCalledWith({ url: "https://docs.aws.amazon.com/s3/" }));
+    expect(ui.getAllByRole("button", { name: "Added" })).toHaveLength(2);
   });
 
   it("shows a selected Search result title with its domain beneath it in the Source list", () => {
