@@ -408,3 +408,6 @@
 - [x] Memadatkan kartu Sessions desktop tanpa mengubah aksi buka, pin, atau hapus
 - [x] Mengubah grid Sessions desktop menjadi maksimal tiga kolom yang lebih mudah dipindai
 - [x] Menambahkan regresi kartu Sessions ringkas sebelum meminta persetujuan push
+- [x] Menambahkan radius halus yang konsisten pada empat sudut luar workspace desktop
+- [x] Menyamakan gaya tombol Again dan Good dengan tombol Key Terms review lain
+- [x] Menambahkan regresi radius workspace dan tombol review sebelum meminta persetujuan push

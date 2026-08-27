@@ -258,7 +258,7 @@
   .study-compact-panel-nav { @apply grid shrink-0 grid-cols-3 gap-1 border-t border-border bg-card p-2; padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
   .study-compact-panel-tab { @apply flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-2 text-xs text-muted-foreground transition-[background-color,color,transform] duration-150 active:scale-[0.97]; }
   .study-compact-panel-tab.is-active { @apply bg-primary text-primary-foreground; }
-  .study-panel-group { background: var(--panel-group); }
+  .study-panel-group { overflow: hidden; border-radius: 1.3rem !important; isolation: isolate; background: var(--panel-group); }
   .study-panel { @apply flex h-full min-h-0 flex-col bg-card; }
   .study-source-panel { @apply relative; --study-selection-x: 50vw; --study-selection-y: 50vh; }
   .study-chat-panel { min-width: 0; overflow: hidden; background: var(--background); }

@@ -67,6 +67,8 @@ describe("Watch vocabulary review", () => {
     await waitFor(() => expect(ui.getByRole("dialog")).toBeTruthy());
     fireEvent.click(ui.getByRole("button", { name: "Reveal answer" }));
     expect(within(ui.getByRole("dialog")).getByText("Alpha definition")).toBeTruthy();
+    expect(ui.getByRole("button", { name: /^Again/ }).className).toContain("bg-secondary/50");
+    expect(ui.getByRole("button", { name: /^Good/ }).className).toContain("bg-secondary/50");
     fireEvent.click(ui.getByRole("button", { name: /^Good/ }));
     expect(reviewVocabulary).toHaveBeenCalledWith("vocab-session", "v1", "good");
   });
