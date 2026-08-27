@@ -330,6 +330,7 @@ describe("mobile Source and AI flow", () => {
     expect(ui.getByRole("button", { name: "File" })).toBeTruthy();
     const searchTrigger = ui.getByRole("button", { name: "Search sources" });
     expect(searchTrigger.querySelector("svg.lucide-compass")).toBeTruthy();
+    expect(searchTrigger.className).toContain("top-1");
     fireEvent.click(searchTrigger);
     expect(ui.getByText("Find a source")).toBeTruthy();
     fireEvent.change(ui.getByPlaceholderText("Search a topic, guide, or article"), { target: { value: "AWS Lambda" } });

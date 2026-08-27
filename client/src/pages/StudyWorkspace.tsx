@@ -273,7 +273,7 @@ function SourceSearchDialog({ session }: { session: StudySession }) {
   };
   const busy = searchSources.isPending || fetchSource.isPending;
   return <>
-    <button type="button" onClick={() => setOpen(true)} aria-label="Search sources" className="study-icon-button absolute right-3 top-2 z-10" title="Search sources"><Compass className="size-4" /></button>
+    <button type="button" onClick={() => setOpen(true)} aria-label="Search sources" className="study-icon-button absolute right-3 top-1 z-10" title="Search sources"><Compass className="size-4" /></button>
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!busy) setOpen(nextOpen); }}>
       <DialogContent className="max-h-[82vh] max-w-lg overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground">
         <DialogHeader className="border-b border-border px-5 pb-4 pt-5"><DialogTitle className="font-display text-xl italic">Find a source</DialogTitle><DialogDescription>Search the web or academic papers, then choose one to add to this session.</DialogDescription></DialogHeader>

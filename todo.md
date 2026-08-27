@@ -369,3 +369,5 @@
 - [x] Membuat daftar hasil Search dapat discroll dengan scrollbar tipis dan halus
 - [x] Mengganti ikon pemicu Search Source dari kaca pembesar menjadi kompas
 - [x] Menambahkan regresi perbaikan scroll dan ikon Search sebelum meminta persetujuan push
+- [x] Menaikkan posisi ikon kompas agar sejajar vertikal dengan label SOURCE
+- [x] Memverifikasi alignment ikon kompas sebelum meminta persetujuan push
