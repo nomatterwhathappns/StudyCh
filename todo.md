@@ -386,3 +386,6 @@
 - [x] Memperbaiki area Chat responsive agar respons panjang tidak terpotong di HP
 - [x] Memastikan daftar pesan Chat dapat discroll penuh di atas composer dan navigasi panel
 - [x] Menambahkan regresi respons panjang pada Chat responsive sebelum meminta persetujuan push
+- [x] Membatasi tinggi viewport pesan Chat mobile sebelum composer agar respons tidak tertutup
+- [x] Memastikan overflow pesan Chat mobile benar-benar scroll vertikal
+- [x] Menambahkan regresi tinggi Chat mobile sebelum meminta persetujuan push

@@ -259,7 +259,8 @@
   .study-panel { @apply flex h-full min-h-0 flex-col bg-card; }
   .study-source-panel { @apply relative; --study-selection-x: 50vw; --study-selection-y: 50vh; }
   .study-chat-panel { min-width: 0; overflow: hidden; background: var(--background); }
-  .study-chat-scroll-area, .study-chat-scroll-area [data-slot="scroll-area-viewport"] { min-width: 0; overscroll-behavior: contain; }
+  .study-chat-scroll-area { min-width: 0; min-height: 0; overflow: hidden; }
+  .study-chat-scroll-area [data-slot="scroll-area-viewport"] { height: 100%; min-width: 0; overflow-y: auto !important; overscroll-behavior: contain; }
   .study-material-row { @apply flex w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-border/70 bg-secondary/35 p-2.5 transition-colors hover:bg-secondary; }
   .study-material-row > button:first-child { min-width: 0; }
   .study-material-row > button:first-child > span.min-w-0 { min-width: 0; }
