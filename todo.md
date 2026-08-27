@@ -343,3 +343,12 @@
 - [x] Menelusuri favicon atau manifest lain yang masih membuat browser memakai ikon lama
 - [x] Memasang jalur favicon baru yang pasti dimuat browser lokal dan memverifikasinya
 - [x] Menambahkan regresi favicon lalu push perbaikannya ke GitHub
+- [x] Membuat preview logo StudyOS dengan ujung bentuk lebih rounded
+- [x] Menunggu persetujuan sebelum mengganti favicon dengan logo rounded
+- [x] Membuat preview alternatif logo StudyOS versi lebih bulat untuk perbandingan
+- [x] Menunggu pilihan pengguna antara versi rounded normal dan versi lebih bulat
+- [x] Membuat preview logo bulat dengan lingkaran luar utuh tanpa garis orbit terputus
+- [x] Menunggu pilihan pengguna sebelum memasang versi logo bulat yang baru
+- [x] Membuat preview logo rounded dengan background lingkaran putih
+- [x] Menunggu persetujuan sebelum mengganti favicon dengan logo berlatar putih
+- [x] Memasang logo StudyOS berlatar lingkaran putih yang disetujui sebagai favicon lalu push ke GitHub
