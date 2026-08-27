@@ -389,3 +389,12 @@
 - [x] Membatasi tinggi viewport pesan Chat mobile sebelum composer agar respons tidak tertutup
 - [x] Memastikan overflow pesan Chat mobile benar-benar scroll vertikal
 - [x] Menambahkan regresi tinggi Chat mobile sebelum meminta persetujuan push
+- [x] Menilai penggantian area riwayat Chat compact ke scroll native (digantikan setelah screenshot menunjukkan akar masalah adalah overflow lebar bubble)
+- [x] Mempertahankan ScrollArea Chat desktop serta Source dan Watch tanpa perubahan (digantikan oleh perbaikan batas lebar bubble)
+- [x] Menilai regresi scroll native Chat compact (digantikan oleh regresi respons dan tabel Chat lebar)
+- [x] Mengunci lebar bubble Chat agar tidak meluber keluar dari panel pada semua ukuran layar
+- [x] Membatasi Markdown dan tabel Chat di dalam bubble tanpa memotong teks
+- [x] Menambahkan regresi respons dan tabel Chat lebar sebelum meminta persetujuan push
+- [x] Menilai kontras dan visibilitas bubble pesan pengguna pada Chat mobile (digantikan setelah screenshot menunjukkan pesan terdorong keluar oleh overflow lebar)
+- [x] Memastikan pesan pengguna tetap berada di dalam batas panel ketika riwayat Chat panjang (ditangani oleh batas lebar bubble)
+- [x] Menambahkan regresi bubble pengguna mobile (dicakup oleh regresi respons dan tabel Chat lebar)

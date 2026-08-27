@@ -716,6 +716,7 @@ describe("mobile Source and AI flow", () => {
     expect(scrollArea?.className).toContain("h-0");
     expect(scrollArea?.className).toContain("overflow-hidden");
     expect(ui.container.querySelector(".study-message-bubble")?.className).toContain("min-w-0");
+    expect(ui.container.querySelector(".study-message-bubble")?.className).toContain("max-w-[calc(100%-1rem)]");
     expect(ui.container.querySelector(".study-citation-chips")).toBeTruthy();
   });
 
