@@ -255,7 +255,10 @@
   .study-panel { @apply flex h-full min-h-0 flex-col bg-card; }
   .study-source-panel { @apply relative; --study-selection-x: 50vw; --study-selection-y: 50vh; }
   .study-chat-panel { background: var(--background); }
-  .study-material-row { @apply flex w-full items-center gap-2 rounded-xl border border-border/70 bg-secondary/35 p-2.5 transition-colors hover:bg-secondary; }
+  .study-material-row { @apply flex w-full min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-border/70 bg-secondary/35 p-2.5 transition-colors hover:bg-secondary; }
+  .study-material-row > button:first-child { min-width: 0; }
+  .study-material-row > button:first-child > span.min-w-0 { min-width: 0; }
+  .study-material-title { display: -webkit-box; overflow: hidden; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
   .study-material-row.is-selected { @apply border-primary bg-primary/30; }
   .study-inline-delete { @apply flex size-6 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-card hover:text-destructive; }
   .study-tab { @apply flex-1 rounded-lg px-2 py-2 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground transition-colors; }

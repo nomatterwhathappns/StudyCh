@@ -374,3 +374,6 @@
 - [x] Menyimpan judul hasil Search sebagai label sumber agar hasil dari domain sama dapat dibedakan
 - [x] Menampilkan domain sebagai metadata kecil tanpa mengubah judul hasil Search
 - [x] Menambahkan regresi sumber Search berjudul dan menyiapkan preview tanpa push GitHub
+- [x] Membuat judul sumber hasil Search membungkus hingga dua baris pada panel sempit
+- [x] Menjaga domain ringkas dan tombol hapus tetap terlihat pada item Source panjang
+- [x] Menambahkan regresi Source panel sempit dan menyiapkan preview tanpa push GitHub

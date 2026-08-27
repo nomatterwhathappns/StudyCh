@@ -353,9 +353,12 @@ describe("mobile Source and AI flow", () => {
   });
 
   it("shows a selected Search result title with its domain beneath it in the Source list", () => {
-    const ui = render(<SourcePanelWithProvider session={{ ...session, materials: [{ ...session.materials[0], title: "AWS Lambda guide", sourceDomain: "docs.aws.amazon.com" }] }} />);
-    expect(ui.getByText("AWS Lambda guide")).toBeTruthy();
-    expect(ui.getByText("docs.aws.amazon.com")).toBeTruthy();
+    const title = "Cloud Computing Services - Amazon Web Services";
+    const ui = render(<SourcePanelWithProvider session={{ ...session, materials: [{ ...session.materials[0], title, sourceDomain: "aws.amazon.com" }] }} />);
+    expect(ui.getByText(title).className).toContain("study-material-title");
+    expect(ui.getByTitle(title)).toBeTruthy();
+    expect(ui.getByRole("button", { name: `Delete ${title}` })).toBeTruthy();
+    expect(ui.getByText("aws.amazon.com")).toBeTruthy();
   });
 
   it("saves a non-empty Fast fallback answer when the stream has a done event but no token events", async () => {
