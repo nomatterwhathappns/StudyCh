@@ -356,3 +356,5 @@
 - [x] Memverifikasi favicon format ICO dan push perbaikannya ke GitHub
 - [x] Menghapus canvas kotak dari favicon agar bagian luar lingkaran transparan
 - [x] Memverifikasi favicon transparan lalu push perbaikannya ke GitHub
+- [x] Memperbesar isi favicon bulat secara proporsional agar lebih terlihat di tab browser
+- [x] Memverifikasi favicon lebih besar lalu push perbaikannya ke GitHub
