@@ -706,6 +706,17 @@ describe("mobile Source and AI flow", () => {
     }
   });
 
+  it("keeps long Chat content and citation chips inside the mobile scroll area", () => {
+    const longSession: StudySession = {
+      ...session,
+      chatHistory: [{ id: "answer-long", role: "assistant", content: "A very long assistant explanation should remain readable inside a narrow mobile Chat panel without extending outside the message bubble.", citations: [{ title: "A long source title that must stay inside the Chat panel", ordinal: 1, materialId: "plant-source" }], createdAt: 2 }],
+    };
+    const ui = render(<ChatPanel session={longSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    expect(ui.container.querySelector(".study-chat-scroll-area")).toBeTruthy();
+    expect(ui.container.querySelector(".study-message-bubble")?.className).toContain("min-w-0");
+    expect(ui.container.querySelector(".study-citation-chips")).toBeTruthy();
+  });
+
   it("renders AI Markdown tables full-width and code blocks without raw controls", () => {
     const markdownSession: StudySession = {
       ...session,

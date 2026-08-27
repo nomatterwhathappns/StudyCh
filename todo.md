@@ -383,3 +383,6 @@
 - [x] Membuat navigasi ringkas Source, Chat, dan Watch untuk workspace HP
 - [x] Memastikan proses AI dan timer tetap berjalan saat pengguna berpindah panel responsive
 - [x] Menambahkan regresi serta preview tablet-HP tanpa push GitHub
+- [x] Memperbaiki area Chat responsive agar respons panjang tidak terpotong di HP
+- [x] Memastikan daftar pesan Chat dapat discroll penuh di atas composer dan navigasi panel
+- [x] Menambahkan regresi respons panjang pada Chat responsive sebelum meminta persetujuan push
