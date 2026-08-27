@@ -137,6 +137,7 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
             indonesian: { ...(current[request.sessionId]?.indonesian ?? {}), ...Object.fromEntries(translations.indonesian.map((item) => [item.id, item.content])) },
           },
         }));
+        window.dispatchEvent(new CustomEvent("studyos:chat-translation-result", { detail: { sessionId: request.sessionId, translations } }));
         finish(id, run, () => null);
       },
       onError: (reason) => finish(id, run, (task) => ({ ...task, status: "error", error: reason.message })),

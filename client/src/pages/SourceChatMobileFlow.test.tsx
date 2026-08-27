@@ -22,7 +22,7 @@ vi.mock("@/lib/trpc", () => ({
       draftVocabulary: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; meaning: string }) => void }) => { draftVocabularyMutate(input); callbacks?.onSuccess?.({ term: "photosynthesis", meaning: "fotosintesis" }); }, reset: vi.fn(), isPending: false }) },
       quiz: { useMutation: () => ({ mutate: vi.fn(), reset: vi.fn(), isPending: false }) },
       chat: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => void; onError?: (reason: { message: string }) => void }) => { chatCallbacks.onSuccess = callbacks?.onSuccess; chatCallbacks.onError = callbacks?.onError; chatMutate(input); }, reset: vi.fn(), isPending: false }) },
-      translateChat: { useMutation: () => ({ mutateAsync: translateChatMutateAsync, reset: vi.fn(), isPending: translateChatIsPending.value }) },
+      translateChat: { useMutation: () => ({ mutateAsync: translateChatMutateAsync, mutate: (input: unknown, callbacks?: { onSuccess?: (value: { translations: { english: Array<{ id: string; content: string }>; indonesian: Array<{ id: string; content: string }> } }) => void; onError?: (reason: { message: string }) => void }) => { void translateChatMutateAsync(input).then((value: { translations: { english: Array<{ id: string; content: string }>; indonesian: Array<{ id: string; content: string }> } }) => callbacks?.onSuccess?.(value)).catch((reason: { message: string }) => callbacks?.onError?.(reason)); }, reset: vi.fn(), isPending: translateChatIsPending.value }) },
       continue: { useMutation: (options: { onSuccess?: (value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean }) => void }) => ({ mutate: (input: unknown) => { continueMutate(input); options.onSuccess?.({ text: "Lanjutan yang selesai.", citations: [], truncated: false }); }, isPending: false }) },
     },
   },
@@ -45,6 +45,10 @@ const fastFallbackProvider = "StudyOS AI gateway · Fast fallback";
 
 function SourcePanelWithProvider({ session }: { session: StudySession }) {
   return <SourceAiActivityProvider><SourcePanel session={session} /></SourceAiActivityProvider>;
+}
+
+function WorkspacePanelsWithProvider({ session }: { session: StudySession }) {
+  return <SourceAiActivityProvider><SourcePanel session={session} /><ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} /></SourceAiActivityProvider>;
 }
 
 class TestFileReader {
@@ -418,6 +422,24 @@ describe("mobile Source and AI flow", () => {
     expect(ui.getByLabelText("Translate chat to Indonesian")).toBeTruthy();
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy());
     sourceUi.unmount();
+  });
+
+  it("renders a Source-triggered translation after the shared workspace task finishes", async () => {
+    const translatedSession: StudySession = {
+      ...session,
+      chatHistory: [{ id: "shared-ai", role: "assistant", content: "Penyimpanan cloud menyimpan file lewat internet.", createdAt: 1 }],
+    };
+    translateChatMutateAsync.mockResolvedValueOnce({ translations: {
+      english: [{ id: "shared-ai", content: "Cloud storage stores files over the internet." }],
+      indonesian: [{ id: "shared-ai", content: "Penyimpanan cloud menyimpan file lewat internet." }],
+    } });
+    const ui = render(<WorkspacePanelsWithProvider session={translatedSession} />);
+
+    fireEvent.click(ui.getByRole("button", { name: "Translate to English" }));
+
+    await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ target: "english", messages: [{ id: "shared-ai", content: "Penyimpanan cloud menyimpan file lewat internet." }] })));
+    await waitFor(() => expect(ui.getByText("Cloud storage stores files over the internet.")).toBeTruthy());
+    expect(ui.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy();
   });
 
   it("keeps the active direction for a new AI answer until the user requests its translation", async () => {

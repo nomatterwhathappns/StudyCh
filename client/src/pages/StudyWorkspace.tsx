@@ -352,6 +352,19 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
     window.addEventListener("storage", syncChatTranslate);
     return () => { window.removeEventListener("studyos:chat-translate", syncChatTranslate); window.removeEventListener("storage", syncChatTranslate); };
   }, []);
+  useEffect(() => {
+    const syncTranslationResult = (event: Event) => {
+      const detail = event instanceof CustomEvent ? event.detail as { sessionId?: string; translations?: { english?: Array<{ id: string; content: string }>; indonesian?: Array<{ id: string; content: string }> } } | undefined : undefined;
+      const translations = detail?.translations;
+      if (detail?.sessionId !== session.id || !translations) return;
+      setTranslatedMessages((current) => ({
+        english: { ...current.english, ...Object.fromEntries((translations.english ?? []).map((item) => [item.id, item.content])) },
+        indonesian: { ...current.indonesian, ...Object.fromEntries((translations.indonesian ?? []).map((item) => [item.id, item.content])) },
+      }));
+    };
+    window.addEventListener("studyos:chat-translation-result", syncTranslationResult);
+    return () => window.removeEventListener("studyos:chat-translation-result", syncTranslationResult);
+  }, [session.id]);
   useEffect(() => { setTranslatedMessages(emptyChatTranslationCache()); translatingIdsRef.current.clear(); translationFailuresRef.current.clear(); setTranslationError(""); setTranslationRequestVersion(0); }, [session.id]);
   useEffect(() => { if (storedTranslationTarget) { setTranslateChat(true); setTranslationTarget(storedTranslationTarget); } }, [session.id, storedTranslationTarget]);
   useEffect(() => { const sourceError = sourceAi?.chatTranslationError(session.id); if (sourceError) setTranslationError(friendlyTranslationError(sourceError)); }, [session.id, sourceAi, sourceAi?.chatTranslationError(session.id)]);

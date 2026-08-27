@@ -258,6 +258,9 @@
 - [x] Menghilangkan kotak dalam serta scrollbar kasar dari textarea bubble Chat
 - [x] Menempatkan tombol kirim sebagai bubble terpisah di bawah composer tanpa ruang kosong di atasnya
 - [x] Menambahkan regresi, memverifikasi composer halus desktop-mobile, lalu push refinement ke GitHub
+- [x] Menelusuri penyebab status Translate Chat berubah tanpa tampilan pesan ikut diterjemahkan
+- [x] Memperbaiki sinkronisasi hasil terjemahan ke cache dan renderer Chat
+- [x] Menambahkan regresi Translate Chat pada provider aktivitas AI yang dipakai workspace
 - [x] Menyatukan textarea dan area tombol kirim ke dalam satu bubble composer dengan pembagian area internal tanpa garis terlihat
 - [x] Memverifikasi composer satu bubble pada desktop-mobile dan push refinement ke GitHub
 - [x] Mengganti font dekoratif menjadi font normal pada empty state, heading, kartu Session, dan kartu Key Terms yang ditandai pengguna

@@ -78,6 +78,23 @@ describe("StudyOS AI prompt regression", () => {
     expect(request.messages[0].content).toContain("Preserve Markdown");
   });
 
+  it("retries an unchanged Indonesian translation response with a stricter instruction", async () => {
+    const callsBefore = invokeLLM.mock.calls.length;
+    invokeLLM
+      .mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ translations: [{ id: "local-ai", content: "Penyimpanan cloud menyimpan file lewat internet." }] }) }, finish_reason: "stop" }] })
+      .mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ translations: [{ id: "local-ai", content: "Cloud storage stores files over the internet." }] }) }, finish_reason: "stop" }] });
+
+    const result = await appRouter.createCaller(context()).study.translateChat({
+      model: "gpt-5-mini",
+      target: "english",
+      messages: [{ id: "local-ai", content: "Penyimpanan cloud menyimpan file lewat internet." }],
+    });
+
+    expect(result.translations.english).toEqual([{ id: "local-ai", content: "Cloud storage stores files over the internet." }]);
+    expect(invokeLLM).toHaveBeenCalledTimes(callsBefore + 2);
+    expect(invokeLLM.mock.calls.at(-1)?.[0].messages[0].content).toContain("previous answer was rejected");
+  });
+
   it("rejects incomplete translation JSON instead of assigning text to the wrong chat bubble", () => {
     expect(() => parseChatTranslations(JSON.stringify({ translations: [{ id: "only-one", content: "Satu" }] }), ["only-one", "missing"])).toThrow("could not translate every chat message");
   });

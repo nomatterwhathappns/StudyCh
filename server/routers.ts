@@ -219,6 +219,26 @@ function mergeTranslationCaches(caches: ChatTranslationCache[]): ChatTranslation
   };
 }
 
+function normalizeTranslationText(value: string) {
+  return value.toLowerCase().replace(/\s+/g, " ").replace(/[.,;:!?()[\]{}"'`*_~—–-]/g, "").trim();
+}
+
+function sourceClearlyNeedsTranslation(value: string, target: "english" | "indonesian") {
+  const text = value.toLowerCase();
+  const indonesianSignals = text.match(/\b(?:aku|saya|kamu|yang|dan|atau|untuk|dengan|dari|ini|itu|apa|bagaimana|belajar|adalah|sebagai|pada|tidak|bisa|sudah|akan|menyimpan|lewat|banyak|sangat|dalam)\b/g)?.length ?? 0;
+  const englishSignals = text.match(/\b(?:the|and|or|for|with|from|this|that|what|how|learn|is|are|can|will|not|about|into|over)\b/g)?.length ?? 0;
+  return target === "english" ? indonesianSignals >= 2 && indonesianSignals > englishSignals : englishSignals >= 2 && englishSignals > indonesianSignals;
+}
+
+function copiedOppositeLanguageSource(originals: z.infer<typeof chatTranslationItemSchema>[], translations: z.infer<typeof chatTranslationItemSchema>[], target: "english" | "indonesian") {
+  const translatedById = new Map(translations.map((item) => [item.id, item.content]));
+  return originals.some((original) => {
+    const translation = translatedById.get(original.id);
+    if (!translation) return false;
+    return sourceClearlyNeedsTranslation(original.content, target) && normalizeTranslationText(original.content) === normalizeTranslationText(translation);
+  });
+}
+
 function normalizedDraftLabel(value: string) {
   return value.toLowerCase().replace(/[*_`]/g, "").replace(/\s+/g, " ").trim();
 }
@@ -615,12 +635,22 @@ export const appRouter = router({
           const translateBatch = async (batch: z.infer<typeof chatTranslationItemSchema>[]): Promise<ChatTranslationCache> => {
             const characterCount = batch.reduce((total, message) => total + message.content.length, 0);
             const outputBudget = Math.min(1_600, Math.max(450, Math.ceil(characterCount * 0.8) + 220));
-            const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
-              { role: "system", content: translationSystemPrompt },
-              { role: "user", content: JSON.stringify({ messages: batch }) },
-            ], outputBudget, "Balanced", translationSchema, 45_000);
-            if (result.truncated) throw new TRPCError({ code: "BAD_GATEWAY", message: "Translation JSON was truncated." });
-            const translated = parseChatTranslations(result.text, batch.map((message) => message.id));
+            const requestTranslation = async (system: string) => {
+              const result = await invokeStudyAIForUser(ctx.user?.id, input.model, [
+                { role: "system", content: system },
+                { role: "user", content: JSON.stringify({ messages: batch }) },
+              ], outputBudget, "Balanced", translationSchema, 45_000);
+              if (result.truncated) throw new TRPCError({ code: "BAD_GATEWAY", message: "Translation JSON was truncated." });
+              return parseChatTranslations(result.text, batch.map((message) => message.id));
+            };
+            let translated = await requestTranslation(translationSystemPrompt);
+            if (copiedOppositeLanguageSource(batch, translated, input.target)) {
+              translated = await requestTranslation([
+                "The previous answer was rejected because it copied a message in the wrong language instead of translating it.",
+                `Translate every supplied message into ${input.target === "english" ? "natural English" : "natural Bahasa Indonesia"}. Do not leave a message unchanged when it clearly uses the opposite language.`,
+                "Return JSON only in exactly this shape: {\"translations\":[{\"id\":\"original id\",\"content\":\"translation\"}]}. Return every supplied id exactly once. Do not add any explanation.",
+              ].join("\n\n"));
+            }
             const originals = batch.map((message) => ({ id: message.id, content: message.content }));
             return input.target === "english"
               ? { english: translated, indonesian: originals }
