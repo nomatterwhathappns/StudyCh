@@ -484,4 +484,28 @@
   .study-mobile-chat-translate.is-on { border-color: var(--ember); color: var(--foreground); background: color-mix(in srgb, var(--ember) 13%, transparent); }
 }
 
+@media (max-width: 1199px) {
+  .study-compact-workspace { height: 100%; min-height: 0; overflow: hidden; }
+  .study-compact-workspace > div:first-child { min-height: 0; overflow: hidden; }
+  .study-compact-workspace .study-panel { min-width: 0; min-height: 0; overflow: hidden; }
+  .study-compact-workspace .study-chat-panel { height: 100%; }
+  .study-compact-workspace .study-chat-scroll-area,
+  .study-compact-workspace .study-chat-scroll-area [data-slot="scroll-area-viewport"],
+  .study-compact-workspace .study-chat-scroll-area [data-slot="scroll-area-viewport"] > div { max-width: 100%; min-width: 0; }
+  .study-compact-workspace .study-chat-scroll-area [data-slot="scroll-area-viewport"] > div { box-sizing: border-box; }
+  .study-compact-workspace .study-chat-message,
+  .study-compact-workspace .study-message-bubble,
+  .study-compact-workspace .study-chat-markdown,
+  .study-compact-workspace .study-chat-markdown [data-streamdown],
+  .study-compact-workspace .study-chat-markdown [data-streamdown] > *,
+  .study-compact-workspace .study-ai-label,
+  .study-compact-workspace [data-testid="ai-provider-label"] { min-width: 0; max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; }
+  .study-compact-workspace .study-message-bubble { max-width: calc(100% - 1rem) !important; }
+  .study-compact-workspace .study-chat-table-scroll,
+  .study-compact-workspace .study-chat-markdown pre,
+  .study-compact-workspace .study-chat-markdown [data-code-block] { max-width: 100%; overflow-x: auto; }
+  .study-compact-workspace .study-chat-composer { flex: 0 0 auto; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+  .study-compact-panel-nav { flex: 0 0 auto; }
+}
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }

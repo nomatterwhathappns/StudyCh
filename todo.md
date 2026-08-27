@@ -436,3 +436,9 @@
 - [x] Menambahkan shortcut garis miring untuk memfokuskan input Chat dari workspace
 - [x] Menjaga shortcut agar tidak mengganggu input, editor, atau dialog lain yang sedang aktif
 - [x] Menambahkan regresi shortcut Chat sebelum meminta persetujuan push
+- [x] Mendorong shortcut garis miring Chat yang disetujui ke GitHub
+- [x] Mengubah aturan responsive menjadi satu panel di bawah 1200px dan mempertahankan desktop tiga panel mulai 1200px
+- [x] Mengunci lebar row, bubble, Markdown, tabel, kode, serta label provider Chat agar tidak terpotong pada portrait sempit
+- [x] Menjaga input Ask Anything dan navigasi bawah tetap terlihat pada mode Chat landscape pendek
+- [x] Menambahkan regresi responsive Chat pada ukuran 344×882, 430×932, 914×412, 956×440, dan desktop 1200px+
+- [x] Menyampaikan kesimpulan hasil tes responsive kepada pengguna tanpa push GitHub
