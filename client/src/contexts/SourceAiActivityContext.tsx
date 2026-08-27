@@ -32,6 +32,7 @@ type SourceRequest = {
 
 type QuizRequest = Omit<SourceRequest, "selection"> & { quiz: QuizGenerationSettings };
 type ChatTranslationRequest = { sessionId: string; sessionName: string; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; target: ChatTranslationLanguage; messages: Array<{ id: string; content: string }> };
+type ChatTranslationJob = Pick<ChatTranslationRequest, "target" | "messages">;
 
 type SourceAiActivityValue = {
   tasks: SourceTask[];
@@ -45,6 +46,7 @@ type SourceAiActivityValue = {
   discardTask: (taskId: string) => void;
   saveKeyTerm: (taskId: string, draft: KeyTermDraft) => void;
   chatTranslationsFor: (sessionId: string) => ChatTranslationCache;
+  chatTranslationProgressFor: (sessionId: string) => { target: ChatTranslationLanguage; messageIds: string[] } | null;
   chatTranslationTarget: (sessionId: string) => ChatTranslationLanguage | null;
   chatTranslationError: (sessionId: string) => string | null;
   clearChatTranslationErrors: (sessionId: string) => void;
@@ -75,6 +77,7 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
   const translateChat = trpc.study.translateChat.useMutation();
   const [chatTranslations, setChatTranslations] = useState<Record<string, ChatTranslationCache>>({});
   const [chatTranslationTargets, setChatTranslationTargets] = useState<Record<string, ChatTranslationLanguage>>({});
+  const [chatTranslationJobs, setChatTranslationJobs] = useState<Record<string, ChatTranslationJob>>({});
 
   const begin = (kind: SourceTaskKind, request: Pick<SourceRequest, "sessionId" | "sessionName"> & { selection?: string }) => {
     const id = taskId(kind);
@@ -123,11 +126,10 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
     });
   };
 
-  const startChatTranslation = (request: ChatTranslationRequest) => {
-    if (tasks.some((task) => task.sessionId === request.sessionId && task.kind === "chat-translation" && task.status === "pending")) return;
-    const { id, run } = begin("chat-translation", request);
-    setChatTranslationTargets((current) => ({ ...current, [request.sessionId]: request.target }));
-    translateChat.mutate({ model: request.model, target: request.target, messages: request.messages }, {
+  const runChatTranslationBatch = (id: string, run: number, request: ChatTranslationRequest, offset: number) => {
+    const batch = request.messages.slice(offset, offset + 6);
+    if (!batch.length) { setChatTranslationJobs((current) => { const next = { ...current }; delete next[request.sessionId]; return next; }); finish(id, run, () => null); return; }
+    translateChat.mutate({ model: request.model, target: request.target, messages: batch }, {
       onSuccess: ({ translations }) => {
         if (runs.current[id] !== run) return;
         setChatTranslations((current) => ({
@@ -138,10 +140,20 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
           },
         }));
         window.dispatchEvent(new CustomEvent("studyos:chat-translation-result", { detail: { sessionId: request.sessionId, translations } }));
+        if (offset + batch.length < request.messages.length) { runChatTranslationBatch(id, run, request, offset + batch.length); return; }
+        setChatTranslationJobs((current) => { const next = { ...current }; delete next[request.sessionId]; return next; });
         finish(id, run, () => null);
       },
-      onError: (reason) => finish(id, run, (task) => ({ ...task, status: "error", error: reason.message })),
+      onError: (reason) => { if (runs.current[id] !== run) return; setChatTranslationJobs((current) => { const next = { ...current }; delete next[request.sessionId]; return next; }); finish(id, run, (task) => ({ ...task, status: "error", error: reason.message })); },
     });
+  };
+
+  const startChatTranslation = (request: ChatTranslationRequest) => {
+    if (tasks.some((task) => task.sessionId === request.sessionId && task.kind === "chat-translation" && task.status === "pending")) return;
+    const { id, run } = begin("chat-translation", request);
+    setChatTranslationTargets((current) => ({ ...current, [request.sessionId]: request.target }));
+    setChatTranslationJobs((current) => ({ ...current, [request.sessionId]: { target: request.target, messages: request.messages } }));
+    runChatTranslationBatch(id, run, request, 0);
   };
 
   const cancelTask = (id: string) => {
@@ -154,6 +166,7 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
     if (task.kind === "quiz") quiz.reset();
     if (task.kind === "chat-translation") {
       translateChat.reset();
+      setChatTranslationJobs((current) => { const next = { ...current }; delete next[task.sessionId]; return next; });
       setChatTranslationTargets((current) => { const next = { ...current }; delete next[task.sessionId]; return next; });
       window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false } }));
     }
@@ -163,6 +176,7 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
   const cancelChatTranslation = (sessionId: string) => {
     tasks.filter((task) => task.sessionId === sessionId && task.kind === "chat-translation").forEach((task) => { runs.current[task.id] = (runs.current[task.id] ?? 0) + 1; });
     translateChat.reset();
+    setChatTranslationJobs((current) => { const next = { ...current }; delete next[sessionId]; return next; });
     setTasks((current) => current.filter((task) => !(task.sessionId === sessionId && task.kind === "chat-translation")));
     setChatTranslationTargets((current) => { const next = { ...current }; delete next[sessionId]; return next; });
     window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false } }));
@@ -179,11 +193,12 @@ export function SourceAiActivityProvider({ children }: { children: React.ReactNo
   const value = useMemo<SourceAiActivityValue>(() => ({
     tasks, startKeyTerm, startVocabulary, startExplain, startQuiz, startChatTranslation, cancelTask, cancelChatTranslation, discardTask, saveKeyTerm,
     chatTranslationsFor: (sessionId) => chatTranslations[sessionId] ?? { english: {}, indonesian: {} },
+    chatTranslationProgressFor: (sessionId) => { const job = chatTranslationJobs[sessionId]; return job ? { target: job.target, messageIds: job.messages.map((message) => message.id) } : null; },
     chatTranslationTarget: (sessionId) => chatTranslationTargets[sessionId] ?? null,
     chatTranslationError: (sessionId) => tasks.find((task) => task.sessionId === sessionId && task.kind === "chat-translation" && task.status === "error")?.error ?? null,
     clearChatTranslationErrors: (sessionId) => setTasks((current) => current.filter((task) => !(task.sessionId === sessionId && task.kind === "chat-translation" && task.status === "error"))),
     isPending: (sessionId, kind) => tasks.some((task) => task.sessionId === sessionId && task.kind === kind && task.status === "pending"),
-  }), [tasks, chatTranslations, chatTranslationTargets]);
+  }), [tasks, chatTranslations, chatTranslationTargets, chatTranslationJobs]);
 
   return <SourceAiActivityContext.Provider value={value}>{children}</SourceAiActivityContext.Provider>;
 }

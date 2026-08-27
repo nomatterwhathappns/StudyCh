@@ -329,12 +329,14 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const [translatedMessages, setTranslatedMessages] = useState<ChatTranslationCache>(emptyChatTranslationCache);
   const emptyTranslations = useMemo(emptyChatTranslationCache, []);
   const savedTranslations = sourceAi ? sourceAi.chatTranslationsFor(session.id) : emptyTranslations;
+  const backgroundTranslationProgress = sourceAi?.chatTranslationProgressFor(session.id) ?? null;
   const storedTranslationTarget = sourceAi?.chatTranslationTarget(session.id) ?? null;
   const translationCache = useMemo(() => ({ english: { ...savedTranslations.english, ...translatedMessages.english }, indonesian: { ...savedTranslations.indonesian, ...translatedMessages.indonesian } }), [savedTranslations, translatedMessages]);
   const translationPending = sourceAi ? sourceAi.isPending(session.id, "chat-translation") : translateChatMessages.isPending;
-  const translationBusy = translationPending || translationProgress !== null;
-  const translationProgressCompleted = useMemo(() => translationProgress ? translationProgress.messageIds.filter((id) => Boolean(translationCache[translationProgress.target][id])).length : 0, [translationCache, translationProgress]);
-  const translationPercent = translationProgress ? Math.round((translationProgressCompleted / translationProgress.messageIds.length) * 100) : 0;
+  const activeTranslationProgress = backgroundTranslationProgress ?? translationProgress;
+  const translationBusy = translationPending || activeTranslationProgress !== null;
+  const translationProgressCompleted = useMemo(() => activeTranslationProgress ? activeTranslationProgress.messageIds.filter((id) => Boolean(translationCache[activeTranslationProgress.target][id])).length : 0, [translationCache, activeTranslationProgress]);
+  const translationPercent = activeTranslationProgress ? Math.round((translationProgressCompleted / activeTranslationProgress.messageIds.length) * 100) : 0;
   const untranslatedMessageCount = translateChat ? session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id]).length : 0;
   useEffect(() => { if (!menuOpen) return; const dismiss = (event: PointerEvent) => { if (event.target instanceof Element && event.target.closest(".study-menu, [aria-label='Session menu']")) return; setMenuOpen(false); }; const dismissWithEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setMenuOpen(false); }; document.addEventListener("pointerdown", dismiss); document.addEventListener("keydown", dismissWithEscape); return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", dismissWithEscape); }; }, [menuOpen]);
   useEffect(() => {
@@ -400,22 +402,23 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   }, [translationProgress, translationProgressCompleted]);
   useEffect(() => {
     if (!translateChat || translationRequestVersion === 0) return;
-    const missing = session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id] && !translatingIdsRef.current.has(message.id) && !translationFailuresRef.current.has(message.id)).slice(0, 6);
+    const missing = session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id] && !translatingIdsRef.current.has(message.id) && !translationFailuresRef.current.has(message.id));
     if (!missing.length) return;
     const preferences = readAiSettings();
     if (sourceAi) { sourceAi.startChatTranslation({ sessionId: session.id, sessionName: session.name, model: preferences.model, target: translationTarget, messages: missing.map(({ id, content }) => ({ id, content })) }); return; }
+    const batch = missing.slice(0, 6);
     const run = translationRunRef.current;
-    missing.forEach((message) => translatingIdsRef.current.add(message.id));
-    void translateChatMessages.mutateAsync({ model: preferences.model, target: translationTarget, messages: missing.map(({ id, content }) => ({ id, content })) })
+    batch.forEach((message) => translatingIdsRef.current.add(message.id));
+    void translateChatMessages.mutateAsync({ model: preferences.model, target: translationTarget, messages: batch.map(({ id, content }) => ({ id, content })) })
       .then(({ translations }) => { if (run !== translationRunRef.current) return; setTranslatedMessages((current) => ({ english: { ...current.english, ...Object.fromEntries(translations.english.map((item) => [item.id, item.content])) }, indonesian: { ...current.indonesian, ...Object.fromEntries(translations.indonesian.map((item) => [item.id, item.content])) } })); setTranslationError(""); })
       .catch((reason: unknown) => {
         if (run !== translationRunRef.current) return;
-        missing.forEach((message) => translationFailuresRef.current.add(message.id));
+        batch.forEach((message) => translationFailuresRef.current.add(message.id));
         setTranslateChat(false); localStorage.setItem("studyos_translate_mode", "false");
         window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false, target: translationTarget } }));
         setTranslationProgress(null); setTranslationRequestVersion(0); setTranslationError(friendlyTranslationError(reason instanceof Error ? reason.message : ""));
       })
-      .finally(() => missing.forEach((message) => translatingIdsRef.current.delete(message.id)));
+      .finally(() => batch.forEach((message) => translatingIdsRef.current.delete(message.id)));
   }, [translateChat, translationTarget, translationCache, translateChatMessages.mutateAsync, translationRequestVersion, sourceAi, session.id, session.name]);
   useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:chat-translation-status", { detail: { pending: translationBusy, target: translationTarget, untranslatedMessageCount } })); }, [translationBusy, translationTarget, untranslatedMessageCount]);
   const streamChat = async (payload: { sessionName: string; materials: string; translate: boolean; responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed"; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; aiName: string; history: Array<{ role: "user" | "assistant"; content: string }>; continueAnswer?: boolean; resumePrefix?: string }) => {
@@ -496,7 +499,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
           </div>}
         </div>
         </div>
-        {translationProgress !== null ? <div role="status" aria-live="polite" className="study-translation-progress"><div role="progressbar" aria-label="Translation progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={translationPercent} className="study-translation-progress-track"><i style={{ width: `${translationPercent}%` }} /></div><strong>{translationPercent}%</strong></div> : null}
+        {activeTranslationProgress !== null ? <div role="status" aria-live="polite" className="study-translation-progress"><div role="progressbar" aria-label="Translation progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={translationPercent} className="study-translation-progress-track"><i style={{ width: `${translationPercent}%` }} /></div><strong>{translationPercent}%</strong></div> : null}
       <ScrollArea className="study-chat-scroll-area h-0 min-h-0 flex-1 overflow-hidden">
         <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-5 p-5 sm:p-8">
           {session.chatHistory.length ? session.chatHistory.map((message, index) => {

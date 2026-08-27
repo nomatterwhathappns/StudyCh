@@ -47,8 +47,8 @@ function SourcePanelWithProvider({ session }: { session: StudySession }) {
   return <SourceAiActivityProvider><SourcePanel session={session} /></SourceAiActivityProvider>;
 }
 
-function WorkspacePanelsWithProvider({ session }: { session: StudySession }) {
-  return <SourceAiActivityProvider><SourcePanel session={session} /><ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} /></SourceAiActivityProvider>;
+function WorkspacePanelsWithProvider({ session, showChat = true }: { session: StudySession; showChat?: boolean }) {
+  return <SourceAiActivityProvider><SourcePanel session={session} />{showChat ? <ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} /> : null}</SourceAiActivityProvider>;
 }
 
 class TestFileReader {
@@ -558,6 +558,32 @@ describe("mobile Source and AI flow", () => {
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translating to English…" })).toBeTruthy());
     expect((ui.getByLabelText("Translate chat to English") as HTMLButtonElement).disabled).toBe(true);
     sourceUi.unmount();
+  });
+
+  it("keeps the Translate progress and loading state when Chat is hidden then shown again", async () => {
+    let resolveFirstBatch: ((value: { translations: { english: Array<{ id: string; content: string }>; indonesian: Array<{ id: string; content: string }> } }) => void) | undefined;
+    let resolveLastBatch: ((value: { translations: { english: Array<{ id: string; content: string }>; indonesian: Array<{ id: string; content: string }> } }) => void) | undefined;
+    const firstBatch = Array.from({ length: 6 }, (_, index) => ({ id: `background-${index + 1}`, content: `Pesan ${index + 1}` }));
+    const lastBatch = { id: "background-7", content: "Pesan 7" };
+    translateChatMutateAsync
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveFirstBatch = resolve; }))
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveLastBatch = resolve; }));
+    const backgroundSession: StudySession = { ...session, chatHistory: [...firstBatch, lastBatch].map((message, index) => ({ ...message, role: "user" as const, createdAt: index + 1 })) };
+    const ui = render(<WorkspacePanelsWithProvider session={backgroundSession} />);
+
+    fireEvent.click(ui.getByRole("button", { name: "Translate to English" }));
+    await waitFor(() => expect(ui.getByRole("progressbar", { name: "Translation progress" }).getAttribute("aria-valuenow")).toBe("0"));
+
+    ui.rerender(<WorkspacePanelsWithProvider session={backgroundSession} showChat={false} />);
+    act(() => resolveFirstBatch?.({ translations: { english: firstBatch.map((item, index) => ({ id: item.id, content: `Message ${index + 1}` })), indonesian: firstBatch } }));
+    await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledTimes(2));
+
+    ui.rerender(<WorkspacePanelsWithProvider session={backgroundSession} />);
+    await waitFor(() => expect(ui.getByRole("progressbar", { name: "Translation progress" }).getAttribute("aria-valuenow")).toBe("86"));
+    expect((ui.getByLabelText("Translate chat to English") as HTMLButtonElement).disabled).toBe(true);
+
+    act(() => resolveLastBatch?.({ translations: { english: [{ id: lastBatch.id, content: "Message 7" }], indonesian: [lastBatch] } }));
+    await waitFor(() => expect(ui.getByText("Message 7")).toBeTruthy());
   });
 
   it("updates the percentage from completed Translate batches without exposing message counts", async () => {

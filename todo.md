@@ -454,3 +454,7 @@
 - [x] Menelusuri arah handle resize yang membuat panel desktop berlawanan sisi berubah
 - [x] Memperbaiki pemetaan resize handle Source dan Watch tanpa mengubah layout responsive
 - [x] Menambahkan regresi arah resize panel desktop sebelum meminta persetujuan push
+- [x] Mendorong perbaikan arah resize panel desktop yang disetujui ke GitHub
+- [x] Menelusuri lifecycle Translate yang berhenti saat pindah Profile atau menyembunyikan panel Chat
+- [x] Memindahkan state proses dan indikator Translate ke lifecycle workspace yang tetap mounted
+- [x] Memverifikasi Translate, indikator, dan Cancel saat hide panel serta pindah halaman sebelum melapor tanpa push
