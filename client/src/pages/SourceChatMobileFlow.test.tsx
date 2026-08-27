@@ -328,12 +328,17 @@ describe("mobile Source and AI flow", () => {
     expect(ui.getByPlaceholderText("Paste a URL")).toBeTruthy();
     expect(ui.getByRole("button", { name: "Fetch" })).toBeTruthy();
     expect(ui.getByRole("button", { name: "File" })).toBeTruthy();
-    fireEvent.click(ui.getByRole("button", { name: "Search sources" }));
+    const searchTrigger = ui.getByRole("button", { name: "Search sources" });
+    expect(searchTrigger.querySelector("svg.lucide-compass")).toBeTruthy();
+    fireEvent.click(searchTrigger);
     expect(ui.getByText("Find a source")).toBeTruthy();
     fireEvent.change(ui.getByPlaceholderText("Search a topic, guide, or article"), { target: { value: "AWS Lambda" } });
     fireEvent.click(ui.getByRole("button", { name: "Search" }));
     await waitFor(() => expect(searchSourcesMutate).toHaveBeenCalledWith({ query: "AWS Lambda", scope: "web" }));
     expect(ui.getByText("AWS Lambda guide")).toBeTruthy();
+    const resultList = ui.getByTestId("source-search-results");
+    expect(resultList.className).toContain("study-source-search-results");
+    expect(resultList.className).toContain("overflow-y-auto");
     expect(ui.getByRole("button", { name: "Add source" })).toBeTruthy();
     fireEvent.click(ui.getByRole("button", { name: "Academic" }));
     expect(ui.getByPlaceholderText("Search papers, journals, or researchers")).toBeTruthy();

@@ -291,6 +291,11 @@
   .study-chat-markdown li + li { margin-top: .25rem; }
   .study-chat-markdown hr { margin: .85rem 0; border: 0; border-top: 1px solid var(--border); }
   .study-chat-table-scroll { width: 100%; max-width: 100%; margin: .8rem 0; overflow-x: auto; border: 1px solid var(--border); border-radius: .65rem; }
+  .study-source-search-results { scroll-behavior: smooth; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: color-mix(in oklch, var(--border) 82%, transparent) transparent; }
+  .study-source-search-results::-webkit-scrollbar { width: 6px; }
+  .study-source-search-results::-webkit-scrollbar-track { background: transparent; }
+  .study-source-search-results::-webkit-scrollbar-thumb { background: color-mix(in oklch, var(--border) 78%, transparent); border-radius: 999px; }
+  .study-source-search-results::-webkit-scrollbar-thumb:hover { background: color-mix(in oklch, var(--primary) 54%, var(--border)); }
   .study-chat-markdown table { width: 100%; min-width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; table-layout: auto; }
   .study-chat-markdown th, .study-chat-markdown td { min-width: 0; padding: .45rem .6rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; overflow-wrap: anywhere; word-break: normal; }
   .study-chat-markdown th { background: color-mix(in srgb, var(--secondary) 75%, transparent); font-weight: 700; }

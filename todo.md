@@ -366,3 +366,6 @@
 - [x] Menjaga Upload file dan Fetch URL tetap berfungsi tanpa perubahan alur
 - [x] Menambahkan batas 5 hasil, preview pilihan, dan pesan kuota/error yang jelas
 - [x] Menambahkan regresi Search Source lalu push fitur yang disetujui ke GitHub
+- [x] Membuat daftar hasil Search dapat discroll dengan scrollbar tipis dan halus
+- [x] Mengganti ikon pemicu Search Source dari kaca pembesar menjadi kompas
+- [x] Menambahkan regresi perbaikan scroll dan ikon Search sebelum meminta persetujuan push
