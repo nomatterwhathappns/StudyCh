@@ -4,6 +4,7 @@ export type Material = {
   type: "url" | "file";
   content: string;
   url?: string;
+  sourceDomain?: string;
   format?: "PDF" | "DOCX" | "TXT" | "MD" | "CSV";
   createdAt: number;
 };

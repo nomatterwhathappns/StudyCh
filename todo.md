@@ -371,3 +371,6 @@
 - [x] Menambahkan regresi perbaikan scroll dan ikon Search sebelum meminta persetujuan push
 - [x] Menaikkan posisi ikon kompas agar sejajar vertikal dengan label SOURCE
 - [x] Memverifikasi alignment ikon kompas sebelum meminta persetujuan push
+- [x] Menyimpan judul hasil Search sebagai label sumber agar hasil dari domain sama dapat dibedakan
+- [x] Menampilkan domain sebagai metadata kecil tanpa mengubah judul hasil Search
+- [x] Menambahkan regresi sumber Search berjudul dan menyiapkan preview tanpa push GitHub
