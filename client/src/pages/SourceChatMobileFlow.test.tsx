@@ -438,10 +438,7 @@ describe("mobile Source and AI flow", () => {
     fireEvent.click(ui.getByRole("button", { name: "Translate to English" }));
 
     await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ target: "english", messages: [{ id: "shared-ai", content: "Penyimpanan cloud menyimpan file lewat internet." }] })));
-    await waitFor(() => expect(ui.getByTestId("translation-preview-shared-ai")).toBeTruthy());
-    expect(ui.getByText("Penyimpanan cloud menyimpan file lewat internet.")).toBeTruthy();
     await waitFor(() => expect(ui.getByText("Cloud storage stores files over the internet.")).toBeTruthy());
-    await waitFor(() => expect(ui.queryByTestId("translation-preview-shared-ai")).toBeNull());
     expect(ui.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy();
   });
 

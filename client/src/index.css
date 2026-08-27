@@ -296,10 +296,6 @@
   .study-message-bubble { @apply min-w-0 max-w-[88%] rounded-2xl border px-4 py-3 text-sm leading-relaxed; width: fit-content; box-sizing: border-box; overflow-wrap: anywhere; }
   .is-user .study-message-bubble { border-color: var(--chat-user-border, var(--primary)); background: var(--chat-user-background, var(--primary)); color: var(--chat-user-foreground, var(--primary-foreground)); }
   .is-ai .study-message-bubble { border-color: var(--chat-ai-border, var(--border)); background: var(--chat-ai-background, var(--card)); color: var(--chat-ai-foreground, var(--card-foreground)); }
-  .study-translation-preview-bubble { position: relative; isolation: isolate; border-style: dashed; opacity: .9; }
-  .study-translation-preview-bubble::before { position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: color-mix(in srgb, var(--primary) 12%, transparent); content: ""; }
-  .study-translation-caret { display: inline-block; width: .45em; height: 1.05em; margin-left: .12em; vertical-align: -.15em; border-radius: .08em; background: currentColor; animation: study-translation-caret 700ms steps(1, end) infinite; }
-  @keyframes study-translation-caret { 50% { opacity: 0; } }
   .study-message-bubble > .study-chat-markdown { width: 100%; min-width: 0; max-width: 100%; }
   .study-chat-markdown, .study-chat-markdown > *, .study-chat-markdown p, .study-chat-markdown li, .study-chat-markdown blockquote { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
   .study-citation-chips { width: 100%; min-width: 0; max-width: 100%; overflow: hidden; }

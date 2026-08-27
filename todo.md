@@ -424,3 +424,6 @@
 - [x] Menampilkan bubble terjemahan sementara tanpa menghapus bubble asli selama proses berjalan
 - [x] Menganimasikan isi bubble terjemahan secara bertahap lalu menggantikan bubble asli saat selesai
 - [x] Menambahkan regresi transisi bubble Translate dan push perbaikan yang disetujui ke GitHub
+- [x] Menghapus efek bubble Translate bertahap yang mengganggu tumpukan Chat
+- [x] Mengembalikan hasil Translate langsung tanpa bubble tambahan
+- [x] Memverifikasi regresi Translate setelah efek live dihapus
