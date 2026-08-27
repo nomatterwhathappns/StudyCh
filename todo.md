@@ -446,3 +446,7 @@
 - [x] Menelusuri sumber overflow bubble Chat yang masih memotong teks pada HP portrait 360–440px
 - [x] Memperbaiki pembungkus renderer Chat yang menyebabkan isi bubble meluber pada HP portrait
 - [x] Memverifikasi Chat pada HP portrait serta melindungi tablet dan desktop sebelum melapor tanpa push
+- [x] Mendorong perbaikan overflow bubble Chat HP portrait yang disetujui ke GitHub
+- [x] Menelusuri pembungkus Markdown nyata yang masih memotong respons Chat pada HP portrait
+- [x] Memperbaiki elemen Markdown atau CSS yang menahan teks satu baris pada respons Chat HP
+- [x] Memverifikasi pola respons asli pada HP portrait serta regresi Chat sebelum melapor tanpa push

@@ -35,7 +35,7 @@ type ChatTranslationProgress = { target: ChatTranslationLanguage; messageIds: st
 
 function normalizeChatMarkdown(content: string) {
   let insideCodeBlock = false;
-  return content.split(/(\r?\n)/).map((line) => {
+  return content.replace(/[\u00A0\u2007\u202F\u2060\uFEFF]/g, " ").split(/(\r?\n)/).map((line) => {
     if (line.trimStart().startsWith("```")) { insideCodeBlock = !insideCodeBlock; return line; }
     if (insideCodeBlock) return line;
     return line.replace(/^(\s*)\*{3,}\s*(.+?)\s*\*{3,}\s*$/, "$1**$2**");

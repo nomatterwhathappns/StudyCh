@@ -785,6 +785,15 @@ describe("mobile Source and AI flow", () => {
     expect(ui.container.querySelector(".study-citation-chips")).toBeTruthy();
   });
 
+  it("normalizes non-breaking response separators so narrow Chat bubbles can wrap long AI text", () => {
+    const narrowResponse: StudySession = {
+      ...session,
+      chatHistory: [{ id: "answer-nonbreaking", role: "assistant", content: "I've\u00a0tried\u202f4\u2060times already — that's why you keep testing, right?", createdAt: 2 }],
+    };
+    const ui = render(<ChatPanel session={narrowResponse} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    expect(ui.getByText("I've tried 4 times already — that's why you keep testing, right?")).toBeTruthy();
+  });
+
   it("renders AI Markdown tables full-width and code blocks without raw controls", () => {
     const markdownSession: StudySession = {
       ...session,
