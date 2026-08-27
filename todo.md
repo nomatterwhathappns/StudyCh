@@ -352,3 +352,5 @@
 - [x] Membuat preview logo rounded dengan background lingkaran putih
 - [x] Menunggu persetujuan sebelum mengganti favicon dengan logo berlatar putih
 - [x] Memasang logo StudyOS berlatar lingkaran putih yang disetujui sebagai favicon lalu push ke GitHub
+- [x] Membuat favicon format ICO dengan jalur baru agar Chrome memuat logo terbaru
+- [x] Memverifikasi favicon format ICO dan push perbaikannya ke GitHub
