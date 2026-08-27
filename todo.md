@@ -458,3 +458,4 @@
 - [x] Menelusuri lifecycle Translate yang berhenti saat pindah Profile atau menyembunyikan panel Chat
 - [x] Memindahkan state proses dan indikator Translate ke lifecycle workspace yang tetap mounted
 - [x] Memverifikasi Translate, indikator, dan Cancel saat hide panel serta pindah halaman sebelum melapor tanpa push
+- [x] Mendorong perbaikan lifecycle Translate yang disetujui ke GitHub
