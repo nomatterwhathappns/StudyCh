@@ -414,3 +414,6 @@
 - [x] Memberi ruang luar tipis agar radius bingkai workspace desktop terlihat jelas
 - [x] Menyesuaikan radius bingkai workspace agar lebih terasa tanpa mengurangi area kerja berlebihan
 - [x] Memverifikasi radius workspace yang diperjelas sebelum meminta persetujuan push
+- [x] Memisahkan Source, Chat, dan Watch menjadi tiga kartu beradius pada workspace desktop
+- [x] Menjaga jarak tipis dan handle resize tetap berfungsi di antara kartu panel
+- [x] Menambahkan regresi panel desktop terpisah sebelum meminta persetujuan push
