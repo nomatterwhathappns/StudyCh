@@ -430,3 +430,6 @@
 - [x] Menampilkan indikator progres Translate berupa bar dan persentase di bawah header Chat
 - [x] Menghitung progres Translate dari pesan yang berhasil diterima dan menyembunyikan indikator pada 100%
 - [x] Menambahkan regresi indikator progres Translate lalu push perbaikan yang disetujui ke GitHub
+- [x] Mengganti persentase Translate perkiraan menjadi progres batch yang akurat
+- [x] Menyederhanakan indikator menjadi bar dan angka persen tanpa jumlah pesan terlihat
+- [x] Menambahkan regresi progres batch lalu push perbaikan yang disetujui ke GitHub

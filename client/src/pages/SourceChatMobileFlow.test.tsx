@@ -439,7 +439,7 @@ describe("mobile Source and AI flow", () => {
 
     await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ target: "english", messages: [{ id: "shared-ai", content: "Penyimpanan cloud menyimpan file lewat internet." }] })));
     await waitFor(() => expect(ui.getByText("Cloud storage stores files over the internet.")).toBeTruthy());
-    expect(ui.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy();
+    await waitFor(() => expect(ui.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy());
   });
 
   it("keeps the active direction for a new AI answer until the user requests its translation", async () => {
@@ -481,7 +481,7 @@ describe("mobile Source and AI flow", () => {
     expect((translateChatMutateAsync.mock.calls.at(-1)?.[0] as { target: string }).target).toBe("indonesian");
 
     await waitFor(() => expect(ui.getByText("Tips belajar baru")).toBeTruthy());
-    expect(ui.getByLabelText("Translate chat to English")).toBeTruthy();
+    await waitFor(() => expect((ui.getByLabelText("Translate chat to English") as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(ui.getByLabelText("Translate chat to English"));
     await waitFor(() => expect(ui.getByText("New study tip")).toBeTruthy());
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(2);
@@ -535,11 +535,29 @@ describe("mobile Source and AI flow", () => {
 
     act(() => window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: "english", request: true } })));
 
-    expect(ui.getByRole("status").textContent).toContain("Translating to English");
-    expect(ui.getByRole("progressbar", { name: "Translation progress" }).getAttribute("aria-valuenow")).toBe("4");
+    expect(ui.getByRole("status").textContent).toContain("0%");
+    expect(ui.getByRole("progressbar", { name: "Translation progress" }).getAttribute("aria-valuenow")).toBe("0");
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translating to English…" })).toBeTruthy());
     expect((ui.getByLabelText("Translate chat to English") as HTMLButtonElement).disabled).toBe(true);
     sourceUi.unmount();
+  });
+
+  it("updates the percentage from completed Translate batches without exposing message counts", async () => {
+    let resolveLastBatch: ((value: { translations: { english: Array<{ id: string; content: string }>; indonesian: Array<{ id: string; content: string }> } }) => void) | undefined;
+    const firstBatch = Array.from({ length: 6 }, (_, index) => ({ id: `batch-${index + 1}`, content: `Pesan ${index + 1}` }));
+    const lastBatch = { id: "batch-7", content: "Pesan 7" };
+    translateChatMutateAsync
+      .mockResolvedValueOnce({ translations: { english: firstBatch.map((item, index) => ({ id: item.id, content: `Message ${index + 1}` })), indonesian: firstBatch } })
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveLastBatch = resolve; }));
+    const batchSession: StudySession = { ...session, chatHistory: [...firstBatch, lastBatch].map((message, index) => ({ ...message, role: "user" as const, createdAt: index + 1 })) };
+    const ui = render(<ChatPanel session={batchSession} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+
+    fireEvent.click(ui.getByLabelText("Translate chat to English"));
+    await waitFor(() => expect(ui.getByRole("progressbar", { name: "Translation progress" }).getAttribute("aria-valuenow")).toBe("86"));
+    expect(ui.getByRole("status").textContent).toBe("86%");
+
+    act(() => resolveLastBatch?.({ translations: { english: [{ id: lastBatch.id, content: "Message 7" }], indonesian: [lastBatch] } }));
+    await waitFor(() => expect(ui.getByRole("progressbar", { name: "Translation progress" }).getAttribute("aria-valuenow")).toBe("100"));
   });
 
   it.each([["desktop", 1280], ["mobile", 375]] as const)("stops translation cleanly after a provider failure and retries only on request on %s", async (_viewport, width) => {
