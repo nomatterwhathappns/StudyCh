@@ -417,7 +417,7 @@ describe("mobile Source and AI flow", () => {
       { id: "indonesian-ai", content: "Cloud storage menyimpan file lewat internet." },
     ], target: "english", model: "claude-haiku-4-5" })));
     await waitFor(() => expect(ui.getByText("Can you explain cloud storage?")).toBeTruthy());
-    expect(ui.getByText("Cloud storage stores files over the internet.")).toBeTruthy();
+    await waitFor(() => expect(ui.getByText("Cloud storage stores files over the internet.")).toBeTruthy());
     expect(ui.getByLabelText("Ask StudyOS")).toBeTruthy();
     expect(ui.getByLabelText("Translate chat to Indonesian")).toBeTruthy();
     await waitFor(() => expect(sourceUi.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy());
@@ -438,7 +438,10 @@ describe("mobile Source and AI flow", () => {
     fireEvent.click(ui.getByRole("button", { name: "Translate to English" }));
 
     await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledWith(expect.objectContaining({ target: "english", messages: [{ id: "shared-ai", content: "Penyimpanan cloud menyimpan file lewat internet." }] })));
+    await waitFor(() => expect(ui.getByTestId("translation-preview-shared-ai")).toBeTruthy());
+    expect(ui.getByText("Penyimpanan cloud menyimpan file lewat internet.")).toBeTruthy();
     await waitFor(() => expect(ui.getByText("Cloud storage stores files over the internet.")).toBeTruthy());
+    await waitFor(() => expect(ui.queryByTestId("translation-preview-shared-ai")).toBeNull());
     expect(ui.getByRole("button", { name: "Translate to Indonesian" })).toBeTruthy();
   });
 
@@ -464,6 +467,7 @@ describe("mobile Source and AI flow", () => {
     fireEvent.click(ui.getByLabelText("Translate chat to English"));
     await waitFor(() => expect(ui.getByText("Welcome")).toBeTruthy());
     expect(translateChatMutateAsync).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect((ui.getByLabelText("Translate chat to Indonesian") as HTMLButtonElement).disabled).toBe(false));
 
     fireEvent.click(ui.getByLabelText("Translate chat to Indonesian"));
     await waitFor(() => expect(ui.getByText("Selamat datang")).toBeTruthy());
@@ -565,7 +569,7 @@ describe("mobile Source and AI flow", () => {
     fireEvent.click(ui.getByRole("button", { name: "Try translation again" }));
     await waitFor(() => expect(translateChatMutateAsync).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(ui.queryByRole("alert")).toBeNull());
-    expect(ui.getByText("Hello again")).toBeTruthy();
+    await waitFor(() => expect(ui.getByText("Hello again")).toBeTruthy());
     sourceUi.unmount();
   });
 

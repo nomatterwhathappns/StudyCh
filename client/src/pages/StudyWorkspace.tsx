@@ -15,7 +15,7 @@ import type { Quiz, StudyCitation, StudySession, VocabItem, VocabReviewRating } 
 import { compactKeyTermText, formatDuration, isVocabularyDue, plainText, scoreQuiz, vocabularyDueAt } from "@/lib/study-utils";
 import { useStudyStore } from "@/store/useStudyStore";
 import { BookOpenText, ChevronLeft, ChevronRight, CircleHelp, Clock3, Compass, ExternalLink, FileText, FolderOpen, FolderPlus, GripVertical, Languages, Loader2, MessageCircleQuestion, MoreHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Pause, Pin, Play, Plus, RotateCcw, Search, Send, Sparkles, Trash2, Upload, X } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 import { useLocation } from "wouter";
 
@@ -31,6 +31,9 @@ type ChatTranslationCache = Record<"english" | "indonesian", Record<string, stri
 const emptyChatTranslationCache = (): ChatTranslationCache => ({ english: {}, indonesian: {} });
 
 type ChatTranslationLanguage = "english" | "indonesian";
+
+type ChatTranslationPreview = { content: string };
+type ChatTranslationResult = { english: Array<{ id: string; content: string }>; indonesian: Array<{ id: string; content: string }> };
 
 function normalizeChatMarkdown(content: string) {
   let insideCodeBlock = false;
@@ -318,15 +321,17 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const translateChatMessages = trpc.study.translateChat.useMutation();
   const aiName = profile.aiName?.trim() || "StudyOS";
   const [input, setInput] = useState(""); const [renaming, setRenaming] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [error, setError] = useState(""); const [translationError, setTranslationError] = useState(""); const [translationRequestVersion, setTranslationRequestVersion] = useState(0); const [streaming, setStreaming] = useState(false); const [streamRecovery, setStreamRecovery] = useState(false); const [streamedText, setStreamedText] = useState(""); const [streamProvider, setStreamProvider] = useState("");
-  const followLatestRef = useRef(true); const pendingScrollRef = useRef(false); const streamedTextRef = useRef(""); const streamProviderRef = useRef(""); const streamRecoveryRef = useRef(false); const streamAbortRef = useRef<AbortController | null>(null); const chatRunRef = useRef(0); const translationRunRef = useRef(0); const translatingIdsRef = useRef(new Set<string>()); const translationFailuresRef = useRef(new Set<string>());
+  const followLatestRef = useRef(true); const pendingScrollRef = useRef(false); const streamedTextRef = useRef(""); const streamProviderRef = useRef(""); const streamRecoveryRef = useRef(false); const streamAbortRef = useRef<AbortController | null>(null); const chatRunRef = useRef(0); const translationRunRef = useRef(0); const translationPreviewRunRef = useRef(0); const translationPreviewTimerRef = useRef<number | null>(null); const chatHistoryRef = useRef(session.chatHistory); const translatingIdsRef = useRef(new Set<string>()); const translationFailuresRef = useRef(new Set<string>());
   const [translateChat, setTranslateChat] = useState(false);
   const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">("english");
   const [translatedMessages, setTranslatedMessages] = useState<ChatTranslationCache>(emptyChatTranslationCache);
+  const [translationPreviews, setTranslationPreviews] = useState<Record<string, ChatTranslationPreview>>({});
   const emptyTranslations = useMemo(emptyChatTranslationCache, []);
   const savedTranslations = sourceAi ? sourceAi.chatTranslationsFor(session.id) : emptyTranslations;
   const storedTranslationTarget = sourceAi?.chatTranslationTarget(session.id) ?? null;
   const translationCache = useMemo(() => ({ english: { ...savedTranslations.english, ...translatedMessages.english }, indonesian: { ...savedTranslations.indonesian, ...translatedMessages.indonesian } }), [savedTranslations, translatedMessages]);
   const translationPending = sourceAi ? sourceAi.isPending(session.id, "chat-translation") : translateChatMessages.isPending;
+  const translationBusy = translationPending || Object.keys(translationPreviews).length > 0;
   const untranslatedMessageCount = translateChat ? session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id]).length : 0;
   useEffect(() => { if (!menuOpen) return; const dismiss = (event: PointerEvent) => { if (event.target instanceof Element && event.target.closest(".study-menu, [aria-label='Session menu']")) return; setMenuOpen(false); }; const dismissWithEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setMenuOpen(false); }; document.addEventListener("pointerdown", dismiss); document.addEventListener("keydown", dismissWithEscape); return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", dismissWithEscape); }; }, [menuOpen]);
   const saveAssistantResponse = (response: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => addMessage(session.id, { role: "assistant", content: response.text, citations: attachMaterialIds(session, response.citations), truncated: response.truncated, ...(response.provider ? { provider: response.provider } : {}) });
@@ -335,6 +340,40 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const clearStreamPreview = () => { setStreaming(false); setStreamRecovery(false); setStreamedText(""); setStreamProvider(""); streamedTextRef.current = ""; streamProviderRef.current = ""; streamRecoveryRef.current = false; };
   const chat = trpc.study.chat.useMutation();
   const continueAnswer = trpc.study.continue.useMutation({ onSuccess: saveAssistantResponse, onError: (reason) => setError(friendlyChatError(reason.message)) });
+  chatHistoryRef.current = session.chatHistory;
+  const playTranslatedBubbles = useCallback((target: ChatTranslationLanguage, translations: ChatTranslationResult) => {
+    const translatedById = new Map(translations[target].map((item) => [item.id, item.content]));
+    const queue = chatHistoryRef.current.flatMap((message) => {
+      const content = translatedById.get(message.id);
+      return content && content !== message.content ? [{ id: message.id, content, english: translations.english.find((item) => item.id === message.id)?.content ?? message.content, indonesian: translations.indonesian.find((item) => item.id === message.id)?.content ?? message.content }] : [];
+    });
+    if (!queue.length) return;
+    const run = ++translationPreviewRunRef.current;
+    if (translationPreviewTimerRef.current !== null) window.clearTimeout(translationPreviewTimerRef.current);
+    setTranslatedMessages((current) => ({
+      english: { ...current.english, ...Object.fromEntries(translations.english.map((item) => [item.id, item.content])) },
+      indonesian: { ...current.indonesian, ...Object.fromEntries(translations.indonesian.map((item) => [item.id, item.content])) },
+    }));
+    setTranslationPreviews(Object.fromEntries(queue.map((item) => [item.id, { content: "" }])));
+    const play = (index: number) => {
+      const item = queue[index];
+      if (!item || run !== translationPreviewRunRef.current) return;
+      const step = Math.max(1, Math.ceil(item.content.length / 42));
+      let visible = step;
+      const reveal = () => {
+        if (run !== translationPreviewRunRef.current) return;
+        setTranslationPreviews((current) => ({ ...current, [item.id]: { content: item.content.slice(0, visible) } }));
+        if (visible < item.content.length) { visible = Math.min(item.content.length, visible + step); translationPreviewTimerRef.current = window.setTimeout(reveal, 18); return; }
+        translationPreviewTimerRef.current = window.setTimeout(() => {
+          if (run !== translationPreviewRunRef.current) return;
+          setTranslationPreviews((current) => { const next = { ...current }; delete next[item.id]; return next; });
+          play(index + 1);
+        }, 110);
+      };
+      reveal();
+    };
+    play(0);
+  }, []);
   useEffect(() => {
     const syncChatTranslate = (event: Event) => {
       const detail = event instanceof CustomEvent ? event.detail : undefined;
@@ -357,27 +396,24 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
       const detail = event instanceof CustomEvent ? event.detail as { sessionId?: string; translations?: { english?: Array<{ id: string; content: string }>; indonesian?: Array<{ id: string; content: string }> } } | undefined : undefined;
       const translations = detail?.translations;
       if (detail?.sessionId !== session.id || !translations) return;
-      setTranslatedMessages((current) => ({
-        english: { ...current.english, ...Object.fromEntries((translations.english ?? []).map((item) => [item.id, item.content])) },
-        indonesian: { ...current.indonesian, ...Object.fromEntries((translations.indonesian ?? []).map((item) => [item.id, item.content])) },
-      }));
+      playTranslatedBubbles(translationTarget, { english: translations.english ?? [], indonesian: translations.indonesian ?? [] });
     };
     window.addEventListener("studyos:chat-translation-result", syncTranslationResult);
     return () => window.removeEventListener("studyos:chat-translation-result", syncTranslationResult);
-  }, [session.id]);
-  useEffect(() => { setTranslatedMessages(emptyChatTranslationCache()); translatingIdsRef.current.clear(); translationFailuresRef.current.clear(); setTranslationError(""); setTranslationRequestVersion(0); }, [session.id]);
+  }, [playTranslatedBubbles, session.id, translationTarget]);
+  useEffect(() => { translationPreviewRunRef.current += 1; if (translationPreviewTimerRef.current !== null) window.clearTimeout(translationPreviewTimerRef.current); translationPreviewTimerRef.current = null; setTranslationPreviews({}); setTranslatedMessages(emptyChatTranslationCache()); translatingIdsRef.current.clear(); translationFailuresRef.current.clear(); setTranslationError(""); setTranslationRequestVersion(0); }, [session.id]);
   useEffect(() => { if (storedTranslationTarget) { setTranslateChat(true); setTranslationTarget(storedTranslationTarget); } }, [session.id, storedTranslationTarget]);
   useEffect(() => { const sourceError = sourceAi?.chatTranslationError(session.id); if (sourceError) setTranslationError(friendlyTranslationError(sourceError)); }, [session.id, sourceAi, sourceAi?.chatTranslationError(session.id)]);
   useEffect(() => {
     if (!translateChat || translationRequestVersion === 0) return;
-    const missing = session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id] && !translatingIdsRef.current.has(message.id) && !translationFailuresRef.current.has(message.id)).slice(0, 6);
+    const missing = session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id] && !translationPreviews[message.id] && !translatingIdsRef.current.has(message.id) && !translationFailuresRef.current.has(message.id)).slice(0, 6);
     if (!missing.length) return;
     const preferences = readAiSettings();
     if (sourceAi) { sourceAi.startChatTranslation({ sessionId: session.id, sessionName: session.name, model: preferences.model, target: translationTarget, messages: missing.map(({ id, content }) => ({ id, content })) }); return; }
     const run = translationRunRef.current;
     missing.forEach((message) => translatingIdsRef.current.add(message.id));
     void translateChatMessages.mutateAsync({ model: preferences.model, target: translationTarget, messages: missing.map(({ id, content }) => ({ id, content })) })
-      .then(({ translations }) => { if (run !== translationRunRef.current) return; setTranslatedMessages((current) => ({ english: { ...current.english, ...Object.fromEntries(translations.english.map((item) => [item.id, item.content])) }, indonesian: { ...current.indonesian, ...Object.fromEntries(translations.indonesian.map((item) => [item.id, item.content])) } })); setTranslationError(""); })
+      .then(({ translations }) => { if (run !== translationRunRef.current) return; playTranslatedBubbles(translationTarget, translations); setTranslationError(""); })
       .catch((reason: unknown) => {
         if (run !== translationRunRef.current) return;
         missing.forEach((message) => translationFailuresRef.current.add(message.id));
@@ -386,8 +422,8 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
         setTranslationError(friendlyTranslationError(reason instanceof Error ? reason.message : ""));
       })
       .finally(() => missing.forEach((message) => translatingIdsRef.current.delete(message.id)));
-  }, [translateChat, translationTarget, translationCache, translateChatMessages.mutateAsync, translationRequestVersion, sourceAi, session.id, session.name]);
-  useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:chat-translation-status", { detail: { pending: translationPending, target: translationTarget, untranslatedMessageCount } })); }, [translationPending, translationTarget, untranslatedMessageCount]);
+  }, [translateChat, translationTarget, translationCache, translationPreviews, translateChatMessages.mutateAsync, translationRequestVersion, sourceAi, session.id, session.name, playTranslatedBubbles]);
+  useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:chat-translation-status", { detail: { pending: translationBusy, target: translationTarget, untranslatedMessageCount } })); }, [translationBusy, translationTarget, untranslatedMessageCount]);
   const streamChat = async (payload: { sessionName: string; materials: string; translate: boolean; responseStyle: "Fast" | "Balanced" | "Deep" | "Concise" | "Detailed"; model: "gpt-5-mini" | "claude-haiku-4-5" | "gemini-3-flash-preview" | "local-9router"; aiName: string; history: Array<{ role: "user" | "assistant"; content: string }>; continueAnswer?: boolean; resumePrefix?: string }) => {
     const run = ++chatRunRef.current;
     const controller = new AbortController();
@@ -435,13 +471,13 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const send = () => { const content = input.trim(); if (!content || chat.isPending || continueAnswer.isPending || streaming || streamRecovery) return; const preferences = readAiSettings(); const payload = { sessionName: session.name, materials: safeMaterials(content, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, aiName, history: [...compactHistory(session.chatHistory.slice(-29)), { role: "user" as const, content }] }; setError(""); pendingScrollRef.current = true; addMessage(session.id, { role: "user", content }); setInput(""); scrollToLatest(); pendingScrollRef.current = false; void streamChat(payload); };
   const continueTruncatedAnswer = () => { if (chat.isPending || streaming || streamRecovery) return; const preferences = readAiSettings(); const priorQuestion = [...session.chatHistory].reverse().find((message) => message.role === "user")?.content ?? ""; setError(""); pendingScrollRef.current = true; scrollToLatest(); pendingScrollRef.current = false; void streamChat({ sessionName: session.name, materials: safeMaterials(priorQuestion, preferences.responseStyle), translate: false, responseStyle: preferences.responseStyle, model: preferences.model, aiName, history: compactHistory(session.chatHistory.slice(-30)), continueAnswer: true }); };
   const toggleChatTranslation = () => {
-    if (translationPending) return;
+    if (translationBusy) return;
     const nextTarget = translateChat && untranslatedMessageCount > 0 ? translationTarget : nextChatTranslationTarget(session.chatHistory, translateChat, translationTarget);
     translationFailuresRef.current.clear(); sourceAi?.clearChatTranslationErrors(session.id); setTranslationError(""); setTranslateChat(true); setTranslationTarget(nextTarget); setTranslationRequestVersion((value) => value + 1); localStorage.setItem("studyos_translate_mode", "true"); localStorage.setItem("studyos_chat_translation_target", nextTarget);
     window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: nextTarget } }));
   };
-  const retryTranslation = () => { if (translationPending) return; translationFailuresRef.current.clear(); sourceAi?.clearChatTranslationErrors(session.id); setTranslationError(""); setTranslateChat(true); setTranslationRequestVersion((value) => value + 1); localStorage.setItem("studyos_translate_mode", "true"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: translationTarget } })); };
-  const cancelTranslation = () => { translationRunRef.current += 1; translatingIdsRef.current.clear(); if (sourceAi) sourceAi.cancelChatTranslation(session.id); else translateChatMessages.reset(); setTranslateChat(false); setTranslationError(""); localStorage.setItem("studyos_translate_mode", "false"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false, target: translationTarget } })); };
+  const retryTranslation = () => { if (translationBusy) return; translationFailuresRef.current.clear(); sourceAi?.clearChatTranslationErrors(session.id); setTranslationError(""); setTranslateChat(true); setTranslationRequestVersion((value) => value + 1); localStorage.setItem("studyos_translate_mode", "true"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: true, target: translationTarget } })); };
+  const cancelTranslation = () => { translationRunRef.current += 1; translationPreviewRunRef.current += 1; if (translationPreviewTimerRef.current !== null) window.clearTimeout(translationPreviewTimerRef.current); translationPreviewTimerRef.current = null; setTranslationPreviews({}); translatingIdsRef.current.clear(); if (sourceAi) sourceAi.cancelChatTranslation(session.id); else translateChatMessages.reset(); setTranslateChat(false); setTranslationError(""); localStorage.setItem("studyos_translate_mode", "false"); window.dispatchEvent(new CustomEvent("studyos:chat-translate", { detail: { active: false, target: translationTarget } })); };
   const cancelChatResponse = () => { chatRunRef.current += 1; streamAbortRef.current?.abort(); streamAbortRef.current = null; chat.reset(); clearStreamPreview(); setError(""); };
   useEffect(() => { if (!sourceAi) window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "translate", label: "Translate", pending: translateChatMessages.isPending, cancel: cancelTranslation } })); }, [sourceAi, translateChatMessages.isPending]);
   useEffect(() => { window.dispatchEvent(new CustomEvent("studyos:ai-activity", { detail: { id: "chat", label: "AI response", pending: streaming || chat.isPending || streamRecovery, cancel: cancelChatResponse } })); }, [streaming, chat.isPending, streamRecovery]);
@@ -455,7 +491,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
         <div className="min-w-0 flex-1">
           {renaming ? <input autoFocus value={session.name} onChange={(event) => updateSession(session.id, { name: event.target.value })} onBlur={() => setRenaming(false)} onKeyDown={(event) => { if (event.key === "Enter") setRenaming(false); }} className="w-full font-display text-xl italic outline-none" /> : <button type="button" onClick={() => setRenaming(true)} className="max-w-full truncate text-left font-display text-xl italic hover:text-muted-foreground">{session.name}</button>}
         </div>
-        <button type="button" disabled={translateChatMessages.isPending} onClick={toggleChatTranslation} aria-label={`Translate chat to ${nextTranslationLabel}`} aria-pressed={translateChat} className={`study-mobile-chat-translate ${translateChat ? "is-on" : ""}`}>{translateChatMessages.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Languages className="size-3.5" />}<span>{translateChatMessages.isPending ? "Translating…" : translateButtonLabel}</span></button>
+        <button type="button" disabled={translationBusy} onClick={toggleChatTranslation} aria-label={`Translate chat to ${nextTranslationLabel}`} aria-pressed={translateChat} className={`study-mobile-chat-translate ${translateChat ? "is-on" : ""}`}>{translationBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Languages className="size-3.5" />}<span>{translationBusy ? "Translating…" : translateButtonLabel}</span></button>
         <div className="relative">
           <button type="button" aria-label="Session menu" onClick={() => setMenuOpen((value) => !value)} className="study-icon-button"><MoreHorizontal className="size-4" /></button>
           {menuOpen && <div className="study-menu">
@@ -468,12 +504,14 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
       </div>
       <ScrollArea className="study-chat-scroll-area h-0 min-h-0 flex-1 overflow-hidden">
         <div className="mx-auto flex min-h-full max-w-3xl flex-col gap-5 p-5 sm:p-8">
-          {translateChat && translateChatMessages.isPending ? <p role="status" className="font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">Translating new chat messages to {translationTarget === "english" ? "English" : "Indonesian"}…</p> : null}
+          {translateChat && translationBusy ? <p role="status" className="font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">Translating new chat messages to {translationTarget === "english" ? "English" : "Indonesian"}…</p> : null}
           {session.chatHistory.length ? session.chatHistory.map((message, index) => {
-            const content = translateChat ? translatedMessages[translationTarget][message.id] ?? message.content : message.content;
+            const preview = translationPreviews[message.id];
+            const content = translateChat && !preview ? translationCache[translationTarget][message.id] ?? message.content : message.content;
             return <div key={message.id} className={`study-chat-message ${message.role === "user" ? "is-user" : "is-ai"}`}>
               {message.role === "assistant" && <span className="study-ai-label">{aiName}</span>}
               <div className="study-message-bubble min-w-0 w-fit max-w-[calc(100%-1rem)]">{message.role === "assistant" ? <ChatMarkdown content={content} /> : <span className="whitespace-pre-wrap">{content}</span>}</div>
+              {preview ? <div data-testid={`translation-preview-${message.id}`} aria-live="polite" className="study-message-bubble study-translation-preview-bubble min-w-0 w-fit max-w-[calc(100%-1rem)]">{preview.content ? <>{message.role === "assistant" ? <ChatMarkdown content={preview.content} /> : <span className="whitespace-pre-wrap">{preview.content}</span>}<span aria-hidden className="study-translation-caret" /></> : <span className="study-thinking"><i /><i /><i /></span>}</div> : null}
               {message.role === "assistant" && message.provider ? <p data-testid="ai-provider-label" className="mt-2 font-mono text-[9px] uppercase tracking-[0.11em] text-muted-foreground">Used: {message.provider}</p> : null}
               {message.role === "assistant" && message.citations?.length ? <CitationChips citations={message.citations} sessionId={session.id} /> : null}
               {message.role === "assistant" && message.truncated && index === session.chatHistory.length - 1 ? <button type="button" onClick={continueTruncatedAnswer} disabled={continueAnswer.isPending || chat.isPending || streaming || streamRecovery} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-primary/45 bg-primary/10 px-2.5 py-1.5 text-[10px] font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-50"><ChevronRight className="size-3.5" />{continueAnswer.isPending ? "Continuing…" : "Continue answer"}</button> : null}

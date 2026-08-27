@@ -420,3 +420,7 @@
 - [x] Memisahkan Source, Chat, dan Watch menjadi tiga kartu beradius pada workspace desktop
 - [x] Menjaga jarak tipis dan handle resize tetap berfungsi di antara kartu panel
 - [x] Menambahkan regresi panel desktop terpisah sebelum meminta persetujuan push
+- [x] Mendorong perbaikan sinkronisasi dan retry Translate Chat yang disetujui ke GitHub
+- [x] Menampilkan bubble terjemahan sementara tanpa menghapus bubble asli selama proses berjalan
+- [x] Menganimasikan isi bubble terjemahan secara bertahap lalu menggantikan bubble asli saat selesai
+- [x] Menambahkan regresi transisi bubble Translate dan push perbaikan yang disetujui ke GitHub
