@@ -340,3 +340,6 @@
 - [x] Membuat preview revisi logo dengan highlight kontras untuk tema gelap dan terang
 - [x] Menunggu persetujuan sebelum memasang atau push revisi logo ber-highlight
 - [x] Memasang logo StudyOS ber-highlight yang disetujui sebagai favicon lalu push ke GitHub
+- [x] Menelusuri favicon atau manifest lain yang masih membuat browser memakai ikon lama
+- [x] Memasang jalur favicon baru yang pasti dimuat browser lokal dan memverifikasinya
+- [x] Menambahkan regresi favicon lalu push perbaikannya ke GitHub
