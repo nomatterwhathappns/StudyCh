@@ -377,3 +377,5 @@
 - [x] Membuat judul sumber hasil Search membungkus hingga dua baris pada panel sempit
 - [x] Menjaga domain ringkas dan tombol hapus tetap terlihat pada item Source panjang
 - [x] Menambahkan regresi Source panel sempit dan menyiapkan preview tanpa push GitHub
+- [x] Menghapus gaya truncate yang menimpa pembungkus judul Source panjang
+- [x] Memverifikasi judul Search benar-benar membungkus dua baris pada panel sempit

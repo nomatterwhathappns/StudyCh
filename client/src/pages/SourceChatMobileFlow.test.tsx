@@ -356,6 +356,7 @@ describe("mobile Source and AI flow", () => {
     const title = "Cloud Computing Services - Amazon Web Services";
     const ui = render(<SourcePanelWithProvider session={{ ...session, materials: [{ ...session.materials[0], title, sourceDomain: "aws.amazon.com" }] }} />);
     expect(ui.getByText(title).className).toContain("study-material-title");
+    expect(ui.getByText(title).className).not.toContain("truncate");
     expect(ui.getByTitle(title)).toBeTruthy();
     expect(ui.getByRole("button", { name: `Delete ${title}` })).toBeTruthy();
     expect(ui.getByText("aws.amazon.com")).toBeTruthy();
