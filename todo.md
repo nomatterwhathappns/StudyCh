@@ -405,3 +405,6 @@
 - [x] Menambahkan pencarian istilah dan ringkasan jumlah hasil pada halaman Key Terms
 - [x] Memindahkan context tambahan ke detail yang tidak memenuhi tampilan utama
 - [x] Merapikan aksi hapus Key Terms dan menambahkan regresi sebelum meminta persetujuan push
+- [x] Memadatkan kartu Sessions desktop tanpa mengubah aksi buka, pin, atau hapus
+- [x] Mengubah grid Sessions desktop menjadi maksimal tiga kolom yang lebih mudah dipindai
+- [x] Menambahkan regresi kartu Sessions ringkas sebelum meminta persetujuan push
