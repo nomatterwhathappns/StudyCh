@@ -411,3 +411,6 @@
 - [x] Menambahkan radius halus yang konsisten pada empat sudut luar workspace desktop
 - [x] Menyamakan gaya tombol Again dan Good dengan tombol Key Terms review lain
 - [x] Menambahkan regresi radius workspace dan tombol review sebelum meminta persetujuan push
+- [x] Memberi ruang luar tipis agar radius bingkai workspace desktop terlihat jelas
+- [x] Menyesuaikan radius bingkai workspace agar lebih terasa tanpa mengurangi area kerja berlebihan
+- [x] Memverifikasi radius workspace yang diperjelas sebelum meminta persetujuan push

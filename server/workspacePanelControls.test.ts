@@ -10,5 +10,6 @@ describe("workspace panel controls", () => {
     expect(workspace).toContain('className="study-icon-button" aria-label="Toggle watch panel"');
     expect(workspace).not.toContain('study-icon-button lg:hidden" aria-label="Toggle source panel"');
     expect(workspace).not.toContain('study-icon-button lg:hidden" aria-label="Toggle watch panel"');
+    expect(workspace).toContain('isCompact ? "p-0" : "p-3 sm:p-4"');
   });
 });
