@@ -319,7 +319,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const translateChatMessages = trpc.study.translateChat.useMutation();
   const aiName = profile.aiName?.trim() || "StudyOS";
   const [input, setInput] = useState(""); const [renaming, setRenaming] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [error, setError] = useState(""); const [translationError, setTranslationError] = useState(""); const [translationRequestVersion, setTranslationRequestVersion] = useState(0); const [translationProgress, setTranslationProgress] = useState<ChatTranslationProgress | null>(null); const [streaming, setStreaming] = useState(false); const [streamRecovery, setStreamRecovery] = useState(false); const [streamedText, setStreamedText] = useState(""); const [streamProvider, setStreamProvider] = useState("");
-  const followLatestRef = useRef(true); const pendingScrollRef = useRef(false); const streamedTextRef = useRef(""); const streamProviderRef = useRef(""); const streamRecoveryRef = useRef(false); const streamAbortRef = useRef<AbortController | null>(null); const chatRunRef = useRef(0); const translationRunRef = useRef(0); const translatingIdsRef = useRef(new Set<string>()); const translationFailuresRef = useRef(new Set<string>());
+  const followLatestRef = useRef(true); const pendingScrollRef = useRef(false); const composerRef = useRef<HTMLTextAreaElement | null>(null); const streamedTextRef = useRef(""); const streamProviderRef = useRef(""); const streamRecoveryRef = useRef(false); const streamAbortRef = useRef<AbortController | null>(null); const chatRunRef = useRef(0); const translationRunRef = useRef(0); const translatingIdsRef = useRef(new Set<string>()); const translationFailuresRef = useRef(new Set<string>());
   const [translateChat, setTranslateChat] = useState(false);
   const [translationTarget, setTranslationTarget] = useState<"english" | "indonesian">("english");
   const [translatedMessages, setTranslatedMessages] = useState<ChatTranslationCache>(emptyChatTranslationCache);
@@ -333,6 +333,17 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
   const translationPercent = translationProgress ? Math.round((translationProgressCompleted / translationProgress.messageIds.length) * 100) : 0;
   const untranslatedMessageCount = translateChat ? session.chatHistory.filter((message) => message.content.trim() && !translationCache[translationTarget][message.id]).length : 0;
   useEffect(() => { if (!menuOpen) return; const dismiss = (event: PointerEvent) => { if (event.target instanceof Element && event.target.closest(".study-menu, [aria-label='Session menu']")) return; setMenuOpen(false); }; const dismissWithEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setMenuOpen(false); }; document.addEventListener("pointerdown", dismiss); document.addEventListener("keydown", dismissWithEscape); return () => { document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", dismissWithEscape); }; }, [menuOpen]);
+  useEffect(() => {
+    const focusComposer = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || document.querySelector("[role='dialog']")) return;
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement || (active instanceof HTMLElement && (active.isContentEditable || active.getAttribute("role") === "textbox"))) return;
+      event.preventDefault();
+      composerRef.current?.focus();
+    };
+    window.addEventListener("keydown", focusComposer);
+    return () => window.removeEventListener("keydown", focusComposer);
+  }, []);
   const saveAssistantResponse = (response: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => addMessage(session.id, { role: "assistant", content: response.text, citations: attachMaterialIds(session, response.citations), truncated: response.truncated, ...(response.provider ? { provider: response.provider } : {}) });
   const friendlyChatError = (message: string) => /(?:Respons Chat belum tersedia karena kuota AI provider|Google Gemini sedang membatasi request|Google Gemini sedang tidak tersedia)/i.test(message) ? message : /too_big|too_small|expected string|materials|history/i.test(message) ? "Konteks chat terlalu besar atau belum lengkap. StudyOS sudah merapikannya—silakan kirim ulang pesanmu." : "Respons AI belum bisa diproses. Coba kirim ulang atau periksa AI Settings.";
   const friendlyTranslationError = (message: string) => /(?:Penerjemahan Chat tidak tersedia karena kuota AI provider|Google Gemini sedang membatasi request|Google Gemini sedang tidak tersedia)/i.test(message) ? message : "Penerjemahan sedang tidak tersedia. Teks asli tetap aman—coba lagi beberapa saat lagi atau gunakan provider AI lain.";
@@ -499,7 +510,7 @@ export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessio
           {error && <p className="rounded-xl border border-[#BA2D0B]/40 bg-[#BA2D0B]/10 p-3 text-xs text-[#EEF1EF]">{error} <button type="button" onClick={onOpenDashboard} className="underline underline-offset-2">Review AI settings</button></p>}
         </div>
       </ScrollArea>
-      <div className="study-chat-composer"><div className={`study-chat-input-shell ${input ? "has-value" : ""}`}><textarea rows={1} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} placeholder="Ask Anything" aria-label="Ask StudyOS" /><div className="study-chat-composer-actions"><AiCancellationDock /><button type="button" onClick={send} disabled={!input.trim() || chat.isPending || continueAnswer.isPending || streaming || streamRecovery} aria-label="Send message"><Send className="size-4" /></button></div></div></div>
+      <div className="study-chat-composer"><div className={`study-chat-input-shell ${input ? "has-value" : ""}`}><textarea ref={composerRef} rows={1} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} placeholder="Ask Anything" aria-label="Ask StudyOS" /><div className="study-chat-composer-actions"><AiCancellationDock /><button type="button" onClick={send} disabled={!input.trim() || chat.isPending || continueAnswer.isPending || streaming || streamRecovery} aria-label="Send message"><Send className="size-4" /></button></div></div></div>
     </section>
   );
 }

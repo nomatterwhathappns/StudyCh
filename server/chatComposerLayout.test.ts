@@ -8,7 +8,7 @@ const workspace = readFileSync(resolve(projectRoot, "client/src/pages/StudyWorks
 
 describe("chat composer layout", () => {
   it("uses a distinct multiline composer bubble with a separate send bubble", () => {
-    expect(workspace).toContain("<textarea rows={1}");
+    expect(workspace).toContain("<textarea ref={composerRef} rows={1}");
     expect(workspace).toContain('className="study-chat-composer"');
     expect(workspace).toContain('event.key === "Enter" && !event.shiftKey');
     expect(css).toContain(".study-chat-composer {");

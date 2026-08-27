@@ -222,6 +222,24 @@ describe("mobile Source and AI flow", () => {
     await waitFor(() => expect(addMessage).toHaveBeenCalledWith("session-mobile", { role: "user", content: longQuestion }));
   });
 
+  it("focuses the Chat composer with slash without interrupting another field or an open dialog", () => {
+    const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
+    const composer = ui.getByLabelText("Ask StudyOS");
+    fireEvent.keyDown(window, { key: "/" });
+    expect(document.activeElement).toBe(composer);
+
+    const otherField = document.createElement("input");
+    document.body.appendChild(otherField); otherField.focus();
+    fireEvent.keyDown(window, { key: "/" });
+    expect(document.activeElement).toBe(otherField);
+
+    otherField.blur();
+    const dialog = document.createElement("div"); dialog.setAttribute("role", "dialog"); document.body.appendChild(dialog);
+    fireEvent.keyDown(window, { key: "/" });
+    expect(document.activeElement).not.toBe(composer);
+    dialog.remove(); otherField.remove();
+  });
+
   it("closes the session three-dot menu when clicking elsewhere or pressing Escape", async () => {
     const ui = render(<ChatPanel session={session} onNewSession={vi.fn()} onOpenDashboard={vi.fn()} />);
     fireEvent.click(ui.getByRole("button", { name: "Session menu" }));

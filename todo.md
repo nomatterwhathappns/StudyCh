@@ -433,3 +433,6 @@
 - [x] Mengganti persentase Translate perkiraan menjadi progres batch yang akurat
 - [x] Menyederhanakan indikator menjadi bar dan angka persen tanpa jumlah pesan terlihat
 - [x] Menambahkan regresi progres batch lalu push perbaikan yang disetujui ke GitHub
+- [x] Menambahkan shortcut garis miring untuk memfokuskan input Chat dari workspace
+- [x] Menjaga shortcut agar tidak mengganggu input, editor, atau dialog lain yang sedang aktif
+- [x] Menambahkan regresi shortcut Chat sebelum meminta persetujuan push
