@@ -12,6 +12,11 @@ describe("workspace panel controls", () => {
     expect(workspace).not.toContain('study-icon-button lg:hidden" aria-label="Toggle source panel"');
     expect(workspace).not.toContain('study-icon-button lg:hidden" aria-label="Toggle watch panel"');
     expect(workspace).toContain('isCompact ? "p-0" : "p-3 sm:p-4"');
+    expect(workspace).toContain('id="source-panel" order={1}');
+    expect(workspace).toContain('id="chat-panel" order={2}');
+    expect(workspace).toContain('id="watch-panel" order={3}');
+    expect(workspace).toContain('id="source-chat-handle"');
+    expect(workspace).toContain('id="chat-watch-handle"');
     expect(styles).toContain('.study-panel-group [data-slot="resizable-panel"]');
     expect(styles).toContain('margin-inline: 0.55rem');
   });
