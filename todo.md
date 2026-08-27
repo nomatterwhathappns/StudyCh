@@ -336,3 +336,7 @@
 - [x] Membuat logo ikon StudyOS sederhana untuk favicon
 - [x] Memasang favicon StudyOS di aplikasi dan memverifikasi tampilannya
 - [x] Menambahkan regresi favicon lalu push logo StudyOS ke GitHub
+- [x] Mengirim preview logo StudyOS dan menunggu persetujuan sebelum revisi atau push logo berikutnya
+- [x] Membuat preview revisi logo dengan highlight kontras untuk tema gelap dan terang
+- [x] Menunggu persetujuan sebelum memasang atau push revisi logo ber-highlight
+- [x] Memasang logo StudyOS ber-highlight yang disetujui sebagai favicon lalu push ke GitHub
