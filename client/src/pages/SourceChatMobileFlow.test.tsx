@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import type { StudySession } from "@/lib/study-types";
 
-const { uploadDocumentMutate, chatMutate, chatCallbacks, continueMutate, draftKeyTermMutate, draftVocabularyMutate, draftKeyTermShouldFail, translateChatMutateAsync, translateChatIsPending, addMaterial, addMessage, addVocabulary, profileState } = vi.hoisted(() => ({
-  uploadDocumentMutate: vi.fn(), chatMutate: vi.fn(), continueMutate: vi.fn(), draftKeyTermMutate: vi.fn(), draftVocabularyMutate: vi.fn(), draftKeyTermShouldFail: { value: false }, translateChatMutateAsync: vi.fn(), addMaterial: vi.fn(), addMessage: vi.fn(), addVocabulary: vi.fn(),
+const { uploadDocumentMutate, searchSourcesMutate, chatMutate, chatCallbacks, continueMutate, draftKeyTermMutate, draftVocabularyMutate, draftKeyTermShouldFail, translateChatMutateAsync, translateChatIsPending, addMaterial, addMessage, addVocabulary, profileState } = vi.hoisted(() => ({
+  uploadDocumentMutate: vi.fn(), searchSourcesMutate: vi.fn(), chatMutate: vi.fn(), continueMutate: vi.fn(), draftKeyTermMutate: vi.fn(), draftVocabularyMutate: vi.fn(), draftKeyTermShouldFail: { value: false }, translateChatMutateAsync: vi.fn(), addMaterial: vi.fn(), addMessage: vi.fn(), addVocabulary: vi.fn(),
   translateChatIsPending: { value: false },
   profileState: { value: { name: "Learner", aiName: "StudyOS" } },
   chatCallbacks: { onSuccess: undefined as undefined | ((value: { text: string; citations: Array<{ title: string; ordinal: number }>; truncated: boolean; provider?: string }) => void), onError: undefined as undefined | ((reason: { message: string }) => void) },
@@ -16,6 +16,7 @@ vi.mock("@/lib/trpc", () => ({
     study: {
       explain: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
       fetchSource: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
+      searchSources: { useMutation: (options?: { onSuccess?: (value: { results: Array<{ id: string; scope: "web" | "academic"; title: string; url: string; summary: string; metadata: string }> }) => void }) => ({ mutate: (input: unknown) => { searchSourcesMutate(input); options?.onSuccess?.({ results: [{ id: "web-aws", scope: "web", title: "AWS Lambda guide", url: "https://docs.aws.amazon.com/lambda/", summary: "An introduction to AWS Lambda.", metadata: "docs.aws.amazon.com" }] }); }, isPending: false }) },
       uploadDocument: { useMutation: () => ({ mutate: uploadDocumentMutate, isPending: false }) },
       draftKeyTerm: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; definition: string; context: string; example: string }) => void; onError?: (reason: { message: string }) => void }) => { draftKeyTermMutate(input); if (draftKeyTermShouldFail.value) { callbacks?.onError?.({ message: "StudyOS AI could not prepare that Key Term." }); return; } callbacks?.onSuccess?.({ term: "AWS S3", definition: "Object storage from AWS.", context: "It stores objects in buckets.", example: "Store a PDF in an S3 bucket." }); }, reset: vi.fn(), isPending: false }) },
       draftVocabulary: { useMutation: () => ({ mutate: (input: unknown, callbacks?: { onSuccess?: (value: { term: string; meaning: string }) => void }) => { draftVocabularyMutate(input); callbacks?.onSuccess?.({ term: "photosynthesis", meaning: "fotosintesis" }); }, reset: vi.fn(), isPending: false }) },
@@ -195,7 +196,7 @@ describe("mobile Source and AI flow", () => {
     vi.stubGlobal("FileReader", TestFileReader);
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callback(0); return 1; });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(streamingResponse()));
-    uploadDocumentMutate.mockReset(); chatMutate.mockReset(); chatCallbacks.onSuccess = undefined; chatCallbacks.onError = undefined; continueMutate.mockReset(); draftKeyTermMutate.mockReset(); draftVocabularyMutate.mockReset(); draftKeyTermShouldFail.value = false; translateChatMutateAsync.mockReset(); translateChatIsPending.value = false; profileState.value = { name: "Learner", aiName: "StudyOS" }; addMaterial.mockReset(); addMessage.mockReset(); addVocabulary.mockReset();
+    uploadDocumentMutate.mockReset(); searchSourcesMutate.mockReset(); chatMutate.mockReset(); chatCallbacks.onSuccess = undefined; chatCallbacks.onError = undefined; continueMutate.mockReset(); draftKeyTermMutate.mockReset(); draftVocabularyMutate.mockReset(); draftKeyTermShouldFail.value = false; translateChatMutateAsync.mockReset(); translateChatIsPending.value = false; profileState.value = { name: "Learner", aiName: "StudyOS" }; addMaterial.mockReset(); addMessage.mockReset(); addVocabulary.mockReset();
     localStorage.clear();
   });
   afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
@@ -320,6 +321,22 @@ describe("mobile Source and AI flow", () => {
       materials: expect.stringContaining("[Source: Plants.md · part 1]"),
       history: [{ role: "user", content: "How does photosynthesis use light?" }],
     }));
+  });
+
+  it("adds Search beside existing source controls and lets learners switch between Web and Academic", async () => {
+    const ui = render(<SourcePanelWithProvider session={session} />);
+    expect(ui.getByPlaceholderText("Paste a URL")).toBeTruthy();
+    expect(ui.getByRole("button", { name: "Fetch" })).toBeTruthy();
+    expect(ui.getByRole("button", { name: "File" })).toBeTruthy();
+    fireEvent.click(ui.getByRole("button", { name: "Search sources" }));
+    expect(ui.getByText("Find a source")).toBeTruthy();
+    fireEvent.change(ui.getByPlaceholderText("Search a topic, guide, or article"), { target: { value: "AWS Lambda" } });
+    fireEvent.click(ui.getByRole("button", { name: "Search" }));
+    await waitFor(() => expect(searchSourcesMutate).toHaveBeenCalledWith({ query: "AWS Lambda", scope: "web" }));
+    expect(ui.getByText("AWS Lambda guide")).toBeTruthy();
+    expect(ui.getByRole("button", { name: "Add source" })).toBeTruthy();
+    fireEvent.click(ui.getByRole("button", { name: "Academic" }));
+    expect(ui.getByPlaceholderText("Search papers, journals, or researchers")).toBeTruthy();
   });
 
   it("saves a non-empty Fast fallback answer when the stream has a done event but no token events", async () => {

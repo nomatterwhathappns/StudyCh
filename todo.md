@@ -358,3 +358,11 @@
 - [x] Memverifikasi favicon transparan lalu push perbaikannya ke GitHub
 - [x] Memperbesar isi favicon bulat secara proporsional agar lebih terlihat di tab browser
 - [x] Memverifikasi favicon lebih besar lalu push perbaikannya ke GitHub
+- [x] Membandingkan provider pencarian Web dan Academic untuk fitur Search Source
+- [x] Menyepakati alur dan UI Search Source sebelum implementasi
+- [x] Memeriksa apakah provider 9router yang tersedia dapat menjalankan Search Source
+- [x] Memilih provider Search Source yang aman dan hemat sebelum implementasi
+- [x] Menambahkan Search Source dengan Tavily Basic untuk Web dan OpenAlex untuk Academic
+- [x] Menjaga Upload file dan Fetch URL tetap berfungsi tanpa perubahan alur
+- [x] Menambahkan batas 5 hasil, preview pilihan, dan pesan kuota/error yang jelas
+- [x] Menambahkan regresi Search Source lalu push fitur yang disetujui ke GitHub

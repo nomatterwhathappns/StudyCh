@@ -13,6 +13,7 @@ import { ENV } from "./_core/env";
 import { getLocalAiRouterConfig, invokeLocalAiRouter, LOCAL_AI_ROUTER_MODEL, LOCAL_QUIZ_TIMEOUT_MS, localAiRouterLabel } from "./localAiRouter";
 import { invokeLLM } from "./_core/llm";
 import { storagePut } from "./storage";
+import { searchSources } from "./sourceSearch";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
@@ -547,6 +548,17 @@ export const appRouter = router({
           if (error instanceof TRPCError) throw error;
           console.error("[StudyOS source fetch]", error);
           throw new TRPCError({ code: "BAD_REQUEST", message: "StudyOS could not read this URL. Try a different public page or upload a text file." });
+        }
+      }),
+    searchSources: publicProcedure
+      .input(z.object({ query: z.string().trim().min(2).max(180), scope: z.enum(["web", "academic"]) }))
+      .mutation(async ({ input }) => {
+        try {
+          return { results: await searchSources(input.scope, input.query) };
+        } catch (error) {
+          if (error instanceof TRPCError) throw error;
+          console.error("[StudyOS source search]", { scope: input.scope, error: error instanceof Error ? error.name : "unknown" });
+          throw new TRPCError({ code: "BAD_GATEWAY", message: "Search belum tersedia saat ini. Coba lagi beberapa saat lagi." });
         }
       }),
     chat: publicProcedure

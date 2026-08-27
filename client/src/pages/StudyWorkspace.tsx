@@ -15,7 +15,7 @@ import type { Quiz, StudyCitation, StudySession, VocabItem, VocabReviewRating } 
 import { compactKeyTermText, formatDuration, isVocabularyDue, plainText, scoreQuiz, vocabularyDueAt } from "@/lib/study-utils";
 import { useStudyStore } from "@/store/useStudyStore";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BookOpenText, ChevronLeft, ChevronRight, CircleHelp, Clock3, FileText, FolderOpen, FolderPlus, GripVertical, Languages, Loader2, MessageCircleQuestion, MoreHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Pause, Pin, Play, Plus, RotateCcw, Send, Sparkles, Trash2, Upload, X } from "lucide-react";
+import { BookOpenText, ChevronLeft, ChevronRight, CircleHelp, Clock3, ExternalLink, FileText, FolderOpen, FolderPlus, GripVertical, Languages, Loader2, MessageCircleQuestion, MoreHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Pause, Pin, Play, Plus, RotateCcw, Search, Send, Sparkles, Trash2, Upload, X } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 import { useLocation } from "wouter";
@@ -133,7 +133,7 @@ export function AiCancellationDock() {
   </div>;
 }
 
-export function SourcePanel({ session }: { session: StudySession }) {
+function SourcePanelContent({ session }: { session: StudySession }) {
   const { addMaterial, deleteMaterial } = useStudyStore();
   const sourceAi = useSourceAiActivity();
   const [tab, setTab] = useState<"sources" | "read">("sources");
@@ -237,6 +237,54 @@ export function SourcePanel({ session }: { session: StudySession }) {
   const translateButtonLabel = translateChat && untranslatedMessageCount > 0 ? `Translate new to ${nextTranslationLabel}` : `Translate to ${nextTranslationLabel}`;
 
   return <section className="study-panel study-source-panel"><PanelTitle title="Source" icon={<BookOpenText className="size-4" />} /><div className="space-y-2 p-3"><div className="flex gap-2"><Input value={url} onChange={(event) => setUrl(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") addUrl(); }} placeholder="Paste a URL" className="h-10 rounded-xl border-border bg-secondary text-sm" /><Button onClick={addUrl} disabled={fetchSource.isPending || !url.trim()} size="icon" className="h-10 w-10 rounded-xl bg-primary text-primary-foreground">{fetchSource.isPending ? <Loader2 className="size-4 animate-spin" /> : <FolderPlus className="size-4" />}</Button></div><div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={addUrl} disabled={fetchSource.isPending || !url.trim()} className="rounded-xl border-border bg-transparent text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"><FolderPlus className="mr-2 size-3.5" />Fetch</Button><Button variant="outline" disabled={uploadDocument.isPending} onClick={() => fileRef.current?.click()} className="rounded-xl border-border bg-transparent text-xs text-muted-foreground hover:bg-secondary hover:text-foreground">{uploadDocument.isPending ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : <Upload className="mr-2 size-3.5" />}{uploadDocument.isPending ? "Importing" : "File"}</Button><input ref={fileRef} type="file" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,text/plain,text/markdown,text/csv,.txt,.md,.csv" className="hidden" onChange={(event) => void addFile(event.target.files?.[0])} /></div><p className="px-1 text-[10px] leading-relaxed text-muted-foreground">PDF, DOCX, Markdown, CSV, and text · up to 5 MB</p>{error && <p className="rounded-xl border border-[#BA2D0B]/40 bg-[#BA2D0B]/10 p-2 text-xs leading-relaxed text-[#EEF1EF]">{error}</p>}</div><div className="min-h-0 flex-1 px-3 pb-3">{tab === "sources" ? <ScrollArea className="h-full pr-2">{session.materials.length ? <div className="space-y-2">{session.materials.map((material) => <div key={material.id} className={`study-material-row ${selectedMaterialId === material.id ? "is-selected" : ""}`}><button type="button" onClick={() => { setSelectedMaterialId(material.id); setTab("read"); }} className="flex min-w-0 flex-1 items-center gap-2 text-left"><FileText className="size-4 shrink-0 text-[#BA2D0B]" /><span className="min-w-0 flex-1 truncate text-xs">{material.title}</span>{material.format && <span className="font-mono text-[8px] tracking-wide text-muted-foreground">{material.format}</span>}</button><button type="button" onClick={() => deleteMaterial(session.id, material.id)} aria-label={`Delete ${material.title}`} className="study-inline-delete"><X className="size-3.5" /></button></div>)}</div> : <EmptyPanel text="Add a public link or import a document to start reading." />}</ScrollArea> : <ReadMaterial material={selected} vocabulary={session.vocabulary.map((entry) => entry.term)} onSelect={(text) => setSelection(text)} />}</div><div className="border-t border-border px-3 py-3"><div className="flex rounded-xl bg-secondary p-1"><button type="button" onClick={() => setTab("sources")} className={`study-tab ${tab === "sources" ? "is-active" : ""}`}>Sources</button><button type="button" onClick={() => setTab("read")} className={`study-tab ${tab === "read" ? "is-active" : ""}`}>Read</button></div><button type="button" disabled={translatePending} onClick={toggleTranslate} className={`study-translate-button ${translateChat ? "is-on" : ""}`}><span className="inline-flex items-center gap-2">{translatePending ? <Loader2 className="size-3.5 animate-spin" /> : <Languages className="size-3.5" />}{translatePending ? `Translating to ${translationTarget === "english" ? "English" : "Indonesian"}…` : translateButtonLabel}</span></button></div>{selection && <div className="study-selection-popover"><span className="line-clamp-1">{selection}</span><div className="flex flex-wrap gap-1"><button type="button" disabled={draftKeyTerm.isPending} onClick={saveSelection}>{draftKeyTerm.isPending ? "Drafting…" : "Save terms"}</button><button type="button" disabled={draftVocabulary.isPending} onClick={saveVocabulary}>{draftVocabulary.isPending ? "Saving…" : "Save vocab"}</button><button type="button" disabled={explain.isPending} onClick={explainSelection}>{explain.isPending ? "Thinking…" : "Explain"}</button></div></div>}<KeyTermEditor draft={keyTermDraft} onClose={() => setKeyTermDraft(null)} onSave={saveKeyTermDraft} /></section>;
+}
+
+type SourceSearchScope = "web" | "academic";
+type SourceSearchResult = { id: string; scope: SourceSearchScope; title: string; url: string; summary: string; metadata: string };
+
+function SourceSearchDialog({ session }: { session: StudySession }) {
+  const { addMaterial } = useStudyStore();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [scope, setScope] = useState<SourceSearchScope>("web");
+  const [results, setResults] = useState<SourceSearchResult[]>([]);
+  const [error, setError] = useState("");
+  const searchSources = trpc.study.searchSources.useMutation({
+    onSuccess: ({ results: nextResults }) => { setResults(nextResults); if (!nextResults.length) setError("No sources found. Try a different topic or phrase."); },
+    onError: (reason) => setError(reason.message),
+  });
+  const fetchSource = trpc.study.fetchSource.useMutation({
+    onSuccess: ({ html, title, url }) => {
+      const content = extractText(html).slice(0, 50_000);
+      if (!content.trim()) { setError("This source did not return readable text. Try another result."); return; }
+      addMaterial(session.id, { title, type: "url", url, content });
+      setOpen(false); setQuery(""); setResults([]); setError("");
+    },
+    onError: (reason) => setError(reason.message),
+  });
+  const search = () => {
+    const term = query.trim();
+    if (term.length < 2 || searchSources.isPending) return;
+    setError(""); setResults([]); searchSources.mutate({ query: term, scope });
+  };
+  const selectResult = (result: SourceSearchResult) => {
+    if (fetchSource.isPending) return;
+    setError(""); fetchSource.mutate({ url: result.url });
+  };
+  const busy = searchSources.isPending || fetchSource.isPending;
+  return <>
+    <button type="button" onClick={() => setOpen(true)} aria-label="Search sources" className="study-icon-button absolute right-3 top-2 z-10" title="Search sources"><Search className="size-4" /></button>
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (!busy) setOpen(nextOpen); }}>
+      <DialogContent className="max-h-[82vh] max-w-lg overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground">
+        <DialogHeader className="border-b border-border px-5 pb-4 pt-5"><DialogTitle className="font-display text-xl italic">Find a source</DialogTitle><DialogDescription>Search the web or academic papers, then choose one to add to this session.</DialogDescription></DialogHeader>
+        <div className="space-y-3 p-5"><div className="flex rounded-xl bg-secondary p-1"><button type="button" onClick={() => { setScope("web"); setResults([]); setError(""); }} className={`study-tab ${scope === "web" ? "is-active" : ""}`}>Web</button><button type="button" onClick={() => { setScope("academic"); setResults([]); setError(""); }} className={`study-tab ${scope === "academic" ? "is-active" : ""}`}>Academic</button></div><form onSubmit={(event) => { event.preventDefault(); search(); }} className="flex gap-2"><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={scope === "web" ? "Search a topic, guide, or article" : "Search papers, journals, or researchers"} className="h-10 rounded-xl border-border bg-secondary text-sm" autoFocus /><Button type="submit" disabled={busy || query.trim().length < 2} className="h-10 rounded-xl px-3">{searchSources.isPending ? <Loader2 className="size-4 animate-spin" /> : <><Search className="mr-1.5 size-4" />Search</>}</Button></form><p className="px-1 text-[10px] leading-relaxed text-muted-foreground">{scope === "web" ? "Web search uses Tavily Basic and returns up to 5 results." : "Academic search uses OpenAlex and returns up to 5 papers."}</p>{error ? <p role="alert" className="rounded-xl border border-[#BA2D0B]/40 bg-[#BA2D0B]/10 p-2 text-xs leading-relaxed text-[#EEF1EF]">{error}</p> : null}<ScrollArea className="max-h-[42vh] pr-3">{results.length ? <div className="space-y-2">{results.map((result) => <article key={result.id} className="rounded-xl border border-border bg-secondary/40 p-3"><div className="flex gap-3"><div className="min-w-0 flex-1"><p className="line-clamp-2 text-sm font-semibold leading-snug">{result.title}</p><p className="mt-1 text-[10px] text-muted-foreground">{result.metadata}</p><p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">{result.summary}</p></div></div><div className="mt-3 flex items-center justify-between gap-2"><a href={result.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">Open <ExternalLink className="size-3" /></a><Button size="sm" onClick={() => selectResult(result)} disabled={busy} className="h-8 rounded-lg px-3 text-xs">{fetchSource.isPending ? <Loader2 className="size-3.5 animate-spin" /> : "Add source"}</Button></div></article>)}</div> : !searchSources.isPending && !error ? <div className="rounded-xl border border-dashed border-border p-5 text-center text-xs leading-relaxed text-muted-foreground">Search for a topic, then choose a result to add as a source.</div> : null}</ScrollArea></div>
+      </DialogContent>
+    </Dialog>
+  </>;
+}
+
+export function SourcePanel({ session }: { session: StudySession }) {
+  return <div className="relative h-full min-h-0"><SourcePanelContent session={session} /><SourceSearchDialog session={session} /></div>;
 }
 
 export function ChatPanel({ session, onNewSession, onOpenDashboard, onOpenSessions }: { session: StudySession; onNewSession: () => void; onOpenDashboard: () => void; onOpenSessions?: () => void }) {
