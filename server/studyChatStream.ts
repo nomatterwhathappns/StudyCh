@@ -272,7 +272,7 @@ export function registerStudyChatStream(app: Express) {
         provider = localAiRouterLabel();
         event(res, "meta", { provider });
         result = await streamLocalAiRouter(messages, maxTokens, timeoutMs, writeToken);
-      } else if (getLocalAiRouterConfig().enabled) {
+      } else if (getLocalAiRouterConfig().localMode) {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Mode StudyOS lokal hanya memakai 9router. Pilih 9router lokal di AI Settings." });
       } else if (input.model === "gemini-3-flash-preview") {
         try {

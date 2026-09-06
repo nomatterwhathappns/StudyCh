@@ -458,3 +458,31 @@
 - [x] Menelusuri lifecycle Translate yang berhenti saat pindah Profile atau menyembunyikan panel Chat
 - [x] Memindahkan state proses dan indikator Translate ke lifecycle workspace yang tetap mounted
 - [x] Memverifikasi Translate, indikator, dan Cancel saat hide panel serta pindah halaman sebelum melapor tanpa push
+
+- [ ] Membandingkan VPS Hostinger dengan opsi hosting terkelola untuk beta online 9router
+
+- [ ] Mengganti pemeriksaan VPS beta dari Hostinger ke Nevacloud
+- [ ] Memeriksa spesifikasi, lokasi, root/SSH, storage persisten, dan opsi template Nevacloud
+
+- [x] Memeriksa arsitektur, RAM, storage, jaringan, dan versi Debian VPS baru
+- [x] Mengamankan akses SSH/firewall VPS sebelum 9router dibuka ke publik
+- [x] Memasang 9router dengan storage persisten dan konfigurasi yang dapat dipulihkan
+- [x] Menguji endpoint 9router secara lokal sebelum menghubungkannya ke StudyOS
+
+- [x] Memastikan VPS, Docker, dan container 9router pulih setelah Power Off
+- [x] Menyelesaikan uji chat non-stream dengan model free yang sudah tersambung
+
+- [x] Mendiagnosis key Endpoint 9router yang ditolak meski variabel shell terisi
+
+- [x] Menguji model/provider fallback setelah OpenCode Free mengembalikan content kosong
+
+- [x] Memetakan `oc/mimo-v2.5-free` ke ID Mimo yang tersedia di 9router dan memverifikasi output teks
+
+- [x] Menguji parameter reasoning dan output token untuk mencegah `content: null` pada Mimo
+- [x] Membuat combo 9router `studyos` dengan Mimo sebagai model utama dan Nemotron Free sebagai fallback
+- [x] Menguji endpoint combo 9router `Studyos` dengan API key setelah session terminal tersambung kembali
+- [x] Memperbaiki konfigurasi Caddy HTTPS setelah sintaks `auto_https on` ditolak oleh versi Caddy VPS
+- [x] Memisahkan header token publik StudyOS dari Authorization API key upstream 9router pada reverse proxy
+- [x] Memperbaiki urutan handler Caddy agar request bertoken valid diproxy sebelum fallback 401
+- [x] Memverifikasi endpoint HTTPS publik dengan token StudyOS, proxy Authorization internal, combo `Studyos`, dan respons HTTP 200
+- [x] Menambahkan URL endpoint HTTPS, token publik, model `Studyos`, dan fallback server-side ke konfigurasi StudyOS
