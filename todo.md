@@ -486,3 +486,6 @@
 - [x] Memperbaiki urutan handler Caddy agar request bertoken valid diproxy sebelum fallback 401
 - [x] Memverifikasi endpoint HTTPS publik dengan token StudyOS, proxy Authorization internal, combo `Studyos`, dan respons HTTP 200
 - [x] Menambahkan URL endpoint HTTPS, token publik, model `Studyos`, dan fallback server-side ke konfigurasi StudyOS
+- [x] Mengaudit kompatibilitas StudyOS dengan hosting gratis untuk beta sederhana tanpa login/database multi-user
+- [x] Membandingkan Vercel dengan alternatif hosting gratis yang mendukung backend Node/tRPC
+- [x] Menyusun rekomendasi hosting beta dan langkah deployment tanpa push atau perubahan kode
