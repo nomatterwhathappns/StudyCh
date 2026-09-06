@@ -459,10 +459,10 @@
 - [x] Memindahkan state proses dan indikator Translate ke lifecycle workspace yang tetap mounted
 - [x] Memverifikasi Translate, indikator, dan Cancel saat hide panel serta pindah halaman sebelum melapor tanpa push
 
-- [ ] Membandingkan VPS Hostinger dengan opsi hosting terkelola untuk beta online 9router
+- [x] Membandingkan VPS Hostinger dengan opsi hosting terkelola untuk beta online 9router
 
-- [ ] Mengganti pemeriksaan VPS beta dari Hostinger ke Nevacloud
-- [ ] Memeriksa spesifikasi, lokasi, root/SSH, storage persisten, dan opsi template Nevacloud
+- [x] Mengganti pemeriksaan VPS beta dari Hostinger ke Nevacloud
+- [x] Memeriksa spesifikasi, lokasi, root/SSH, storage persisten, dan opsi template Nevacloud
 
 - [x] Memeriksa arsitektur, RAM, storage, jaringan, dan versi Debian VPS baru
 - [x] Mengamankan akses SSH/firewall VPS sebelum 9router dibuka ke publik
