@@ -1,7 +1,6 @@
 import "dotenv/config";
-import "dotenv/config";
-import express from "express";
-import { createServer } from "http";
+import express, { type Express } from "express";
+import { createServer, type Server } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerStorageProxy } from "./storageProxy";
@@ -29,13 +28,15 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-async function startServer() {
+export async function createApp(server?: Server): Promise<Express> {
   const app = express();
-  const server = createServer(app);
   const localStudyMode = process.env.STUDYOS_LOCAL_MODE === "true";
-  // Configure body parser with larger size limit for file uploads
+
+  // Configure body parser with the existing local limit. Vercel upload limits
+  // are handled separately by the deployment adapter and direct storage flow.
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
   if (!localStudyMode) {
     registerStorageProxy(app);
     const { registerOAuthRoutes } = await import("./oauth");
@@ -43,8 +44,9 @@ async function startServer() {
   } else {
     console.log("[StudyOS] Local mode enabled: cloud OAuth, storage proxy, and analytics are disabled.");
   }
+
   registerStudyChatStream(app);
-  // tRPC API
+
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -52,13 +54,22 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
+
   if (process.env.NODE_ENV === "development") {
+    if (!server) {
+      throw new Error("A development HTTP server is required for Vite middleware.");
+    }
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
+  return app;
+}
+
+async function startServer() {
+  const server = createServer();
+  const app = await createApp(server);
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
 
@@ -66,9 +77,14 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
+  server.on("request", app);
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
 }
 
-startServer().catch(console.error);
+// Vercel imports the exported app from the root `server.ts` entrypoint.
+// The local process still owns its HTTP listener for `pnpm dev`/`pnpm start`.
+if (process.env.VERCEL !== "1") {
+  startServer().catch(console.error);
+}

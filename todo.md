@@ -489,3 +489,6 @@
 - [x] Mengaudit kompatibilitas StudyOS dengan hosting gratis untuk beta sederhana tanpa login/database multi-user
 - [x] Membandingkan Vercel dengan alternatif hosting gratis yang mendukung backend Node/tRPC
 - [x] Menyusun rekomendasi hosting beta dan langkah deployment tanpa push atau perubahan kode
+- [x] Menyiapkan entrypoint Express yang kompatibel dengan Vercel tanpa mengganggu start lokal
+- [x] Menyesuaikan static assets, streaming Chat, dan batas upload untuk deployment Vercel
+- [x] Menambahkan regresi deployment dan memvalidasi production build Vercel sebelum push GitHub
