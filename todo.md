@@ -495,5 +495,5 @@
 - [ ] Memverifikasi ulang `package.json`, `vercel.json`, route `/api`, dan entrypoint `server.ts` sebelum push GitHub
 - [ ] Mengaudit repository dan Git ignore untuk memastikan credential 9router, token VPS, `.env`, dan pola `sk-` tidak ikut dipush
 - [ ] Menyiapkan koneksi Vercel setelah konfigurasi dinyatakan aman dan pengguna memberi persetujuan eksplisit
-- [ ] Membuat commit dan push checkpoint adapter Vercel ke repository GitHub setelah audit secret terakhir
-- [ ] Memverifikasi branch dan commit remote setelah push GitHub
+- [x] Membuat commit dan push checkpoint adapter Vercel ke repository GitHub setelah audit secret terakhir
+- [x] Memverifikasi branch dan commit remote setelah push GitHub
