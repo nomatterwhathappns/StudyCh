@@ -492,3 +492,8 @@
 - [x] Menyiapkan entrypoint Express yang kompatibel dengan Vercel tanpa mengganggu start lokal
 - [x] Menyesuaikan static assets, streaming Chat, dan batas upload untuk deployment Vercel
 - [x] Menambahkan regresi deployment dan memvalidasi production build Vercel sebelum push GitHub
+- [ ] Memverifikasi ulang `package.json`, `vercel.json`, route `/api`, dan entrypoint `server.ts` sebelum push GitHub
+- [ ] Mengaudit repository dan Git ignore untuk memastikan credential 9router, token VPS, `.env`, dan pola `sk-` tidak ikut dipush
+- [ ] Menyiapkan koneksi Vercel setelah konfigurasi dinyatakan aman dan pengguna memberi persetujuan eksplisit
+- [ ] Membuat commit dan push checkpoint adapter Vercel ke repository GitHub setelah audit secret terakhir
+- [ ] Memverifikasi branch dan commit remote setelah push GitHub
