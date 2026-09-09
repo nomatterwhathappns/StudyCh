@@ -497,3 +497,9 @@
 - [ ] Menyiapkan koneksi Vercel setelah konfigurasi dinyatakan aman dan pengguna memberi persetujuan eksplisit
 - [x] Membuat commit dan push checkpoint adapter Vercel ke repository GitHub setelah audit secret terakhir
 - [x] Memverifikasi branch dan commit remote setelah push GitHub
+- [ ] Memeriksa apakah konektor atau alur akses Vercel tersedia untuk sesi ini
+- [ ] Menghubungkan repository StudyCh ke project Vercel tanpa membocorkan secret
+- [ ] Mengatur environment variables Vercel dan menjalankan deployment test beta
+- [x] Memperbaiki error Vercel `functions.server.ts.includeFiles should be string`
+- [x] Memvalidasi ulang konfigurasi dan build setelah koreksi `includeFiles`
+- [ ] Push koreksi `vercel.json` ke GitHub dan memandu redeploy

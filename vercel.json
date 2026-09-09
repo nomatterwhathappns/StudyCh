@@ -5,7 +5,7 @@
     "server.ts": {
       "runtime": "nodejs22.x",
       "maxDuration": 90,
-      "includeFiles": ["public/**"]
+      "includeFiles": "public/**"
     }
   },
   "rewrites": [
