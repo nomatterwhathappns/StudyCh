@@ -502,4 +502,7 @@
 - [ ] Mengatur environment variables Vercel dan menjalankan deployment test beta
 - [x] Memperbaiki error Vercel `functions.server.ts.includeFiles should be string`
 - [x] Memvalidasi ulang konfigurasi dan build setelah koreksi `includeFiles`
-- [ ] Push koreksi `vercel.json` ke GitHub dan memandu redeploy
+- [x] Push koreksi `vercel.json` ke GitHub dan memandu redeploy
+- [x] Memperbaiki error Vercel `Function Runtimes must have a valid version` pada `vercel.json`
+- [x] Memvalidasi build dan regresi setelah koreksi runtime
+- [ ] Push koreksi runtime ke GitHub dan memandu redeploy

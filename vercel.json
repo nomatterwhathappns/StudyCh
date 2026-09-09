@@ -3,7 +3,6 @@
   "buildCommand": "pnpm build:vercel",
   "functions": {
     "server.ts": {
-      "runtime": "nodejs22.x",
       "maxDuration": 90,
       "includeFiles": "public/**"
     }

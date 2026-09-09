@@ -23,7 +23,7 @@ describe("Vercel deployment adapter", () => {
     expect(packageJson.scripts?.["build:vercel"]).toContain("VITE_DEPLOY_TARGET=vercel");
     expect(packageJson.scripts?.["build:vercel"]).toContain("cp -R dist/public public");
     expect(vercelConfig.buildCommand).toBe("pnpm build:vercel");
-    expect(vercelConfig.functions?.["server.ts"]?.runtime).toBe("nodejs22.x");
+    expect(vercelConfig.functions?.["server.ts"]?.runtime).toBeUndefined();
     expect(vercelConfig.functions?.["server.ts"]?.maxDuration).toBe(90);
     expect(vercelConfig.rewrites).toEqual(expect.arrayContaining([
       { source: "/api/:path*", destination: "/server.ts" },
